@@ -633,6 +633,14 @@
 			<div class="batch-form">
 				<h1>Scooby</h1>
 				<p class="muted">Enter your batch code(s)</p>
+				<div class="batch-tip">
+					<span class="tip-icon">💡</span>
+					<span
+						>Add <strong>all</strong> your batches. e.g. ECE 2nd
+						years have both <strong>ELC2X</strong> and
+						<strong>ELC2YR</strong>.</span
+					>
+				</div>
 				<form
 					onsubmit={(e) => {
 						e.preventDefault();
@@ -2131,5 +2139,31 @@
 		.calendar {
 			min-width: 500px;
 		}
+	}
+	/* Batch Tip */
+	.batch-tip {
+		background: rgba(255, 255, 255, 0.05);
+		border-left: 2px solid #aaa;
+		padding: 0.75rem 1rem;
+		border-radius: 0 6px 6px 0;
+		margin: 1rem 0;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: #ccc;
+		text-align: left;
+		display: flex;
+		gap: 0.75rem;
+		align-items: flex-start;
+	}
+
+	.tip-icon {
+		font-size: 1.1rem;
+		line-height: 1.2;
+		flex-shrink: 0;
+	}
+
+	.batch-tip strong {
+		color: #fff;
+		font-weight: 500;
 	}
 </style>
