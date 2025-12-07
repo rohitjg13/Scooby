@@ -171,6 +171,11 @@
 			if (savedSwapped) {
 				swappedCourseCodes = new Map(JSON.parse(savedSwapped));
 			}
+
+			const savedExcluded = localStorage.getItem("scooby_excluded");
+			if (savedExcluded) {
+				excludedCourseCodes = new Set(JSON.parse(savedExcluded));
+			}
 		} catch (e) {
 			console.error("Failed to restore state", e);
 		} finally {
@@ -214,6 +219,15 @@
 			localStorage.setItem(
 				"scooby_swapped",
 				JSON.stringify(Array.from(swappedCourseCodes.entries())),
+			);
+		}
+	});
+
+	$effect(() => {
+		if (stateLoaded) {
+			localStorage.setItem(
+				"scooby_excluded",
+				JSON.stringify(Array.from(excludedCourseCodes)),
 			);
 		}
 	});
@@ -265,7 +279,11 @@
 	}
 
 	function addCourse(course: Course) {
-		const conflicts = getConflicts(course, $batchCourses, $selectedCourses);
+		const conflicts = getConflicts(
+			course,
+			getEffectiveCoursesList($batchCourses),
+			$selectedCourses,
+		);
 		if (conflicts.length > 0) return;
 
 		selectedCourses.update((courses) => {
@@ -297,6 +315,8 @@
 		batchInput = "";
 		searchInput = "";
 		searchQuery.set("");
+		swappedCourseCodes = new Map();
+		excludedCourseCodes = new Set();
 	}
 
 	// Convert slot/section to readable component type
@@ -311,6 +331,9 @@
 
 	// Store for swapped components: original courseCode -> new courseCode
 	let swappedCourseCodes = $state<Map<string, string>>(new Map());
+
+	// Store for excluded/removed batch courses: courseCode
+	let excludedCourseCodes = $state<Set<string>>(new Set());
 
 	function getBaseCourseCode(courseCode: string): string {
 		return courseCode.split("-")[0];
@@ -371,7 +394,16 @@
 		swappedCourseCodes = new Map(swappedCourseCodes);
 	}
 
-	// Get flattened list of effective courses (handling swaps)
+	function toggleExclusion(courseCode: string) {
+		if (excludedCourseCodes.has(courseCode)) {
+			excludedCourseCodes.delete(courseCode);
+		} else {
+			excludedCourseCodes.add(courseCode);
+		}
+		excludedCourseCodes = new Set(excludedCourseCodes);
+	}
+
+	// Get flattened list of effective courses (handling swaps and exclusions)
 	function getEffectiveCoursesList(sourceCourses: Course[]): Course[] {
 		// First, identify all unique course codes in source
 		const uniqueCodes = new Set(sourceCourses.map((c) => c.courseCode));
@@ -379,6 +411,9 @@
 		let result: Course[] = [];
 
 		uniqueCodes.forEach((code) => {
+			// Skip excluded courses
+			if (excludedCourseCodes.has(code)) return;
+
 			// Check if this code is swapped
 			if (swappedCourseCodes.has(code)) {
 				const newCode = swappedCourseCodes.get(code)!;
@@ -399,9 +434,12 @@
 	}
 
 	// Get unique courses for display (deduplicated by code)
-	function getUniqueDisplayCourses(
-		sourceCourses: Course[],
-	): { original: Course; effective: Course; isSwapped: boolean }[] {
+	function getUniqueDisplayCourses(sourceCourses: Course[]): {
+		original: Course;
+		effective: Course;
+		isSwapped: boolean;
+		isExcluded: boolean;
+	}[] {
 		const uniqueMap = new Map<string, Course>(); // code -> first row
 
 		sourceCourses.forEach((c) => {
@@ -411,10 +449,11 @@
 		});
 
 		return Array.from(uniqueMap.values()).map((original) => {
+			const isExcluded = excludedCourseCodes.has(original.courseCode);
 			const isSwapped = swappedCourseCodes.has(original.courseCode);
 			let effective = original;
 
-			if (isSwapped) {
+			if (!isExcluded && isSwapped) {
 				const newCode = swappedCourseCodes.get(original.courseCode);
 				const newCourse = $allCourses.find(
 					(c) => c.courseCode === newCode,
@@ -422,7 +461,7 @@
 				if (newCourse) effective = newCourse;
 			}
 
-			return { original, effective, isSwapped };
+			return { original, effective, isSwapped, isExcluded };
 		});
 	}
 
@@ -490,6 +529,8 @@
 
 		// Round to nearest hour
 		minTime = Math.floor(minTime / 60) * 60;
+
+		// ... (rest of function)
 		maxTime = Math.ceil(maxTime / 60) * 60;
 
 		// Ensure we have at least some range
@@ -523,6 +564,11 @@
 	);
 	let totalMinutes = $derived(calendar.maxTime - calendar.minTime);
 
+	// Derived: hidden courses
+	let hiddenCourses = $derived(
+		getUniqueDisplayCourses($batchCourses).filter((c) => c.isExcluded),
+	);
+
 	const VERTICAL_PADDING = 20;
 	// Calculate calendar height: 60px per hour + padding
 	let calendarHeight = $derived(
@@ -540,7 +586,7 @@
 			<h2>No Timetable</h2>
 			<p class="muted">{error}</p>
 			<p class="muted small">
-				Put your file in: <code>static/data/</code>
+				Put your file in: <code>src/lib/data/</code>
 			</p>
 		</div>
 	{:else if !$currentBatch}
@@ -607,7 +653,7 @@
 							{#each $filteredCourses as course}
 								{@const conflicts = getConflicts(
 									course,
-									$batchCourses,
+									getEffectiveCoursesList($batchCourses),
 									$selectedCourses,
 								)}
 								{@const hasConflict = conflicts.length > 0}
@@ -881,147 +927,198 @@
 				<div class="list-box">
 					<h3>
 						Your Courses <span class="muted"
-							>({$batchCourses.length})</span
+							>({getEffectiveCoursesList($batchCourses)
+								.length})</span
 						>
 					</h3>
 					<div class="courses-grid">
-						{#each getUniqueDisplayCourses($batchCourses) as { original: originalCourse, effective: course, isSwapped }}
-							{@const alternatives =
-								getAlternativeComponents(originalCourse)}
-							<div class="list-item" class:swapped={isSwapped}>
-								<div class="course-main-info">
-									<div class="course-header-row">
-										<span class="mono">
-											{course.courseCode.split("-")[0]}
-											{#if getComponentType(course.component)}
-												<span class="comp-label"
-													>({getComponentType(
-														course.component,
-													)})</span
+						{#each getUniqueDisplayCourses($batchCourses) as { original: originalCourse, effective: course, isSwapped, isExcluded }}
+							{#if !isExcluded}
+								{@const alternatives =
+									getAlternativeComponents(originalCourse)}
+								<div
+									class="list-item"
+									class:swapped={isSwapped}
+								>
+									<div class="course-main-info">
+										<div class="course-header-row">
+											<span class="mono">
+												{course.courseCode.split(
+													"-",
+												)[0]}
+												{#if getComponentType(course.component)}
+													<span class="comp-label"
+														>({getComponentType(
+															course.component,
+														)})</span
+													>
+												{/if}
+											</span>
+											<div class="header-right-group">
+												{#if alternatives.length > 0}
+													<button
+														class="swap-btn"
+														onclick={() =>
+															toggleSwapDropdown(
+																originalCourse.courseCode,
+															)}
+														title="Change section ({alternatives.length} alternatives)"
+													>
+														⇄ {getSection(course)}
+													</button>
+												{:else}
+													<span class="slot-label"
+														>{getSection(
+															course,
+														)}</span
+													>
+												{/if}
+												<button
+													class="remove-btn"
+													title="Remove this course"
+													onclick={() =>
+														toggleExclusion(
+															originalCourse.courseCode,
+														)}
 												>
-											{/if}
+													×
+												</button>
+											</div>
+										</div>
+										<span class="item-name"
+											>{course.courseName}</span
+										>
+										{#if course.courseType || course.component}
+											<span class="item-type">
+												{course.courseType}{course.courseType &&
+												course.component
+													? " • "
+													: ""}{course.component}
+											</span>
+										{/if}
+										<span class="muted small">
+											{course.day}
+											{course.startTime}-{course.endTime} •
+											{course.room}
 										</span>
-										{#if alternatives.length > 0}
+										{#if isSwapped}
 											<button
-												class="swap-btn"
+												class="reset-swap-btn"
 												onclick={() =>
-													toggleSwapDropdown(
+													resetSwap(
 														originalCourse.courseCode,
 													)}
-												title="Change section ({alternatives.length} alternatives)"
 											>
-												⇄ {getSection(course)}
+												↩ Reset to {getSection(
+													originalCourse,
+												)}
 											</button>
-										{:else}
-											<span class="slot-label"
-												>{getSection(course)}</span
-											>
 										{/if}
 									</div>
-									<span class="item-name"
-										>{course.courseName}</span
-									>
-									{#if course.courseType || course.component}
-										<span class="item-type">
-											{course.courseType}{course.courseType &&
-											course.component
-												? " • "
-												: ""}{course.component}
-										</span>
-									{/if}
-									<span class="muted small">
-										{course.day}
-										{course.startTime}-{course.endTime} • {course.room}
-									</span>
-									{#if isSwapped}
-										<button
-											class="reset-swap-btn"
-											onclick={() =>
-												resetSwap(
-													originalCourse.courseCode,
-												)}
-										>
-											↩ Reset to {getSection(
-												originalCourse,
-											)}
-										</button>
+
+									{#if showingSwapFor === originalCourse.courseCode && alternatives.length > 0}
+										<div class="swap-dropdown">
+											<div class="swap-header">
+												Change {getComponentType(
+													course.component,
+												) || "Section"}:
+											</div>
+											{#each alternatives as alt}
+												{@const conflicts =
+													getConflicts(
+														alt,
+														getEffectiveCoursesList(
+															$batchCourses.filter(
+																(c) =>
+																	c.courseCode !==
+																	originalCourse.courseCode,
+															),
+														),
+														$selectedCourses,
+													)}
+												<button
+													class="swap-option"
+													class:has-conflict={conflicts.length >
+														0}
+													class:is-current={alt.courseCode ===
+														course.courseCode}
+													onclick={() => {
+														if (
+															alt.courseCode ===
+															course.courseCode
+														)
+															return;
+														swapComponent(
+															originalCourse.courseCode,
+															alt.courseCode,
+														);
+														showingSwapFor = null;
+													}}
+													disabled={conflicts.length >
+														0}
+												>
+													<span class="swap-slot">
+														{getSection(alt)}
+														{#if alt.courseCode === course.courseCode}
+															<span
+																class="current-badge"
+																>(Current)</span
+															>
+														{/if}
+													</span>
+													<span class="swap-time"
+														>{alt.day}
+														{alt.startTime}-{alt.endTime}</span
+													>
+													<span class="swap-room"
+														>{alt.room}</span
+													>
+													{#if conflicts.length > 0}
+														<span
+															class="swap-conflict"
+														>
+															⚠ Conflicts with: {conflicts
+																.map(
+																	(c) =>
+																		`${c.courseCode.split("-")[0]}${getComponentType(c.component) ? ` (${getComponentType(c.component)})` : ""}`,
+																)
+																.join(", ")}
+														</span>
+													{/if}
+												</button>
+											{/each}
+										</div>
 									{/if}
 								</div>
-
-								{#if showingSwapFor === originalCourse.courseCode && alternatives.length > 0}
-									<div class="swap-dropdown">
-										<div class="swap-header">
-											Change {getComponentType(
-												course.component,
-											) || "Section"}:
-										</div>
-										{#each alternatives as alt}
-											{@const conflicts = getConflicts(
-												alt,
-												getEffectiveCoursesList(
-													$batchCourses.filter(
-														(c) =>
-															c.courseCode !==
-															originalCourse.courseCode,
-													),
-												),
-												$selectedCourses,
-											)}
-											<button
-												class="swap-option"
-												class:has-conflict={conflicts.length >
-													0}
-												class:is-current={alt.courseCode ===
-													course.courseCode}
-												onclick={() => {
-													if (
-														alt.courseCode ===
-														course.courseCode
-													)
-														return;
-													swapComponent(
-														originalCourse.courseCode,
-														alt.courseCode,
-													);
-													showingSwapFor = null;
-												}}
-												disabled={conflicts.length > 0}
-											>
-												<span class="swap-slot">
-													{getSection(alt)}
-													{#if alt.courseCode === course.courseCode}
-														<span
-															class="current-badge"
-															>(Current)</span
-														>
-													{/if}
-												</span>
-												<span class="swap-time"
-													>{alt.day}
-													{alt.startTime}-{alt.endTime}</span
-												>
-												<span class="swap-room"
-													>{alt.room}</span
-												>
-												{#if conflicts.length > 0}
-													<span class="swap-conflict">
-														⚠ Conflicts with: {conflicts
-															.map(
-																(c) =>
-																	`${c.courseCode.split("-")[0]}${getComponentType(c.component) ? ` (${getComponentType(c.component)})` : ""}`,
-															)
-															.join(", ")}
-													</span>
-												{/if}
-											</button>
-										{/each}
-									</div>
-								{/if}
-							</div>
+							{/if}
 						{/each}
 					</div>
 					{#if $batchCourses.length === 0}
 						<p class="muted">No courses for {$currentBatch}</p>
+					{/if}
+
+					<!-- Hidden Courses Section -->
+					{#if hiddenCourses.length > 0}
+						<div class="hidden-courses">
+							<h4>Hidden Courses ({hiddenCourses.length})</h4>
+							<div class="hidden-list">
+								{#each hiddenCourses as { original: course }}
+									<div class="hidden-item">
+										<span
+											>{course.courseCode.split("-")[0]} -
+											{course.courseName}</span
+										>
+										<button
+											class="restore-btn"
+											onclick={() =>
+												toggleExclusion(
+													course.courseCode,
+												)}>Restore</button
+										>
+									</div>
+								{/each}
+							</div>
+						</div>
 					{/if}
 				</div>
 
@@ -1693,6 +1790,12 @@
 		transform: translateY(-1px);
 	}
 
+	.header-right-group {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
 	.action-btn {
 		display: flex;
 		align-items: center;
@@ -1710,6 +1813,93 @@
 
 	.icon svg {
 		display: block;
+	}
+
+	.remove-btn {
+		width: 28px;
+		height: 28px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(255, 255, 255, 0.03);
+		color: #555;
+		border: 1px solid transparent;
+		border-radius: 50%;
+		cursor: pointer;
+		font-size: 1.1rem;
+		line-height: 0;
+		transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+		margin-left: 0;
+		flex-shrink: 0;
+	}
+
+	.remove-btn:hover {
+		background: #1a0a0a;
+		color: #ff4444;
+		border-color: #331111;
+		transform: scale(1.1);
+	}
+
+	.hidden-courses {
+		margin-top: 2.5rem;
+		padding-top: 1.5rem;
+		border-top: 1px dashed #222;
+		opacity: 0.6;
+		transition: opacity 0.2s;
+	}
+
+	.hidden-courses:hover {
+		opacity: 1;
+	}
+
+	.hidden-courses h4 {
+		margin: 0 0 1rem 0;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: #444;
+		font-weight: 600;
+	}
+
+	.hidden-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 0.75rem;
+	}
+
+	.hidden-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.6rem 0.9rem;
+		background: #050505;
+		border: 1px solid #151515;
+		border-radius: 6px;
+		font-size: 0.8rem;
+		color: #666;
+		transition: border-color 0.2s;
+	}
+
+	.hidden-item:hover {
+		border-color: #333;
+	}
+
+	.restore-btn {
+		background: #111;
+		border: 1px solid #222;
+		color: #888;
+		padding: 0.3rem 0.7rem;
+		border-radius: 4px;
+		font-size: 0.7rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.restore-btn:hover {
+		background: #eee;
+		color: #000;
+		border-color: #fff;
 	}
 
 	@media (max-width: 700px) {
