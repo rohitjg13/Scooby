@@ -1,0 +1,1727 @@
+<script lang="ts">
+	import { onMount } from "svelte";
+	import type { Course } from "$lib/types";
+	import { DAYS, parseDays, timeToMinutes, minutesToTime } from "$lib/types";
+	import {
+		allCourses,
+		currentBatch,
+		selectedCourses,
+		searchQuery,
+		batchCourses,
+		filteredCourses,
+		getConflicts,
+	} from "$lib/timetableStore";
+	import { toPng } from "html-to-image";
+	import { createEvents } from "ics";
+	import type { EventAttributes } from "ics";
+
+	let loading = $state(true);
+	let error = $state("");
+	let batchInput = $state("");
+	let searchInput = $state("");
+	let batchError = $state("");
+
+	// Helper to safely trigger download
+	function triggerDownload(blobOrUrl: Blob | string, filename: string) {
+		const link = document.createElement("a");
+		if (typeof blobOrUrl === "string") {
+			link.href = blobOrUrl;
+		} else {
+			link.href = URL.createObjectURL(blobOrUrl);
+		}
+		link.download = filename;
+		document.body.appendChild(link);
+		link.click();
+
+		// Wait before cleaning up to ensure browser captures the download
+		setTimeout(() => {
+			document.body.removeChild(link);
+			if (typeof blobOrUrl !== "string") {
+				URL.revokeObjectURL(link.href);
+			}
+		}, 100);
+	}
+
+	// Helper to get next occurrence of a day
+	function getNextDayDate(dayName: string): Date {
+		const daysMap: Record<string, number> = {
+			Sunday: 0,
+			Monday: 1,
+			Tuesday: 2,
+			Wednesday: 3,
+			Thursday: 4,
+			Friday: 5,
+			Saturday: 6,
+		};
+		const today = new Date();
+		const targetDay = daysMap[dayName];
+		const currentDay = today.getDay();
+
+		let daysUntil = (targetDay - currentDay + 7) % 7;
+		if (daysUntil === 0) daysUntil = 7; // Start next week if today
+
+		const nextDate = new Date(today);
+		nextDate.setDate(today.getDate() + daysUntil);
+		return nextDate;
+	}
+
+	// Helper to parse HH:MM for ICS
+	function parseTimeParts(timeStr: string): [number, number] {
+		const mins = timeToMinutes(timeStr);
+		return [Math.floor(mins / 60), mins % 60];
+	}
+
+	async function downloadImage() {
+		const node = document.getElementById("timetable-calendar");
+		if (!node) return;
+
+		try {
+			const dataUrl = await toPng(node, { backgroundColor: "#000000" });
+			const cleanBatch = ($currentBatch || "custom").replace(
+				/[^a-z0-9]/gi,
+				"_",
+			);
+			triggerDownload(dataUrl, `timetable-${cleanBatch}.png`);
+		} catch (err) {
+			console.error("Failed to download image", err);
+			alert("Failed to download image");
+		}
+	}
+
+	async function exportCalendar() {
+		const effectiveBatch = getEffectiveCoursesList($batchCourses);
+		const effectiveSelected = getEffectiveCoursesList($selectedCourses);
+		const allEffective = [...effectiveBatch, ...effectiveSelected];
+
+		const events: EventAttributes[] = [];
+		const semesterEndDate = new Date();
+		semesterEndDate.setMonth(semesterEndDate.getMonth() + 4); // 4 months from now
+		const untilParts = [
+			semesterEndDate.getFullYear(),
+			semesterEndDate.getMonth() + 1,
+			semesterEndDate.getDate(),
+		] as [number, number, number];
+
+		allEffective.forEach((course) => {
+			if (!course.day || !course.startTime || !course.endTime) return;
+
+			const courseDays = parseDays(course.day);
+			const [startH, startM] = parseTimeParts(course.startTime);
+			const [endH, endM] = parseTimeParts(course.endTime);
+
+			const durationMins = endH * 60 + endM - (startH * 60 + startM);
+			const duration = {
+				hours: Math.floor(durationMins / 60),
+				minutes: durationMins % 60,
+			};
+
+			courseDays.forEach((dayStr) => {
+				const startDate = getNextDayDate(dayStr);
+
+				events.push({
+					start: [
+						startDate.getFullYear(),
+						startDate.getMonth() + 1,
+						startDate.getDate(),
+						startH,
+						startM,
+					],
+					duration,
+					title: `${course.courseCode.split("-")[0]} - ${course.courseName}`,
+					description: `Faculty: ${course.faculty}\nType: ${course.courseType}\nComponent: ${course.component || course.slot}`,
+					location: course.room,
+					recurrenceRule: `FREQ=WEEKLY;INTERVAL=1;UNTIL=${untilParts[0]}${untilParts[1].toString().padStart(2, "0")}${untilParts[2].toString().padStart(2, "0")}T235959Z`,
+					uid: `${course.courseCode}-${dayStr}-${Date.now()}@scooby.app`,
+					calName: "Scooby Timetable",
+				});
+			});
+		});
+
+		createEvents(events, (error, value) => {
+			if (error) {
+				console.error(error);
+				alert("Failed to create calendar file");
+				return;
+			}
+			const blob = new Blob([value], {
+				type: "text/calendar;charset=utf-8",
+			});
+			const cleanBatch = ($currentBatch || "custom").replace(
+				/[^a-z0-9]/gi,
+				"_",
+			);
+			triggerDownload(blob, `timetable-${cleanBatch}.ics`);
+		});
+	}
+
+	let stateLoaded = false;
+
+	onMount(async () => {
+		// Restore state from localStorage
+		try {
+			const savedBatch = localStorage.getItem("scooby_batch");
+			if (savedBatch) currentBatch.set(savedBatch);
+
+			const savedSelected = localStorage.getItem("scooby_selected");
+			if (savedSelected) {
+				selectedCourses.set(JSON.parse(savedSelected));
+			}
+
+			const savedSwapped = localStorage.getItem("scooby_swapped");
+			if (savedSwapped) {
+				swappedCourseCodes = new Map(JSON.parse(savedSwapped));
+			}
+		} catch (e) {
+			console.error("Failed to restore state", e);
+		} finally {
+			stateLoaded = true;
+		}
+
+		try {
+			const response = await fetch("/api/timetable");
+			const data = await response.json();
+
+			if (data.error) {
+				error = data.error;
+			} else {
+				allCourses.set(data.courses);
+			}
+		} catch (e) {
+			error = "Failed to load timetable data";
+		} finally {
+			loading = false;
+		}
+	});
+
+	// Persist state changes
+	$effect(() => {
+		if (stateLoaded) {
+			localStorage.setItem("scooby_batch", $currentBatch);
+		}
+	});
+
+	$effect(() => {
+		if (stateLoaded) {
+			localStorage.setItem(
+				"scooby_selected",
+				JSON.stringify($selectedCourses),
+			);
+		}
+	});
+
+	$effect(() => {
+		if (stateLoaded) {
+			localStorage.setItem(
+				"scooby_swapped",
+				JSON.stringify(Array.from(swappedCourseCodes.entries())),
+			);
+		}
+	});
+
+	// Get all unique batch codes from courses
+	function getAllBatches(): string[] {
+		const batches = new Set<string>();
+		$allCourses.forEach((course) => {
+			if (course.major) {
+				course.major.split(/[\s,]+/).forEach((b) => {
+					if (b.trim()) batches.add(b.trim().toUpperCase());
+				});
+			}
+		});
+		return [...batches].sort();
+	}
+
+	// Filter batches based on input
+	let batchSuggestions = $derived(() => {
+		if (!batchInput || batchInput.length < 1) return [];
+		const query = batchInput.toUpperCase();
+		return getAllBatches()
+			.filter((b) => b.includes(query))
+			.slice(0, 15);
+	});
+
+	function selectBatch(batch: string) {
+		batchInput = batch;
+		currentBatch.set(batch);
+		batchError = "";
+	}
+
+	function handleBatchSubmit() {
+		if (!batchInput.trim()) return;
+
+		const input = batchInput.trim().toUpperCase();
+		const validBatches = getAllBatches();
+
+		if (validBatches.includes(input)) {
+			currentBatch.set(input);
+			batchError = "";
+		} else {
+			batchError = "Invalid batch. Please select from suggestions.";
+		}
+	}
+
+	function handleSearch() {
+		searchQuery.set(searchInput);
+	}
+
+	function addCourse(course: Course) {
+		const conflicts = getConflicts(course, $batchCourses, $selectedCourses);
+		if (conflicts.length > 0) return;
+
+		selectedCourses.update((courses) => {
+			if (courses.find((c) => c.courseCode === course.courseCode))
+				return courses;
+			return [...courses, course];
+		});
+		searchInput = "";
+		searchQuery.set("");
+	}
+
+	function removeCourse(course: Course) {
+		selectedCourses.update((courses) =>
+			courses.filter((c) => c.courseCode !== course.courseCode),
+		);
+	}
+
+	function isSelected(course: Course): boolean {
+		return $selectedCourses.some((c) => c.courseCode === course.courseCode);
+	}
+
+	function isBatchCourse(course: Course): boolean {
+		return $batchCourses.some((c) => c.courseCode === course.courseCode);
+	}
+
+	function reset() {
+		currentBatch.set("");
+		selectedCourses.set([]);
+		batchInput = "";
+		searchInput = "";
+		searchQuery.set("");
+	}
+
+	// Convert slot/section to readable component type
+	function getComponentType(slot: string | undefined): string {
+		if (!slot) return "";
+		const upper = slot.toUpperCase();
+		if (upper.startsWith("LEC")) return "Lecture";
+		if (upper.startsWith("TUT")) return "Tutorial";
+		if (upper.startsWith("PRAC")) return "Practical";
+		return "";
+	}
+
+	// Store for swapped components: original courseCode -> new courseCode
+	let swappedCourseCodes = $state<Map<string, string>>(new Map());
+
+	function getBaseCourseCode(courseCode: string): string {
+		return courseCode.split("-")[0];
+	}
+
+	function getComponentPrefix(course: Course): string {
+		const compVal = course.component?.toUpperCase() || "";
+		if (compVal.startsWith("LEC")) return "LEC";
+		if (compVal.startsWith("TUT")) return "TUT";
+		if (compVal.startsWith("PRAC")) return "PRAC";
+
+		const slotVal = course.slot?.toUpperCase() || "";
+		if (slotVal.startsWith("LEC")) return "LEC";
+		if (slotVal.startsWith("TUT")) return "TUT";
+		if (slotVal.startsWith("PRAC")) return "PRAC";
+
+		return "";
+	}
+
+	function getSection(course: Course): string {
+		return course.slot || course.component || "";
+	}
+
+	function getAlternativeComponents(course: Course): Course[] {
+		const baseCode = getBaseCourseCode(course.courseCode);
+		const prefix = getComponentPrefix(course);
+
+		if (!prefix) return [];
+
+		// Get all courses matching base & prefix
+		// We no longer exclude the current section so it appears in the list
+		const candidates = $allCourses.filter((c) => {
+			if (getBaseCourseCode(c.courseCode) !== baseCode) return false;
+			if (getComponentPrefix(c) !== prefix) return false;
+			return true;
+		});
+
+		// Return unique sections only (deduplicate by courseCode)
+		const unique = new Map<string, Course>();
+		candidates.forEach((c) => {
+			if (!unique.has(c.courseCode)) {
+				unique.set(c.courseCode, c);
+			}
+		});
+
+		return Array.from(unique.values()).sort((a, b) =>
+			getSection(a).localeCompare(getSection(b)),
+		);
+	}
+
+	function swapComponent(originalCode: string, newCode: string) {
+		swappedCourseCodes.set(originalCode, newCode);
+		swappedCourseCodes = new Map(swappedCourseCodes);
+	}
+
+	function resetSwap(originalCode: string) {
+		swappedCourseCodes.delete(originalCode);
+		swappedCourseCodes = new Map(swappedCourseCodes);
+	}
+
+	// Get flattened list of effective courses (handling swaps)
+	function getEffectiveCoursesList(sourceCourses: Course[]): Course[] {
+		// First, identify all unique course codes in source
+		const uniqueCodes = new Set(sourceCourses.map((c) => c.courseCode));
+
+		let result: Course[] = [];
+
+		uniqueCodes.forEach((code) => {
+			// Check if this code is swapped
+			if (swappedCourseCodes.has(code)) {
+				const newCode = swappedCourseCodes.get(code)!;
+				// Find all rows for the new code in *all* courses
+				const newRows = $allCourses.filter(
+					(c) => c.courseCode === newCode,
+				);
+				result.push(...newRows);
+			} else {
+				// Keep original rows
+				result.push(
+					...sourceCourses.filter((c) => c.courseCode === code),
+				);
+			}
+		});
+
+		return result;
+	}
+
+	// Get unique courses for display (deduplicated by code)
+	function getUniqueDisplayCourses(
+		sourceCourses: Course[],
+	): { original: Course; effective: Course; isSwapped: boolean }[] {
+		const uniqueMap = new Map<string, Course>(); // code -> first row
+
+		sourceCourses.forEach((c) => {
+			if (!uniqueMap.has(c.courseCode)) {
+				uniqueMap.set(c.courseCode, c);
+			}
+		});
+
+		return Array.from(uniqueMap.values()).map((original) => {
+			const isSwapped = swappedCourseCodes.has(original.courseCode);
+			let effective = original;
+
+			if (isSwapped) {
+				const newCode = swappedCourseCodes.get(original.courseCode);
+				const newCourse = $allCourses.find(
+					(c) => c.courseCode === newCode,
+				);
+				if (newCourse) effective = newCourse;
+			}
+
+			return { original, effective, isSwapped };
+		});
+	}
+
+	// Track which course is showing swap dropdown
+	let showingSwapFor = $state<string | null>(null);
+
+	function toggleSwapDropdown(courseCode: string) {
+		if (showingSwapFor === courseCode) {
+			showingSwapFor = null;
+		} else {
+			showingSwapFor = courseCode;
+		}
+	}
+
+	// Calendar visualization
+	interface CalendarBlock {
+		course: Course;
+		day: string;
+		startMin: number;
+		endMin: number;
+		isAdded: boolean;
+	}
+
+	function buildCalendar(): {
+		days: string[];
+		minTime: number;
+		maxTime: number;
+		visibleMin: number;
+		visibleMax: number;
+		blocks: CalendarBlock[];
+	} {
+		// Get effective courses (with swaps applied) across all rows
+		const effectiveBatch = getEffectiveCoursesList($batchCourses);
+		const effectiveSelected = getEffectiveCoursesList($selectedCourses);
+		const courses = [...effectiveBatch, ...effectiveSelected];
+
+		const usedDays = new Set<string>();
+		const blocks: CalendarBlock[] = [];
+		let minTime = 24 * 60;
+		let maxTime = 0;
+
+		courses.forEach((course) => {
+			if (!course.day || !course.startTime || !course.endTime) return;
+
+			const days = parseDays(course.day);
+			const startMin = timeToMinutes(course.startTime);
+			const endMin = timeToMinutes(course.endTime);
+
+			if (startMin >= endMin) return;
+
+			minTime = Math.min(minTime, startMin);
+			maxTime = Math.max(maxTime, endMin);
+
+			days.forEach((day) => {
+				usedDays.add(day);
+				blocks.push({
+					course,
+					day,
+					startMin,
+					endMin,
+					isAdded: isSelected(course),
+				});
+			});
+		});
+
+		// Round to nearest hour
+		minTime = Math.floor(minTime / 60) * 60;
+		maxTime = Math.ceil(maxTime / 60) * 60;
+
+		// Ensure we have at least some range
+		if (minTime >= maxTime) {
+			minTime = 8 * 60;
+			maxTime = 18 * 60;
+		}
+
+		// Use same values for visible/coordinate system
+		const visibleMin = minTime;
+		const visibleMax = maxTime;
+
+		const days = DAYS.filter((d) => usedDays.has(d));
+		return { days, minTime, maxTime, visibleMin, visibleMax, blocks };
+	}
+
+	function getTimeLabels(
+		minTime: number,
+		maxTime: number,
+	): { time: number; label: string }[] {
+		const labels: { time: number; label: string }[] = [];
+		for (let t = minTime; t <= maxTime; t += 60) {
+			labels.push({ time: t, label: minutesToTime(t) });
+		}
+		return labels;
+	}
+
+	let calendar = $derived(buildCalendar());
+	let timeLabels = $derived(
+		getTimeLabels(calendar.visibleMin, calendar.visibleMax),
+	);
+	let totalMinutes = $derived(calendar.maxTime - calendar.minTime);
+
+	const VERTICAL_PADDING = 20;
+	// Calculate calendar height: 60px per hour + padding
+	let calendarHeight = $derived(
+		Math.max(500, (totalMinutes / 60) * 60) + VERTICAL_PADDING * 2,
+	);
+</script>
+
+<main class="main">
+	{#if loading}
+		<div class="center">
+			<p class="muted">Loading...</p>
+		</div>
+	{:else if error}
+		<div class="center">
+			<h2>No Timetable</h2>
+			<p class="muted">{error}</p>
+			<p class="muted small">
+				Put your file in: <code>static/data/</code>
+			</p>
+		</div>
+	{:else if !$currentBatch}
+		<div class="center">
+			<div class="batch-form">
+				<h1>Scooby</h1>
+				<p class="muted">Enter your batch code</p>
+				<form
+					onsubmit={(e) => {
+						e.preventDefault();
+						handleBatchSubmit();
+					}}
+				>
+					<div class="batch-input-wrap">
+						<input
+							type="text"
+							class="input"
+							class:error={!!batchError}
+							placeholder="e.g. ELC26, DES2YR, BMS11"
+							bind:value={batchInput}
+							oninput={() => (batchError = "")}
+							autocomplete="off"
+						/>
+						{#if batchSuggestions().length > 0}
+							<div class="batch-suggestions">
+								{#each batchSuggestions() as batch}
+									<button
+										type="button"
+										class="batch-option"
+										onclick={() => selectBatch(batch)}
+									>
+										{batch}
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
+					{#if batchError}
+						<div class="error-msg">{batchError}</div>
+					{/if}
+					<button type="submit" class="btn primary">Load</button>
+				</form>
+			</div>
+		</div>
+	{:else}
+		<div class="app">
+			<!-- Header -->
+			<header class="header">
+				<div class="header-left">
+					<h1>Scooby</h1>
+					<span class="tag">{$currentBatch}</span>
+				</div>
+
+				<div class="search-wrap">
+					<input
+						type="text"
+						class="input"
+						placeholder="Add course/UWE/CCC"
+						bind:value={searchInput}
+						oninput={handleSearch}
+					/>
+					{#if $filteredCourses.length > 0}
+						<div class="dropdown">
+							{#each $filteredCourses as course}
+								{@const conflicts = getConflicts(
+									course,
+									$batchCourses,
+									$selectedCourses,
+								)}
+								{@const hasConflict = conflicts.length > 0}
+								{@const selected = isSelected(course)}
+								{@const batch = isBatchCourse(course)}
+								<div
+									class="dropdown-item"
+									class:dimmed={hasConflict}
+								>
+									<div class="item-info">
+										<div class="item-row">
+											<span class="mono"
+												>{course.courseCode.split(
+													"-",
+												)[0]}{#if getComponentType(course.component)}
+													<span class="comp-label"
+														>({getComponentType(
+															course.component,
+														)})</span
+													>{/if}</span
+											>
+											{#if course.day}
+												<span class="muted small"
+													>{course.day}
+													{course.startTime}-{course.endTime}</span
+												>
+											{/if}
+										</div>
+										<span class="item-name"
+											>{course.courseName}</span
+										>
+										{#if course.courseType || course.component}
+											<span class="item-type"
+												>{course.courseType}{course.courseType &&
+												course.component
+													? " • "
+													: ""}{course.component}</span
+											>
+										{/if}
+										{#if hasConflict}
+											<span class="conflict-note"
+												>⚠ Conflicts: {conflicts
+													.map(
+														(c) =>
+															`${c.courseCode.split("-")[0]}${getComponentType(c.component) ? ` (${getComponentType(c.component)})` : ""}`,
+													)
+													.join(", ")}</span
+											>
+										{/if}
+									</div>
+									<div class="item-action">
+										{#if batch}
+											<span class="tag small">Yours</span>
+										{:else if selected}
+											<button
+												class="btn small"
+												onclick={() =>
+													removeCourse(course)}
+												>Remove</button
+											>
+										{:else}
+											<button
+												class="btn small"
+												onclick={() =>
+													addCourse(course)}
+												disabled={hasConflict}
+											>
+												{hasConflict
+													? "Conflict"
+													: "Add"}
+											</button>
+										{/if}
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+
+				<div class="header-actions">
+					<button
+						class="btn secondary action-btn"
+						onclick={downloadImage}
+					>
+						<span class="icon">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								><path
+									d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+								/><circle cx="12" cy="13" r="4" /></svg
+							>
+						</span>
+						Save Image
+					</button>
+					<button
+						class="btn secondary action-btn"
+						onclick={exportCalendar}
+					>
+						<span class="icon">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								><rect
+									x="3"
+									y="4"
+									width="18"
+									height="18"
+									rx="2"
+									ry="2"
+								/><line x1="16" y1="2" x2="16" y2="6" /><line
+									x1="8"
+									y1="2"
+									x2="8"
+									y2="6"
+								/><line x1="3" y1="10" x2="21" y2="10" /></svg
+							>
+						</span>
+						Export Calendar
+					</button>
+					<button class="btn" onclick={reset}>Reset</button>
+				</div>
+			</header>
+
+			<!-- Calendar View -->
+			{#if calendar.days.length > 0}
+				<section class="calendar-section">
+					<div class="calendar-scroll-wrapper">
+						<div class="calendar-container" id="timetable-calendar">
+							<div
+								class="calendar"
+								style="--days: {calendar.days.length}"
+							>
+								<!-- Day headers -->
+								<div class="time-gutter"></div>
+								{#each calendar.days as day}
+									<div class="day-header">{day}</div>
+								{/each}
+
+								<!-- Time grid -->
+								<div
+									class="time-column"
+									style="height: {calendarHeight}px"
+								>
+									<div
+										style="position: absolute; top: {VERTICAL_PADDING}px; width: 100%; height: {(totalMinutes /
+											60) *
+											60}px"
+									>
+										{#each timeLabels as { time, label }}
+											<div
+												class="time-label"
+												style="top: {((time -
+													calendar.minTime) /
+													totalMinutes) *
+													100}%"
+											>
+												{label}
+											</div>
+										{/each}
+									</div>
+								</div>
+
+								<!-- Day columns with courses -->
+								{#each calendar.days as day, dayIndex}
+									<div
+										class="day-column"
+										style="height: {calendarHeight}px"
+									>
+										<!-- Content Wrapper to match Time Column -->
+										<div
+											style="position: absolute; top: {VERTICAL_PADDING}px; width: 100%; height: {(totalMinutes /
+												60) *
+												60}px"
+										>
+											<!-- Hour lines -->
+											{#each timeLabels as { time }}
+												<div
+													class="hour-line"
+													style="top: {((time -
+														calendar.minTime) /
+														totalMinutes) *
+														100}%"
+												></div>
+											{/each}
+
+											<!-- Course blocks -->
+											{#each calendar.blocks.filter((b) => b.day === day) as block}
+												{@const top =
+													((block.startMin -
+														calendar.minTime) /
+														totalMinutes) *
+													100}
+												{@const height = Math.max(
+													((block.endMin -
+														block.startMin) /
+														totalMinutes) *
+														100,
+													8,
+												)}
+												<div
+													class="course-block"
+													class:added={block.isAdded}
+													style="top: {top}%; height: {height}%; min-height: 45px"
+												>
+													<span class="block-code">
+														{block.course.courseCode.split(
+															"-",
+														)[0]}
+														{#if getComponentType(block.course.component)}
+															<span
+																class="comp-label"
+																>({getComponentType(
+																	block.course
+																		.component,
+																)})</span
+															>
+														{/if}
+													</span>
+													<span class="block-name"
+														>{block.course
+															.courseName}</span
+													>
+													{#if block.course.courseType || block.course.component}
+														<span
+															class="block-type"
+														>
+															{block.course
+																.courseType}{block
+																.course
+																.courseType &&
+															block.course
+																.component
+																? " • "
+																: ""}{block
+																.course
+																.component}
+														</span>
+													{/if}
+													<span class="block-room"
+														>{block.course
+															.room}</span
+													>
+												</div>
+											{/each}
+										</div>
+									</div>
+								{/each}
+							</div>
+						</div>
+					</div>
+				</section>
+			{/if}
+
+			<!-- Course Lists -->
+			<section class="lists">
+				<div class="list-box">
+					<h3>
+						Your Courses <span class="muted"
+							>({$batchCourses.length})</span
+						>
+					</h3>
+					<div class="courses-grid">
+						{#each getUniqueDisplayCourses($batchCourses) as { original: originalCourse, effective: course, isSwapped }}
+							{@const alternatives =
+								getAlternativeComponents(originalCourse)}
+							<div class="list-item" class:swapped={isSwapped}>
+								<div class="course-main-info">
+									<div class="course-header-row">
+										<span class="mono">
+											{course.courseCode.split("-")[0]}
+											{#if getComponentType(course.component)}
+												<span class="comp-label"
+													>({getComponentType(
+														course.component,
+													)})</span
+												>
+											{/if}
+										</span>
+										{#if alternatives.length > 0}
+											<button
+												class="swap-btn"
+												onclick={() =>
+													toggleSwapDropdown(
+														originalCourse.courseCode,
+													)}
+												title="Change section ({alternatives.length} alternatives)"
+											>
+												⇄ {getSection(course)}
+											</button>
+										{:else}
+											<span class="slot-label"
+												>{getSection(course)}</span
+											>
+										{/if}
+									</div>
+									<span class="item-name"
+										>{course.courseName}</span
+									>
+									{#if course.courseType || course.component}
+										<span class="item-type">
+											{course.courseType}{course.courseType &&
+											course.component
+												? " • "
+												: ""}{course.component}
+										</span>
+									{/if}
+									<span class="muted small">
+										{course.day}
+										{course.startTime}-{course.endTime} • {course.room}
+									</span>
+									{#if isSwapped}
+										<button
+											class="reset-swap-btn"
+											onclick={() =>
+												resetSwap(
+													originalCourse.courseCode,
+												)}
+										>
+											↩ Reset to {getSection(
+												originalCourse,
+											)}
+										</button>
+									{/if}
+								</div>
+
+								{#if showingSwapFor === originalCourse.courseCode && alternatives.length > 0}
+									<div class="swap-dropdown">
+										<div class="swap-header">
+											Change {getComponentType(
+												course.component,
+											) || "Section"}:
+										</div>
+										{#each alternatives as alt}
+											{@const conflicts = getConflicts(
+												alt,
+												getEffectiveCoursesList(
+													$batchCourses.filter(
+														(c) =>
+															c.courseCode !==
+															originalCourse.courseCode,
+													),
+												),
+												$selectedCourses,
+											)}
+											<button
+												class="swap-option"
+												class:has-conflict={conflicts.length >
+													0}
+												class:is-current={alt.courseCode ===
+													course.courseCode}
+												onclick={() => {
+													if (
+														alt.courseCode ===
+														course.courseCode
+													)
+														return;
+													swapComponent(
+														originalCourse.courseCode,
+														alt.courseCode,
+													);
+													showingSwapFor = null;
+												}}
+												disabled={conflicts.length > 0}
+											>
+												<span class="swap-slot">
+													{getSection(alt)}
+													{#if alt.courseCode === course.courseCode}
+														<span
+															class="current-badge"
+															>(Current)</span
+														>
+													{/if}
+												</span>
+												<span class="swap-time"
+													>{alt.day}
+													{alt.startTime}-{alt.endTime}</span
+												>
+												<span class="swap-room"
+													>{alt.room}</span
+												>
+												{#if conflicts.length > 0}
+													<span class="swap-conflict">
+														⚠ Conflicts with: {conflicts
+															.map(
+																(c) =>
+																	`${c.courseCode.split("-")[0]}${getComponentType(c.component) ? ` (${getComponentType(c.component)})` : ""}`,
+															)
+															.join(", ")}
+													</span>
+												{/if}
+											</button>
+										{/each}
+									</div>
+								{/if}
+							</div>
+						{/each}
+					</div>
+					{#if $batchCourses.length === 0}
+						<p class="muted">No courses for {$currentBatch}</p>
+					{/if}
+				</div>
+
+				{#if $selectedCourses.length > 0}
+					<div class="list-box">
+						<h3>
+							Added <span class="muted"
+								>({$selectedCourses.length})</span
+							>
+						</h3>
+						{#each $selectedCourses as course}
+							<div class="list-item added">
+								<div>
+									<span class="mono"
+										>{course.courseCode.split(
+											"-",
+										)[0]}{#if getComponentType(course.component)}
+											<span class="comp-label"
+												>({getComponentType(
+													course.component,
+												)})</span
+											>{/if}</span
+									>
+									<span class="item-name"
+										>{course.courseName}</span
+									>
+									{#if course.courseType || course.component}
+										<span class="item-type"
+											>{course.courseType}{course.courseType &&
+											course.component
+												? " • "
+												: ""}{course.component}</span
+										>
+									{/if}
+									<span class="muted small"
+										>{course.day}
+										{course.startTime}-{course.endTime}</span
+									>
+								</div>
+								<button
+									class="btn small"
+									onclick={() => removeCourse(course)}
+									>×</button
+								>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</section>
+		</div>
+	{/if}
+</main>
+
+<style>
+	* {
+		box-sizing: border-box;
+	}
+
+	.main {
+		min-height: 100vh;
+		background: #000;
+		color: #fff;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	}
+
+	.center {
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		padding: 2rem;
+	}
+
+	.batch-form {
+		width: 100%;
+		max-width: 280px;
+	}
+
+	.batch-form h1 {
+		margin-bottom: 0.5rem;
+	}
+	.batch-form p {
+		margin-bottom: 1.5rem;
+	}
+	.batch-form form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+	.batch-form .input {
+		text-align: center;
+		text-transform: uppercase;
+	}
+
+	.batch-input-wrap {
+		position: relative;
+	}
+
+	.batch-suggestions {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		background: #0a0a0a;
+		border: 1px solid #222;
+		border-radius: 6px;
+		margin-top: 4px;
+		max-height: 200px;
+		overflow-y: auto;
+		z-index: 100;
+	}
+
+	.batch-option {
+		display: block;
+		width: 100%;
+		padding: 0.6rem 0.75rem;
+		background: none;
+		border: none;
+		border-bottom: 1px solid #1a1a1a;
+		color: #fff;
+		font-size: 0.85rem;
+		font-family: "SF Mono", monospace;
+		cursor: pointer;
+		text-align: center;
+	}
+
+	.batch-option:last-child {
+		border-bottom: none;
+	}
+
+	.batch-option:hover {
+		background: #111;
+	}
+
+	code {
+		background: #111;
+		padding: 0.2rem 0.5rem;
+		border-radius: 4px;
+		font-family: monospace;
+	}
+
+	.muted {
+		color: #666;
+	}
+	.small {
+		font-size: 0.75rem;
+	}
+	.mono {
+		font-family: "SF Mono", monospace;
+		font-size: 0.85rem;
+	}
+	.comp-label {
+		color: #777;
+		font-weight: 400;
+		font-size: 0.75rem;
+	}
+
+	/* App layout */
+	.app {
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 1rem;
+	}
+
+	/* Header */
+	.header {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid #1a1a1a;
+		margin-bottom: 1.5rem;
+		flex-wrap: wrap;
+	}
+
+	.header-left {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.header h1 {
+		font-size: 1.25rem;
+		font-weight: 500;
+	}
+
+	.tag {
+		padding: 0.2rem 0.5rem;
+		background: #111;
+		border-radius: 4px;
+		font-size: 0.7rem;
+		color: #888;
+	}
+	.tag.small {
+		font-size: 0.65rem;
+		padding: 0.15rem 0.4rem;
+	}
+
+	.search-wrap {
+		flex: 1;
+		min-width: 200px;
+		max-width: 450px;
+		position: relative;
+	}
+
+	.dropdown {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		background: #0a0a0a;
+		border: 1px solid #222;
+		border-radius: 8px;
+		margin-top: 4px;
+		max-height: 350px;
+		overflow-y: auto;
+		z-index: 100;
+	}
+
+	.dropdown-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 1rem;
+		padding: 0.6rem 0.75rem;
+		border-bottom: 1px solid #1a1a1a;
+	}
+	.dropdown-item:last-child {
+		border-bottom: none;
+	}
+	.dropdown-item:hover {
+		background: #111;
+	}
+	.header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-left: auto;
+	}
+
+	.dropdown-item.dimmed {
+		opacity: 0.5;
+	}
+
+	.item-info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+	.item-row {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+	}
+	.item-name {
+		font-size: 0.8rem;
+		color: #888;
+	}
+	.item-type {
+		font-size: 0.7rem;
+		color: #555;
+		font-style: italic;
+	}
+	.conflict-note {
+		font-size: 0.7rem;
+		color: #555;
+		font-style: italic;
+	}
+
+	.item-action {
+		flex-shrink: 0;
+	}
+
+	/* Calendar */
+	.calendar-section {
+		margin-bottom: 2rem;
+	}
+
+	.calendar-scroll-wrapper {
+		overflow-x: auto;
+		overflow-y: hidden; /* Prevent Y scrollbar on wrapper */
+		background: #050505;
+		border: 1px solid #1a1a1a;
+		border-radius: 8px;
+		padding: 0 20px;
+	}
+
+	.calendar-container {
+		overflow: visible;
+		height: auto;
+		min-width: max-content;
+		background: #050505;
+	}
+
+	.calendar {
+		display: grid;
+		grid-template-columns: 70px repeat(var(--days), minmax(120px, 1fr));
+		min-width: max-content;
+		position: relative;
+		height: max-content;
+	}
+
+	.time-gutter {
+		background: #050505;
+		border-right: 1px solid #1a1a1a;
+		border-bottom: 1px solid #1a1a1a;
+	}
+
+	.day-header {
+		padding: 0.75rem;
+		text-align: center;
+		font-size: 0.85rem;
+		font-weight: 500;
+		background: #050505;
+		border-bottom: 1px solid #1a1a1a;
+		border-right: 1px solid #111;
+	}
+	.day-header:last-child {
+		border-right: none;
+	}
+
+	.time-column {
+		position: relative;
+		background: #050505;
+		border-right: 1px solid #1a1a1a;
+	}
+
+	.time-label {
+		position: absolute;
+		right: 8px;
+		transform: translateY(-50%);
+		font-size: 0.65rem;
+		color: #555;
+		font-family: "SF Mono", monospace;
+		white-space: nowrap;
+	}
+
+	.day-column {
+		position: relative;
+		border-right: 1px solid #111;
+	}
+	.day-column:last-child {
+		border-right: none;
+	}
+
+	.hour-line {
+		position: absolute;
+		left: 0;
+		right: 0;
+		height: 1px;
+		background: #1a1a1a;
+	}
+
+	.course-block {
+		position: absolute;
+		left: 2px;
+		right: 2px;
+		background: #111;
+		border: 1px solid #222;
+		border-radius: 4px;
+		padding: 4px 6px;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+		cursor: pointer;
+		transition:
+			z-index 0s,
+			transform 0.15s,
+			box-shadow 0.15s;
+	}
+
+	.course-block:hover {
+		z-index: 50;
+		transform: scale(1.05);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+		overflow: visible;
+		min-height: fit-content;
+		background: #1a1a1a;
+	}
+
+	.course-block:hover .block-name,
+	.course-block:hover .block-code,
+	.course-block:hover .block-type,
+	.course-block:hover .block-room {
+		white-space: normal;
+		overflow: visible;
+	}
+
+	.course-block.added {
+		border-left: 2px solid #444;
+	}
+
+	.block-code {
+		font-family: "SF Mono", monospace;
+		font-size: 0.7rem;
+		font-weight: 500;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.block-name {
+		font-size: 0.65rem;
+		color: #888;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.block-type {
+		font-size: 0.6rem;
+		color: #666;
+		font-style: italic;
+	}
+
+	.block-room {
+		font-size: 0.6rem;
+		color: #555;
+	}
+
+	/* Lists */
+	.lists {
+		display: grid;
+		gap: 1.5rem;
+	}
+
+	.list-box h3 {
+		font-size: 0.9rem;
+		font-weight: 500;
+		margin-bottom: 0.75rem;
+	}
+
+	.courses-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1rem;
+		margin-bottom: 2rem;
+	}
+
+	.list-item {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		padding: 0.6rem 0.75rem;
+		background: #0a0a0a;
+		border: 1px solid #151515;
+		border-radius: 6px;
+		margin-bottom: 0.5rem;
+	}
+
+	.list-item.added {
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: flex-start;
+		border-left: 2px solid #333;
+	}
+
+	.list-item.swapped {
+		border-left: 2px solid #555;
+		background: #0d0d0d;
+	}
+
+	.course-main-info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		flex: 1;
+	}
+
+	.course-header-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.swap-btn {
+		padding: 0.3rem 0.6rem;
+		background: #fff;
+		border: 1px solid #fff;
+		border-radius: 4px;
+		color: #000;
+		font-size: 0.75rem;
+		font-weight: 600;
+		cursor: pointer;
+		font-family: "SF Mono", monospace;
+	}
+
+	.swap-btn:hover {
+		background: #e0e0e0;
+		border-color: #e0e0e0;
+	}
+
+	.slot-label {
+		font-size: 0.7rem;
+		color: #555;
+		font-family: "SF Mono", monospace;
+	}
+
+	.reset-swap-btn {
+		margin-top: 0.3rem;
+		padding: 0.2rem 0.4rem;
+		background: none;
+		border: 1px solid #333;
+		border-radius: 4px;
+		color: #666;
+		font-size: 0.65rem;
+		cursor: pointer;
+	}
+
+	.reset-swap-btn:hover {
+		background: #1a1a1a;
+		color: #888;
+	}
+
+	.swap-dropdown {
+		margin-top: 0.5rem;
+		padding-top: 0.5rem;
+		border-top: 1px solid #222;
+	}
+
+	.swap-header {
+		font-size: 0.7rem;
+		color: #666;
+		margin-bottom: 0.4rem;
+	}
+
+	.swap-option {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		align-items: center;
+		width: 100%;
+		padding: 0.5rem;
+		background: #111;
+		border: 1px solid #222;
+		border-radius: 4px;
+		margin-bottom: 0.3rem;
+		color: #fff;
+		font-size: 0.75rem;
+		cursor: pointer;
+		text-align: left;
+	}
+
+	.swap-option:hover:not(:disabled) {
+		background: #1a1a1a;
+		border-color: #333;
+	}
+
+	.swap-option:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.swap-option.has-conflict {
+		opacity: 0.5;
+	}
+
+	.swap-option.is-current {
+		border-color: #555;
+		background: #1a1a1a;
+		cursor: default;
+	}
+
+	.current-badge {
+		font-size: 0.65rem;
+		color: #888;
+		margin-left: 0.4rem;
+		font-weight: normal;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	}
+
+	.swap-slot {
+		font-family: "SF Mono", monospace;
+		font-weight: 500;
+	}
+
+	.swap-time {
+		color: #888;
+	}
+
+	.swap-room {
+		color: #666;
+	}
+
+	.swap-conflict {
+		color: #777;
+		font-style: italic;
+	}
+
+	/* Inputs */
+	.input {
+		width: 100%;
+		padding: 0.55rem 0.7rem;
+		background: #0a0a0a;
+		border: 1px solid #222;
+		border-radius: 6px;
+		color: #fff;
+		font-size: 0.85rem;
+	}
+
+	@media (max-width: 768px) {
+		.input {
+			font-size: 16px;
+		}
+	}
+	.input:focus {
+		outline: none;
+		border-color: #333;
+	}
+	.input::placeholder {
+		color: #444;
+	}
+
+	.input.error {
+		border-color: #ff4444;
+	}
+
+	.error-msg {
+		color: #ff4444;
+		font-size: 0.8rem;
+		margin-top: 0.5rem;
+		margin-bottom: 0.5rem;
+		text-align: left;
+	}
+
+	.btn {
+		padding: 0.5rem 0.7rem;
+		background: #111;
+		border: 1px solid #222;
+		border-radius: 5px;
+		color: #fff;
+		font-size: 0.8rem;
+		cursor: pointer;
+	}
+	.btn:hover {
+		background: #1a1a1a;
+		border-color: #333;
+	}
+	.btn:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+	.btn.primary {
+		background: #fff;
+		color: #000;
+		border-color: #fff;
+	}
+	.btn.primary:hover {
+		background: #ddd;
+	}
+	.btn.small {
+		padding: 0.3rem 0.5rem;
+		font-size: 0.7rem;
+	}
+
+	.btn.secondary {
+		background: #1a1a1a;
+		border: 1px solid #333;
+		color: #eee;
+		transition: all 0.2s;
+	}
+	.btn.secondary:hover {
+		background: #252525;
+		border-color: #555;
+		transform: translateY(-1px);
+	}
+
+	.action-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.4rem 0.9rem;
+		font-size: 0.85rem;
+		font-weight: 500;
+	}
+
+	.icon {
+		display: flex;
+		align-items: center;
+		color: #999;
+	}
+
+	.icon svg {
+		display: block;
+	}
+
+	@media (max-width: 700px) {
+		.header {
+			flex-direction: column;
+			align-items: stretch;
+		}
+		.search-wrap {
+			max-width: none;
+		}
+		.calendar {
+			min-width: 500px;
+		}
+	}
+</style>
