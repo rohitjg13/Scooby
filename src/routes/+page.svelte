@@ -669,7 +669,7 @@
 									class="input"
 									class:error={!!batchError}
 									class:valid={isValid}
-									placeholder="e.g. ELC26"
+									placeholder="e.g. ELC26, DES2YR, CSD21"
 									bind:value={batchInputs[i]}
 									oninput={() => (batchError = "")}
 									autocomplete="off"
