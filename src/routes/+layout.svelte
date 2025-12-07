@@ -23,6 +23,15 @@
 
 <div class="app-container">
 	{@render children()}
+	<footer class="footer">
+		<p>
+			Built and Maintained by <a
+				href="https://github.com/rohitjg13"
+				target="_blank"
+				rel="noopener noreferrer">Rohit J G</a
+			>
+		</p>
+	</footer>
 </div>
 
 <style>
@@ -30,5 +39,26 @@
 		min-height: 100vh;
 		display: flex;
 		flex-direction: column;
+	}
+
+	.footer {
+		margin-top: auto;
+		padding: 2rem;
+		text-align: center;
+		color: var(--text-secondary);
+		font-size: 0.875rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.footer a {
+		color: var(--text);
+		text-decoration: none;
+		font-weight: 500;
+		transition: opacity 0.2s;
+	}
+
+	.footer a:hover {
+		opacity: 0.8;
+		text-decoration: underline;
 	}
 </style>

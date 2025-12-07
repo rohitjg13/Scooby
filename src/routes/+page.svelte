@@ -1277,14 +1277,16 @@
 	}
 
 	.main {
-		min-height: 100vh;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
 		background: #000;
 		color: #fff;
 		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 	}
 
 	.center {
-		min-height: 100vh;
+		flex: 1;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -1379,6 +1381,7 @@
 
 	/* App layout */
 	.app {
+		width: 100%;
 		max-width: 1400px;
 		margin: 0 auto;
 		padding: 1rem;
