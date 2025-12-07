@@ -1,42 +1,50 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import * as XLSX from 'xlsx';
-import * as fs from 'fs';
-import * as path from 'path';
 import type { Course } from '$lib/types';
 
-export const GET: RequestHandler = async () => {
-    try {
-        const dataDir = path.join(process.cwd(), 'static', 'data');
+// Import data files dynamically using Vite
+const dataFiles = import.meta.glob('$lib/data/*.{xlsx,xls,csv}', { query: '?url', import: 'default', eager: true });
 
-        if (!fs.existsSync(dataDir)) {
-            return json({ error: 'Data directory not found.' }, { status: 404 });
+export const GET: RequestHandler = async ({ fetch }) => {
+    try {
+        const filePaths = Object.keys(dataFiles);
+        if (filePaths.length === 0) {
+            return json({ error: 'No timetable file found in src/lib/data/' }, { status: 404 });
         }
 
-        const files = fs.readdirSync(dataDir);
-        const xlsxFile = files.find(f => f.endsWith('.xlsx') || f.endsWith('.xls'));
-        const csvFile = files.find(f => f.endsWith('.csv'));
+        const xlsxFile = filePaths.find(f => f.endsWith('.xlsx') || f.endsWith('.xls'));
+        const csvFile = filePaths.find(f => f.endsWith('.csv'));
+        const targetFile = xlsxFile || csvFile;
 
+        if (!targetFile) {
+            return json({ error: 'No supported file found.' }, { status: 404 });
+        }
+
+        const url = dataFiles[targetFile] as string;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch data file: ${response.statusText}`);
+        }
+
+        const buffer = await response.arrayBuffer();
         let courses: Course[] = [];
 
-        if (xlsxFile) {
-            const filePath = path.join(dataDir, xlsxFile);
-            const buffer = fs.readFileSync(filePath);
-            const workbook = XLSX.read(buffer, { type: 'buffer' });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet);
-            courses = parseData(jsonData);
-        } else if (csvFile) {
-            const filePath = path.join(dataDir, csvFile);
-            const text = fs.readFileSync(filePath, 'utf-8');
+        if (targetFile.endsWith('.csv')) {
+            const decoder = new TextDecoder('utf-8');
+            const text = decoder.decode(buffer);
             const workbook = XLSX.read(text, { type: 'string' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet);
             courses = parseData(jsonData);
         } else {
-            return json({ error: 'No timetable file found in static/data/' }, { status: 404 });
+            const workbook = XLSX.read(buffer, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet);
+            courses = parseData(jsonData);
         }
 
         return json({ courses });
