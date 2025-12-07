@@ -20,6 +20,7 @@
 	let batchInputs = $state([""]);
 	let searchInput = $state("");
 	let batchError = $state("");
+	let showDownloadModal = $state(false);
 
 	// Helper to safely trigger download
 	function triggerDownload(blobOrUrl: Blob | string, filename: string) {
@@ -151,6 +152,7 @@
 				"_",
 			);
 			triggerDownload(blob, `timetable-${cleanBatch}.ics`);
+			showDownloadModal = true;
 		});
 	}
 
@@ -1240,6 +1242,25 @@
 			</section>
 		</div>
 	{/if}
+
+	<!-- Download Instructions Modal -->
+	{#if showDownloadModal}
+		<div class="modal-overlay">
+			<div class="modal">
+				<h2>Calendar Downloaded!</h2>
+				<p>Your <code>.ics</code> file has been downloaded.</p>
+				<p class="instruction">
+					Please <strong>open the downloaded file</strong> to import these
+					events into your calendar application (Apple Calendar, Google
+					Calendar, Outlook, etc.).
+				</p>
+				<button
+					class="btn primary"
+					onclick={() => (showDownloadModal = false)}>Got it</button
+				>
+			</div>
+		</div>
+	{/if}
 </main>
 
 <style>
@@ -2028,6 +2049,75 @@
 		display: flex;
 		gap: 0.5rem;
 		flex-wrap: wrap;
+	}
+
+	/* Modal */
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.8);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 1000;
+		backdrop-filter: blur(4px);
+		animation: fadeIn 0.2s ease-out;
+	}
+
+	.modal {
+		background: #111;
+		border: 1px solid #333;
+		padding: 2rem;
+		border-radius: 12px;
+		max-width: 400px;
+		width: 90%;
+		text-align: center;
+		box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+		animation: scaleIn 0.2s ease-out;
+	}
+
+	.modal h2 {
+		margin-top: 0;
+		color: #fff;
+		margin-bottom: 1rem;
+	}
+
+	.modal p {
+		color: #ccc;
+		margin-bottom: 1rem;
+		line-height: 1.5;
+	}
+
+	.modal .instruction {
+		background: #1a1a1a;
+		padding: 1rem;
+		border-radius: 8px;
+		font-size: 0.9rem;
+		border: 1px dashed #444;
+		margin-bottom: 1.5rem;
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes scaleIn {
+		from {
+			transform: scale(0.9);
+			opacity: 0;
+		}
+		to {
+			transform: scale(1);
+			opacity: 1;
+		}
 	}
 
 	@media (max-width: 700px) {
