@@ -152,7 +152,16 @@
 				"_",
 			);
 			triggerDownload(blob, `timetable-${cleanBatch}.ics`);
-			showDownloadModal = true;
+
+			// Don't show modal ONLY on Safari on iOS as Safari autoopens ICS
+			const ua = navigator.userAgent;
+			const isIOS = /iPhone|iPad|iPod/.test(ua);
+			const isNonSafariIOS = /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+			const isIOSSafari = isIOS && !isNonSafariIOS;
+
+			if (!isIOSSafari) {
+				showDownloadModal = true;
+			}
 		});
 	}
 
