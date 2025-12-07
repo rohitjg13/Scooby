@@ -5,8 +5,8 @@ import { parseDays, timesOverlap } from './types';
 // Store for all courses loaded from the spreadsheet
 export const allCourses = writable<Course[]>([]);
 
-// Store for the current batch code
-export const currentBatch = writable<string>('');
+// Store for the current batch codes (array of strings)
+export const currentBatches = writable<string[]>([]);
 
 // Store for selected/added courses
 export const selectedCourses = writable<Course[]>([]);
@@ -14,15 +14,27 @@ export const selectedCourses = writable<Course[]>([]);
 // Store for search query
 export const searchQuery = writable<string>('');
 
-// Derived store for courses allocated to the current batch
+// Derived store for courses allocated to the current batches
 export const batchCourses = derived(
-    [allCourses, currentBatch],
-    ([$allCourses, $currentBatch]) => {
-        if (!$currentBatch) return [];
-        const batchUpper = $currentBatch.toUpperCase().trim();
+    [allCourses, currentBatches],
+    ([$allCourses, $currentBatches]) => {
+        if (!$currentBatches || $currentBatches.length === 0) return [];
+
+        // Optimize: Convert batches to Set/canonical form for faster lookup if needed, 
+        // but for <3 items and string matching logic, simple iteration is fine.
+        const validBatches = $currentBatches
+            .map(b => b.toUpperCase().trim())
+            .filter(b => b.length > 0);
+
+        if (validBatches.length === 0) return [];
+
         return $allCourses.filter(course => {
+            if (!course.major) return false;
             const majors = course.major.toUpperCase().split(/[\s,]+/);
-            return majors.some(m => m.includes(batchUpper) || batchUpper.includes(m));
+            // Check if ANY of the user's batches matches ANY of the course's majors
+            return validBatches.some(userBatch =>
+                majors.some(m => m.includes(userBatch) || userBatch.includes(m))
+            );
         });
     }
 );

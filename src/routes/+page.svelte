@@ -4,7 +4,7 @@
 	import { DAYS, parseDays, timeToMinutes, minutesToTime } from "$lib/types";
 	import {
 		allCourses,
-		currentBatch,
+		currentBatches,
 		selectedCourses,
 		searchQuery,
 		batchCourses,
@@ -17,7 +17,7 @@
 
 	let loading = $state(true);
 	let error = $state("");
-	let batchInput = $state("");
+	let batchInputs = $state([""]);
 	let searchInput = $state("");
 	let batchError = $state("");
 
@@ -77,7 +77,7 @@
 
 		try {
 			const dataUrl = await toPng(node, { backgroundColor: "#000000" });
-			const cleanBatch = ($currentBatch || "custom").replace(
+			const cleanBatch = ($currentBatches.join("_") || "custom").replace(
 				/[^a-z0-9]/gi,
 				"_",
 			);
@@ -146,7 +146,7 @@
 			const blob = new Blob([value], {
 				type: "text/calendar;charset=utf-8",
 			});
-			const cleanBatch = ($currentBatch || "custom").replace(
+			const cleanBatch = ($currentBatches.join("_") || "custom").replace(
 				/[^a-z0-9]/gi,
 				"_",
 			);
@@ -159,8 +159,15 @@
 	onMount(async () => {
 		// Restore state from localStorage
 		try {
+			// Migrate old single batch to new array
 			const savedBatch = localStorage.getItem("scooby_batch");
-			if (savedBatch) currentBatch.set(savedBatch);
+			const savedBatches = localStorage.getItem("scooby_batches");
+
+			if (savedBatches) {
+				currentBatches.set(JSON.parse(savedBatches));
+			} else if (savedBatch) {
+				currentBatches.set([savedBatch]);
+			}
 
 			const savedSelected = localStorage.getItem("scooby_selected");
 			if (savedSelected) {
@@ -201,7 +208,10 @@
 	// Persist state changes
 	$effect(() => {
 		if (stateLoaded) {
-			localStorage.setItem("scooby_batch", $currentBatch);
+			localStorage.setItem(
+				"scooby_batches",
+				JSON.stringify($currentBatches),
+			);
 		}
 	});
 
@@ -246,31 +256,58 @@
 	}
 
 	// Filter batches based on input
-	let batchSuggestions = $derived(() => {
-		if (!batchInput || batchInput.length < 1) return [];
-		const query = batchInput.toUpperCase();
+	// Filter batches based on input
+	function getSuggestionsFor(input: string) {
+		if (!input || input.length < 1) return [];
+		const query = input.toUpperCase();
 		return getAllBatches()
-			.filter((b) => b.includes(query))
+			.filter((b) => b.includes(query) && b !== query)
 			.slice(0, 15);
-	});
+	}
 
-	function selectBatch(batch: string) {
-		batchInput = batch;
-		currentBatch.set(batch);
+	function selectBatch(batch: string, index: number) {
+		batchInputs[index] = batch;
 		batchError = "";
+
+		// Auto-focus next input or blur
+		setTimeout(() => {
+			const nextInput = document.getElementById(
+				`batch-input-${index + 1}`,
+			);
+			if (nextInput) {
+				nextInput.focus();
+			} else {
+				document.getElementById(`batch-input-${index}`)?.blur();
+			}
+		}, 10);
+	}
+
+	function addBatchInput() {
+		if (batchInputs.length < 4) {
+			batchInputs = [...batchInputs, ""];
+		}
+	}
+
+	function removeBatchInput(index: number) {
+		batchInputs = batchInputs.filter((_, i) => i !== index);
 	}
 
 	function handleBatchSubmit() {
-		if (!batchInput.trim()) return;
-
-		const input = batchInput.trim().toUpperCase();
 		const validBatches = getAllBatches();
+		const inputsToProcess = batchInputs
+			.map((b) => b.trim().toUpperCase())
+			.filter((b) => b.length > 0);
 
-		if (validBatches.includes(input)) {
-			currentBatch.set(input);
+		if (inputsToProcess.length === 0) return;
+
+		const allValid = inputsToProcess.every((b) => validBatches.includes(b));
+
+		if (allValid) {
+			currentBatches.set(inputsToProcess);
 			batchError = "";
 		} else {
-			batchError = "Invalid batch. Please select from suggestions.";
+			batchError =
+				"One or more batches are invalid. Please select from suggestions.";
 		}
 	}
 
@@ -310,9 +347,9 @@
 	}
 
 	function reset() {
-		currentBatch.set("");
+		currentBatches.set([]);
 		selectedCourses.set([]);
-		batchInput = "";
+		batchInputs = [""];
 		searchInput = "";
 		searchQuery.set("");
 		swappedCourseCodes = new Map();
@@ -589,41 +626,68 @@
 				Put your file in: <code>src/lib/data/</code>
 			</p>
 		</div>
-	{:else if !$currentBatch}
+	{:else if $currentBatches.length === 0}
 		<div class="center">
 			<div class="batch-form">
 				<h1>Scooby</h1>
-				<p class="muted">Enter your batch code</p>
+				<p class="muted">Enter your batch code(s)</p>
 				<form
 					onsubmit={(e) => {
 						e.preventDefault();
 						handleBatchSubmit();
 					}}
 				>
-					<div class="batch-input-wrap">
-						<input
-							type="text"
-							class="input"
-							class:error={!!batchError}
-							placeholder="e.g. ELC26, DES2YR, BMS11"
-							bind:value={batchInput}
-							oninput={() => (batchError = "")}
-							autocomplete="off"
-						/>
-						{#if batchSuggestions().length > 0}
-							<div class="batch-suggestions">
-								{#each batchSuggestions() as batch}
-									<button
-										type="button"
-										class="batch-option"
-										onclick={() => selectBatch(batch)}
-									>
-										{batch}
-									</button>
-								{/each}
+					{#each batchInputs as input, i}
+						{@const suggestions = getSuggestionsFor(input)}
+						{@const isValid = getAllBatches().includes(
+							input.trim().toUpperCase(),
+						)}
+						<div class="batch-input-row">
+							<div class="batch-input-wrap">
+								<input
+									type="text"
+									id="batch-input-{i}"
+									class="input"
+									class:error={!!batchError}
+									class:valid={isValid}
+									placeholder="e.g. ELC26"
+									bind:value={batchInputs[i]}
+									oninput={() => (batchError = "")}
+									autocomplete="off"
+								/>
+								{#if suggestions.length > 0}
+									<div class="batch-suggestions">
+										{#each suggestions as batch}
+											<button
+												type="button"
+												class="batch-option"
+												onclick={() =>
+													selectBatch(batch, i)}
+											>
+												{batch}
+											</button>
+										{/each}
+									</div>
+								{/if}
 							</div>
-						{/if}
-					</div>
+							{#if batchInputs.length > 1}
+								<button
+									type="button"
+									class="remove-batch-btn"
+									onclick={() => removeBatchInput(i)}
+									title="Remove batch">×</button
+								>
+							{/if}
+						</div>
+					{/each}
+
+					{#if batchInputs.length < 4}
+						<button
+							type="button"
+							class="add-batch-btn"
+							onclick={addBatchInput}>+ Add another batch</button
+						>
+					{/if}
 					{#if batchError}
 						<div class="error-msg">{batchError}</div>
 					{/if}
@@ -637,7 +701,11 @@
 			<header class="header">
 				<div class="header-left">
 					<h1>Scooby</h1>
-					<span class="tag">{$currentBatch}</span>
+					<div class="tags-row">
+						{#each $currentBatches as batch}
+							<span class="tag">{batch}</span>
+						{/each}
+					</div>
 				</div>
 
 				<div class="search-wrap">
@@ -1094,7 +1162,9 @@
 						{/each}
 					</div>
 					{#if $batchCourses.length === 0}
-						<p class="muted">No courses for {$currentBatch}</p>
+						<p class="muted">
+							No courses for {$currentBatches.join(", ")}
+						</p>
 					{/if}
 
 					<!-- Hidden Courses Section -->
@@ -1740,6 +1810,12 @@
 		border-color: #ff4444;
 	}
 
+	.input.valid {
+		border-color: #44aa44;
+		border-style: dashed;
+		background: rgba(68, 170, 68, 0.05);
+	}
+
 	.error-msg {
 		color: #ff4444;
 		font-size: 0.8rem;
@@ -1900,6 +1976,58 @@
 		background: #eee;
 		color: #000;
 		border-color: #fff;
+	}
+
+	.batch-input-row {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+	}
+
+	.batch-input-wrap {
+		position: relative;
+		flex: 1;
+	}
+
+	.add-batch-btn {
+		background: none;
+		border: 1px dashed #333;
+		color: #888;
+		padding: 0.5rem;
+		border-radius: 6px;
+		cursor: pointer;
+		font-size: 0.8rem;
+		transition: all 0.2s;
+	}
+	.add-batch-btn:hover {
+		background: #111;
+		color: #fff;
+		border-color: #555;
+	}
+
+	.remove-batch-btn {
+		background: #111;
+		border: 1px solid #222;
+		color: #666;
+		width: 38px; /* Match input height roughly */
+		height: 38px;
+		border-radius: 6px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1.2rem;
+		flex-shrink: 0;
+	}
+	.remove-batch-btn:hover {
+		background: #222;
+		color: #ff4444;
+	}
+
+	.tags-row {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
 	}
 
 	@media (max-width: 700px) {
