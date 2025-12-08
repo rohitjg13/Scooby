@@ -1603,7 +1603,6 @@
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 		overflow: visible;
 		min-height: fit-content !important;
-		height: auto !important;
 		background: #1a1a1a;
 	}
 
