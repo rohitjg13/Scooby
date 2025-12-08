@@ -1602,7 +1602,8 @@
 		transform: scale(1.05);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 		overflow: visible;
-		min-height: fit-content;
+		min-height: fit-content !important;
+		height: auto !important;
 		background: #1a1a1a;
 	}
 
@@ -1612,6 +1613,7 @@
 	.course-block:hover .block-room {
 		white-space: normal;
 		overflow: visible;
+		word-break: break-word;
 	}
 
 	.course-block.added {
