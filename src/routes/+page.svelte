@@ -979,25 +979,18 @@
 															.courseName}</span
 													>
 													{#if block.course.courseType || block.course.component}
-														<span
-															class="block-type"
-														>
-															{block.course
-																.courseType}{block
-																.course
-																.courseType &&
-															block.course
-																.component
-																? " • "
-																: ""}{block
-																.course
-																.component}
+														<span class="block-type">
+															{block.course.courseType}
+															{block.course.courseType && block.course.component ? " • " : ""}
+															{block.course.component}
+															{(block.course.courseType || block.course.component) && block.course.room ? " • " : ""}
+															{block.course.room}
 														</span>
 													{/if}
-													<span class="block-room"
+													<!-- <span class="block-room"
 														>{block.course
 															.room}</span
-													>
+													> -->
 												</div>
 											{/each}
 										</div>

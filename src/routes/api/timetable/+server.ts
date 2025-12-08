@@ -81,7 +81,7 @@ function parseData(jsonData: Record<string, unknown>[]): Course[] {
         const courseCode = getValue(['Course Code', 'CourseCode', 'Code']);
         const section = getValue(['Section', 'Sec']); // LEC1, TUT1, PRAC1
         const batch = getValue(['Batch', 'Major', 'Batches', 'Program']);
-        const room = getValue(['Room', 'Venue', 'Location', 'Classroom']);
+        const room = getValue(['Room', 'Venue', 'Location', 'Classroom', 'Rooms']);
         const days = getValue(['Day', 'Days', 'Weekday']);
         const startTime = getValue(['Start Time', 'StartTime', 'Start', 'From']);
         const endTime = getValue(['End Time', 'EndTime', 'End', 'To']);
