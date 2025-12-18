@@ -401,7 +401,24 @@
 		const allValid = inputsToProcess.every((b) => validBatches.includes(b));
 
 		if (allValid) {
-			currentBatches.set(inputsToProcess);
+			const expandedBatches = new Set(inputsToProcess);
+
+			inputsToProcess.forEach((batch) => {
+				const match = batch.match(/^([A-Z]+)(\d)([A-Z0-9]*)$/);
+				
+				if (match) {
+					const code = match[1];
+					const year = match[2];
+					const hiddenGroup = `${code}${year}YR`; // Construct e.g., CSD2YR
+
+					// Only add if this constructed batch actually exists in the timetable
+					if (validBatches.includes(hiddenGroup)) {
+						expandedBatches.add(hiddenGroup);
+					}
+				}
+			});
+
+			currentBatches.set(Array.from(expandedBatches));
 			batchError = "";
 		} else {
 			batchError =
@@ -733,12 +750,10 @@
 				<p class="muted">Enter your batch code(s)</p>
 				<div class="batch-tip">
 					<span class="tip-icon">💡</span>
-					<span
-						>Add <strong>all</strong> your batches. e.g. ECE 2nd
-						years have both <strong>ELC2X</strong> and
-						<strong>ELC2YR</strong>. CSE 2nd years have both
-						<strong>CSDXX</strong> and <strong>CSD2YR</strong>.</span
-					>
+					<span>
+						Enter your <strong>assigned group</strong> (e.g. <strong>ELC21</strong>, <strong>CSD25</strong>).
+						We'll automatically include your year group (e.g. <strong>ELC2YR</strong>).
+					</span>
 				</div>
 				<form
 					onsubmit={(e) => {
