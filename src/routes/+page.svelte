@@ -21,6 +21,7 @@
 	let searchInput = $state("");
 	let batchError = $state("");
 	let showDownloadModal = $state(false);
+	let onlyShowUWE = $state(false);
 
 	// Helper to safely trigger download
 	function triggerDownload(blobOrUrl: Blob | string, filename: string) {
@@ -737,7 +738,16 @@
 					/>
 					{#if $filteredCourses.length > 0}
 						<div class="dropdown">
-							{#each $filteredCourses as course}
+							<div class="dropdown-filter">
+								<label class="uwe-toggle">
+									<input
+										type="checkbox"
+										bind:checked={onlyShowUWE}
+									/>
+									<span class="toggle-label">Open as UWE</span>
+								</label>
+							</div>
+							{#each onlyShowUWE ? $filteredCourses.filter(c => c.openAsUWE) : $filteredCourses as course}
 								{@const conflicts = getConflicts(
 									course,
 									getEffectiveCoursesList($batchCourses),
@@ -1007,8 +1017,7 @@
 				<div class="list-box">
 					<h3>
 						Your Courses <span class="muted"
-							>({getEffectiveCoursesList($batchCourses)
-								.length})</span
+							>({getEffectiveCoursesList($batchCourses).length})</span
 						>
 					</h3>
 					<div class="courses-grid">
@@ -1463,6 +1472,54 @@
 		align-items: center;
 		gap: 0.5rem;
 		margin-left: auto;
+	}
+
+	.dropdown-filter {
+		position: sticky;
+		top: 0;
+		background: #0a0a0a;
+		padding: 0.5rem 0.75rem;
+		border-bottom: 1px solid #222;
+		z-index: 1;
+	}
+
+	.uwe-toggle {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.3rem 0.5rem;
+		background: #151515;
+		border: 1px solid #222;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-size: 0.75rem;
+		color: #888;
+		width: fit-content;
+	}
+
+	.uwe-toggle:hover {
+		background: #1a1a1a;
+		border-color: #333;
+	}
+
+	.uwe-toggle:has(input:checked) {
+		background: #1a1a1a;
+		border-color: #444;
+		color: #fff;
+	}
+
+	.uwe-toggle input {
+		width: 14px;
+		height: 14px;
+		margin: 0;
+		accent-color: #fff;
+		cursor: pointer;
+	}
+
+	.toggle-label {
+		font-weight: 500;
+		white-space: nowrap;
 	}
 
 	.dropdown-item.dimmed {

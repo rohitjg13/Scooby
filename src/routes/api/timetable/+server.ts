@@ -94,6 +94,10 @@ function parseData(jsonData: Record<string, unknown>[]): Course[] {
         // Component: LEC, TUT, PRAC etc
         const component = getValue(['Component', 'Comp', 'ComponentType']);
 
+        // Open as UWE
+        const openAsUWEVal = getValue(['Open as UWE', 'OpenAsUWE', 'UWE', 'Open As UWE']);
+        const openAsUWE = openAsUWEVal.toLowerCase() === 'yes' || openAsUWEVal.toLowerCase() === 'true';
+
         // Create code with section or component
         let fullCode = courseCode;
         if (section) {
@@ -116,6 +120,7 @@ function parseData(jsonData: Record<string, unknown>[]): Course[] {
             endTime,
             courseType,
             component,
+            openAsUWE,
         };
     }).filter(course => course.courseCode && course.courseCode !== '-');
 }
