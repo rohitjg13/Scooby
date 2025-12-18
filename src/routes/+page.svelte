@@ -409,9 +409,8 @@
 				if (match) {
 					const code = match[1];
 					const year = match[2];
-					const hiddenGroup = `${code}${year}YR`; // Construct e.g., CSD2YR
-
-					// Only add if this constructed batch actually exists in the timetable
+					const hiddenGroup = `${code}${year}YR`;
+					
 					if (validBatches.includes(hiddenGroup)) {
 						expandedBatches.add(hiddenGroup);
 					}
