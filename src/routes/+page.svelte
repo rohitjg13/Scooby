@@ -22,6 +22,9 @@
 	let batchError = $state("");
 	let showDownloadModal = $state(false);
 	let onlyShowUWE = $state(false);
+	let selectedCourseDetails: Course | null = $state(null);
+	let showKeyboardHelp = $state(false);
+	let searchInputRef: HTMLInputElement | null = $state(null);
 
 	// Helper to safely trigger download
 	function triggerDownload(blobOrUrl: Blob | string, filename: string) {
@@ -168,7 +171,88 @@
 
 	let stateLoaded = false;
 
+	function handleKeydown(e: KeyboardEvent) {
+		// Don't trigger shortcuts when typing in inputs
+		const target = e.target as HTMLElement;
+		const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA";
+
+		// Escape closes modals/dropdowns
+		if (e.key === "Escape") {
+			if (selectedCourseDetails) {
+				selectedCourseDetails = null;
+				e.preventDefault();
+				return;
+			}
+			if (showKeyboardHelp) {
+				showKeyboardHelp = false;
+				e.preventDefault();
+				return;
+			}
+			if (showDownloadModal) {
+				showDownloadModal = false;
+				e.preventDefault();
+				return;
+			}
+			if (searchInput && !isInput) {
+				searchInput = "";
+				searchQuery.set("");
+				e.preventDefault();
+				return;
+			}
+			if (isInput) {
+				(target as HTMLInputElement).blur();
+				e.preventDefault();
+				return;
+			}
+		}
+
+		// Skip other shortcuts if typing
+		if (isInput) return;
+
+		// "/" or "s" focuses search
+		if (e.key === "/" || e.key === "s") {
+			e.preventDefault();
+			searchInputRef?.focus();
+			return;
+		}
+
+		// "?" shows keyboard help
+		if (e.key === "?") {
+			e.preventDefault();
+			showKeyboardHelp = !showKeyboardHelp;
+			return;
+		}
+
+		// "r" resets
+		if (e.key === "r" && $currentBatches.length > 0) {
+			e.preventDefault();
+			reset();
+			return;
+		}
+
+		// "p" downloads image
+		if (e.key === "p" && $currentBatches.length > 0) {
+			e.preventDefault();
+			downloadImage();
+			return;
+		}
+
+		// "c" exports calendar
+		if (e.key === "c" && $currentBatches.length > 0) {
+			e.preventDefault();
+			exportCalendar();
+			return;
+		}
+	}
+
+	function openCourseDetails(course: Course) {
+		selectedCourseDetails = course;
+	}
+
 	onMount(async () => {
+		// Add keyboard listener
+		window.addEventListener("keydown", handleKeydown);
+
 		// Restore state from localStorage
 		try {
 			// Migrate old single batch to new array
@@ -732,8 +816,9 @@
 					<input
 						type="text"
 						class="input"
-						placeholder="Add course/UWE/CCC"
+						placeholder="Add course/UWE/CCC  (Press / to search)"
 						bind:value={searchInput}
+						bind:this={searchInputRef}
 						oninput={handleSearch}
 					/>
 					{#if $filteredCourses.length > 0}
@@ -886,6 +971,9 @@
 						Export Calendar
 					</button>
 					<button class="btn" onclick={reset}>Reset</button>
+					<button class="btn keyboard-help-btn" onclick={() => showKeyboardHelp = true} title="Keyboard shortcuts (?)">
+						<span class="kbd-icon">⌨</span>
+					</button>
 				</div>
 			</header>
 
@@ -969,6 +1057,10 @@
 													class="course-block"
 													class:added={block.isAdded}
 													style="top: {top}%; height: {height}%; min-height: 45px"
+													onclick={() => openCourseDetails(block.course)}
+													role="button"
+													tabindex="0"
+													onkeydown={(e) => e.key === 'Enter' && openCourseDetails(block.course)}
 												>
 													<span class="block-code">
 														{block.course.courseCode.split(
@@ -1277,6 +1369,103 @@
 					class="btn primary"
 					onclick={() => (showDownloadModal = false)}>Got it</button
 				>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Course Details Modal -->
+	{#if selectedCourseDetails}
+		<div class="modal-overlay" onclick={() => selectedCourseDetails = null} role="button" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (selectedCourseDetails = null)}>
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<div class="modal course-modal" onclick={(e) => e.stopPropagation()} role="dialog" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (selectedCourseDetails = null)}>
+				<button class="modal-close" onclick={() => selectedCourseDetails = null}>×</button>
+				<h2>{selectedCourseDetails.courseCode.split("-")[0]}</h2>
+				<p class="course-modal-name">{selectedCourseDetails.courseName}</p>
+				
+				<div class="course-modal-grid">
+					{#if selectedCourseDetails.faculty}
+						<div class="course-modal-item">
+							<span class="modal-label">Faculty</span>
+							<span class="modal-value">{selectedCourseDetails.faculty}</span>
+						</div>
+					{/if}
+					{#if selectedCourseDetails.room}
+						<div class="course-modal-item">
+							<span class="modal-label">Room</span>
+							<span class="modal-value">{selectedCourseDetails.room}</span>
+						</div>
+					{/if}
+					{#if selectedCourseDetails.day}
+						<div class="course-modal-item">
+							<span class="modal-label">Schedule</span>
+							<span class="modal-value">{selectedCourseDetails.day} {selectedCourseDetails.startTime}-{selectedCourseDetails.endTime}</span>
+						</div>
+					{/if}
+					{#if selectedCourseDetails.credits}
+						<div class="course-modal-item">
+							<span class="modal-label">Credits</span>
+							<span class="modal-value">{selectedCourseDetails.credits}</span>
+						</div>
+					{/if}
+					{#if selectedCourseDetails.courseType}
+						<div class="course-modal-item">
+							<span class="modal-label">Type</span>
+							<span class="modal-value">{selectedCourseDetails.courseType}</span>
+						</div>
+					{/if}
+					{#if selectedCourseDetails.component || selectedCourseDetails.slot}
+						<div class="course-modal-item">
+							<span class="modal-label">Section</span>
+							<span class="modal-value">{selectedCourseDetails.slot || selectedCourseDetails.component}</span>
+						</div>
+					{/if}
+					{#if selectedCourseDetails.openAsUWE !== undefined}
+						<div class="course-modal-item">
+							<span class="modal-label">Open as UWE</span>
+							<span class="modal-value">{selectedCourseDetails.openAsUWE ? "Yes" : "No"}</span>
+						</div>
+					{/if}
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Keyboard Shortcuts Help Modal -->
+	{#if showKeyboardHelp}
+		<div class="modal-overlay" onclick={() => showKeyboardHelp = false} role="button" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showKeyboardHelp = false)}>
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<div class="modal keyboard-modal" onclick={(e) => e.stopPropagation()} role="dialog" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showKeyboardHelp = false)}>
+				<button class="modal-close" onclick={() => showKeyboardHelp = false}>×</button>
+				<h2>Keyboard Shortcuts</h2>
+				
+				<div class="shortcuts-list">
+					<div class="shortcut-item">
+						<kbd>/</kbd> or <kbd>S</kbd>
+						<span>Focus search</span>
+					</div>
+					<div class="shortcut-item">
+						<kbd>Esc</kbd>
+						<span>Close modal / Clear search</span>
+					</div>
+					<div class="shortcut-item">
+						<kbd>P</kbd>
+						<span>Save as image</span>
+					</div>
+					<div class="shortcut-item">
+						<kbd>C</kbd>
+						<span>Export calendar</span>
+					</div>
+					<div class="shortcut-item">
+						<kbd>R</kbd>
+						<span>Reset timetable</span>
+					</div>
+					<div class="shortcut-item">
+						<kbd>?</kbd>
+						<span>Show this help</span>
+					</div>
+				</div>
+				
+				<button class="btn primary" onclick={() => showKeyboardHelp = false}>Got it</button>
 			</div>
 		</div>
 	{/if}
@@ -2202,6 +2391,9 @@
 		.calendar {
 			min-width: 500px;
 		}
+		.keyboard-help-btn {
+			display: none;
+		}
 	}
 	/* Batch Tip */
 	.batch-tip {
@@ -2228,5 +2420,126 @@
 	.batch-tip strong {
 		color: #fff;
 		font-weight: 500;
+	}
+
+	/* Keyboard help button */
+	.keyboard-help-btn {
+		padding: 0.4rem 0.6rem;
+		font-size: 1rem;
+		line-height: 1;
+	}
+
+	.kbd-icon {
+		opacity: 0.7;
+	}
+
+	/* Modal close button */
+	.modal-close {
+		position: absolute;
+		top: 0.75rem;
+		right: 0.75rem;
+		background: none;
+		border: none;
+		color: #666;
+		font-size: 1.5rem;
+		cursor: pointer;
+		padding: 0.25rem 0.5rem;
+		line-height: 1;
+		border-radius: 4px;
+		transition: all 0.2s;
+	}
+
+	.modal-close:hover {
+		color: #fff;
+		background: #222;
+	}
+
+	/* Course Details Modal */
+	.course-modal {
+		max-width: 450px;
+		text-align: left;
+		position: relative;
+	}
+
+	.course-modal h2 {
+		font-family: "SF Mono", monospace;
+		font-size: 1.5rem;
+		margin-bottom: 0.25rem;
+	}
+
+	.course-modal-name {
+		color: #888;
+		font-size: 1rem;
+		margin-bottom: 1.5rem;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid #222;
+	}
+
+	.course-modal-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.course-modal-item {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.modal-label {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: #555;
+		font-weight: 500;
+	}
+
+	.modal-value {
+		font-size: 0.9rem;
+		color: #eee;
+	}
+
+	/* Keyboard Shortcuts Modal */
+	.keyboard-modal {
+		max-width: 380px;
+		text-align: left;
+		position: relative;
+	}
+
+	.keyboard-modal h2 {
+		margin-bottom: 1.5rem;
+	}
+
+	.shortcuts-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.shortcut-item {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		font-size: 0.9rem;
+	}
+
+	.shortcut-item span {
+		color: #888;
+	}
+
+	kbd {
+		display: inline-block;
+		padding: 0.25rem 0.5rem;
+		background: #1a1a1a;
+		border: 1px solid #333;
+		border-radius: 4px;
+		font-family: "SF Mono", monospace;
+		font-size: 0.75rem;
+		color: #fff;
+		min-width: 1.5rem;
+		text-align: center;
 	}
 </style>
