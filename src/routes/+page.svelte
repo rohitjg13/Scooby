@@ -286,7 +286,7 @@
 		}
 
 		try {
-			const response = await fetch("/api/timetable");
+			const response = await fetch("/api/timetable?v=2");
 			const data = await response.json();
 
 			if (data.error) {
