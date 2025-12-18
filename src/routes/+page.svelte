@@ -676,7 +676,9 @@
 		const visibleMin = minTime;
 		const visibleMax = maxTime;
 
-		const days = DAYS.filter((d) => usedDays.has(d));
+		// Always show Mon-Fri, only include Saturday if there are classes
+		const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+		const days = usedDays.has('Saturday') ? [...weekdays, 'Saturday'] : weekdays;
 		return { days, minTime, maxTime, visibleMin, visibleMax, blocks };
 	}
 
