@@ -24,6 +24,8 @@
 	let onlyShowUWE = $state(false);
 	let selectedCourseDetails: Course | null = $state(null);
 	let showKeyboardHelp = $state(false);
+	let showUWEList = $state(false);
+	let showCCCList = $state(false);
 	let searchInputRef: HTMLInputElement | null = $state(null);
 
 	// Helper to safely trigger download
@@ -973,6 +975,8 @@
 						</span>
 						Export Calendar
 					</button>
+					<button class="btn secondary" onclick={() => showUWEList = true} title="View all UWE courses">UWE List</button>
+					<button class="btn secondary" onclick={() => showCCCList = true} title="View all CCC courses">CCC List</button>
 					<button class="btn" onclick={reset}>Reset</button>
 					<button class="btn keyboard-help-btn" onclick={() => showKeyboardHelp = true} title="Keyboard shortcuts (?)">
 						<span class="kbd-icon">⌨</span>
@@ -1469,6 +1473,114 @@
 				</div>
 				
 				<button class="btn primary" onclick={() => showKeyboardHelp = false}>Got it</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- UWE Courses List Modal -->
+	{#if showUWEList}
+		{@const uweCourses = $allCourses.filter(c => c.openAsUWE)}
+		<div class="modal-overlay" onclick={() => showUWEList = false} role="button" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showUWEList = false)}>
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<div class="modal course-list-modal" onclick={(e) => e.stopPropagation()} role="dialog" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showUWEList = false)}>
+				<button class="modal-close" onclick={() => showUWEList = false}>×</button>
+				<h2>Open as UWE Courses ({uweCourses.length})</h2>
+				
+				<div class="course-list-container">
+					{#each uweCourses as course}
+						{@const conflicts = getConflicts(course, getEffectiveCoursesList($batchCourses), $selectedCourses)}
+						{@const hasConflict = conflicts.length > 0}
+						{@const selected = isSelected(course)}
+						{@const batch = isBatchCourse(course)}
+						{@const compType = getComponentType(course.component)}
+						<div class="course-list-item" class:dimmed={hasConflict}>
+							<div class="course-list-info">
+								<div class="course-list-header">
+									<span class="mono">{course.courseCode.split("-")[0]}</span>
+									{#if compType}
+										<span class="comp-badge">{compType}</span>
+									{/if}
+								</div>
+								<span class="course-list-name">{course.courseName}</span>
+								{#if course.day}
+									<span class="muted small">{course.day} {course.startTime}-{course.endTime}</span>
+								{/if}
+								{#if hasConflict}
+									<span class="conflict-info">⚠️ Conflicts with: {conflicts.map(c => c.courseCode.split("-")[0]).join(", ")}</span>
+								{/if}
+							</div>
+							<div class="course-list-actions">
+								{#if batch}
+									<span class="badge">Batch</span>
+								{:else if selected}
+									<button class="btn small danger" onclick={() => removeCourse(course)}>Remove</button>
+								{:else if hasConflict}
+									<span class="badge warning">Conflict</span>
+								{:else}
+									<button class="btn small" onclick={() => addCourse(course)}>Add</button>
+								{/if}
+							</div>
+						</div>
+					{:else}
+						<p class="muted">No UWE courses found.</p>
+					{/each}
+				</div>
+				
+				<button class="btn primary" onclick={() => showUWEList = false}>Close</button>
+			</div>
+		</div>
+	{/if}
+
+	<!-- CCC Courses List Modal -->
+	{#if showCCCList}
+		{@const cccCourses = $allCourses.filter(c => c.courseCode.toUpperCase().startsWith('CCC'))}
+		<div class="modal-overlay" onclick={() => showCCCList = false} role="button" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showCCCList = false)}>
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<div class="modal course-list-modal" onclick={(e) => e.stopPropagation()} role="dialog" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showCCCList = false)}>
+				<button class="modal-close" onclick={() => showCCCList = false}>×</button>
+				<h2>CCC Courses ({cccCourses.length})</h2>
+				
+				<div class="course-list-container">
+					{#each cccCourses as course}
+						{@const conflicts = getConflicts(course, getEffectiveCoursesList($batchCourses), $selectedCourses)}
+						{@const hasConflict = conflicts.length > 0}
+						{@const selected = isSelected(course)}
+						{@const batch = isBatchCourse(course)}
+						{@const compType = getComponentType(course.component)}
+						<div class="course-list-item" class:dimmed={hasConflict}>
+							<div class="course-list-info">
+								<div class="course-list-header">
+									<span class="mono">{course.courseCode.split("-")[0]}</span>
+									{#if compType}
+										<span class="comp-badge">{compType}</span>
+									{/if}
+								</div>
+								<span class="course-list-name">{course.courseName}</span>
+								{#if course.day}
+									<span class="muted small">{course.day} {course.startTime}-{course.endTime}</span>
+								{/if}
+								{#if hasConflict}
+									<span class="conflict-info">⚠️ Conflicts with: {conflicts.map(c => c.courseCode.split("-")[0]).join(", ")}</span>
+								{/if}
+							</div>
+							<div class="course-list-actions">
+								{#if batch}
+									<span class="badge">Batch</span>
+								{:else if selected}
+									<button class="btn small danger" onclick={() => removeCourse(course)}>Remove</button>
+								{:else if hasConflict}
+									<span class="badge warning">Conflict</span>
+								{:else}
+									<button class="btn small" onclick={() => addCourse(course)}>Add</button>
+								{/if}
+							</div>
+						</div>
+					{:else}
+						<p class="muted">No CCC courses found.</p>
+					{/each}
+				</div>
+				
+				<button class="btn primary" onclick={() => showCCCList = false}>Close</button>
 			</div>
 		</div>
 	{/if}
@@ -2387,9 +2499,28 @@
 		.header {
 			flex-direction: column;
 			align-items: stretch;
+			gap: 0.75rem;
 		}
 		.search-wrap {
 			max-width: none;
+		}
+		.header-actions {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 0.5rem;
+			margin-left: 0;
+		}
+		.header-actions .action-btn {
+			white-space: nowrap;
+			font-size: 0.8rem;
+			padding: 0.5rem 0.75rem;
+		}
+		.header-actions .action-btn .icon {
+			display: none;
+		}
+		.header-actions .btn:not(.action-btn) {
+			padding: 0.5rem 0.75rem;
+			font-size: 0.8rem;
 		}
 		.calendar {
 			min-width: 500px;
@@ -2544,5 +2675,96 @@
 		color: #fff;
 		min-width: 1.5rem;
 		text-align: center;
+	}
+
+	/* Course List Modals (UWE, CCC) */
+	.course-list-modal {
+		max-width: 500px;
+		width: 90vw;
+		text-align: left;
+		position: relative;
+	}
+
+	.course-list-modal h2 {
+		margin-bottom: 1rem;
+	}
+
+	.course-list-container {
+		max-height: 60vh;
+		overflow-y: auto;
+		margin-bottom: 1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.course-list-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		padding: 0.75rem;
+		background: #1a1a1a;
+		border-radius: 6px;
+		gap: 1rem;
+	}
+
+	.course-list-item.dimmed {
+		opacity: 0.8;
+	}
+
+	.course-list-info {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.course-list-header {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.comp-badge {
+		font-size: 0.7rem;
+		padding: 0.15rem 0.4rem;
+		background: #333;
+		color: #aaa;
+		border-radius: 3px;
+		text-transform: uppercase;
+	}
+
+	.course-list-name {
+		font-size: 0.85rem;
+		color: #ccc;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.conflict-info {
+		font-size: 0.75rem;
+		color: #f59e0b;
+		margin-top: 0.25rem;
+	}
+
+	.course-list-actions {
+		flex-shrink: 0;
+		align-self: center;
+	}
+
+	.course-list-actions .badge {
+		display: inline-block;
+		padding: 0.3rem 0.6rem;
+		font-size: 0.75rem;
+		border-radius: 4px;
+		background: #333;
+		color: #aaa;
+	}
+
+	.course-list-actions .badge.warning {
+		background: rgba(245, 158, 11, 0.2);
+		color: #f59e0b;
 	}
 </style>
