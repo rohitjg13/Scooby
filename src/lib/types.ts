@@ -15,6 +15,7 @@ export interface Course {
     courseType?: string; // Major, Elective, etc.
     component?: string;  // LEC, TUT, PRAC, etc.
     openAsUWE?: boolean; // Whether course is open as UWE
+    remarks?: string;    // Additional remarks/notes
 }
 
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

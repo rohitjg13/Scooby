@@ -354,7 +354,6 @@
 	}
 
 	// Filter batches based on input
-	// Filter batches based on input
 	function getSuggestionsFor(input: string) {
 		if (!input || input.length < 1) return [];
 		const query = input.toUpperCase();
@@ -1125,8 +1124,13 @@
 								{@const alternatives =
 									getAlternativeComponents(originalCourse)}
 								<div
-									class="list-item"
+									class="list-item clickable"
 									class:swapped={isSwapped}
+									onclick={() => openCourseDetails(course)}
+									role="button"
+									tabindex="0"
+									onkeydown={(e) => e.key === 'Enter' && openCourseDetails(course)}
+									title="Click for details"
 								>
 									<div class="course-main-info">
 										<div class="course-header-row">
@@ -1141,15 +1145,18 @@
 														)})</span
 													>
 												{/if}
+												<span class="info-hint">ⓘ</span>
 											</span>
 											<div class="header-right-group">
 												{#if alternatives.length > 0}
 													<button
 														class="swap-btn"
-														onclick={() =>
+														onclick={(e) => {
+															e.stopPropagation();
 															toggleSwapDropdown(
 																originalCourse.courseCode,
-															)}
+															);
+														}}
 														title="Change section ({alternatives.length} alternatives)"
 													>
 														⇄ {getSection(course)}
@@ -1164,10 +1171,12 @@
 												<button
 													class="remove-btn"
 													title="Remove this course"
-													onclick={() =>
+													onclick={(e) => {
+														e.stopPropagation();
 														toggleExclusion(
 															originalCourse.courseCode,
-														)}
+														);
+													}}
 												>
 													×
 												</button>
@@ -1192,10 +1201,12 @@
 										{#if isSwapped}
 											<button
 												class="reset-swap-btn"
-												onclick={() =>
+												onclick={(e) => {
+													e.stopPropagation();
 													resetSwap(
 														originalCourse.courseCode,
-													)}
+													);
+												}}
 											>
 												↩ Reset to {getSection(
 													originalCourse,
@@ -1230,7 +1241,8 @@
 														0}
 													class:is-current={alt.courseCode ===
 														course.courseCode}
-													onclick={() => {
+													onclick={(e) => {
+														e.stopPropagation();
 														if (
 															alt.courseCode ===
 															course.courseCode
@@ -1382,7 +1394,7 @@
 
 	<!-- Course Details Modal -->
 	{#if selectedCourseDetails}
-		<div class="modal-overlay" onclick={() => selectedCourseDetails = null} role="button" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (selectedCourseDetails = null)}>
+		<div class="modal-overlay course-details-overlay" onclick={() => selectedCourseDetails = null} role="button" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (selectedCourseDetails = null)}>
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 			<div class="modal course-modal" onclick={(e) => e.stopPropagation()} role="dialog" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (selectedCourseDetails = null)}>
 				<button class="modal-close" onclick={() => selectedCourseDetails = null}>×</button>
@@ -1430,6 +1442,12 @@
 						<div class="course-modal-item">
 							<span class="modal-label">Open as UWE</span>
 							<span class="modal-value">{selectedCourseDetails.openAsUWE ? "Yes" : "No"}</span>
+						</div>
+					{/if}
+					{#if selectedCourseDetails.remarks}
+						<div class="course-modal-item full-width">
+							<span class="modal-label">Remarks</span>
+							<span class="modal-value">{selectedCourseDetails.remarks}</span>
 						</div>
 					{/if}
 				</div>
@@ -1494,12 +1512,13 @@
 						{@const batch = isBatchCourse(course)}
 						{@const compType = getComponentType(course.component)}
 						<div class="course-list-item" class:dimmed={hasConflict}>
-							<div class="course-list-info">
+							<div class="course-list-info" onclick={() => openCourseDetails(course)} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && openCourseDetails(course)} title="Click for details">
 								<div class="course-list-header">
 									<span class="mono">{course.courseCode.split("-")[0]}</span>
 									{#if compType}
 										<span class="comp-badge">{compType}</span>
 									{/if}
+									<span class="info-hint">ⓘ</span>
 								</div>
 								<span class="course-list-name">{course.courseName}</span>
 								{#if course.day}
@@ -1548,12 +1567,13 @@
 						{@const batch = isBatchCourse(course)}
 						{@const compType = getComponentType(course.component)}
 						<div class="course-list-item" class:dimmed={hasConflict}>
-							<div class="course-list-info">
+							<div class="course-list-info" onclick={() => openCourseDetails(course)} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && openCourseDetails(course)} title="Click for details">
 								<div class="course-list-header">
 									<span class="mono">{course.courseCode.split("-")[0]}</span>
 									{#if compType}
 										<span class="comp-badge">{compType}</span>
 									{/if}
+									<span class="info-hint">ⓘ</span>
 								</div>
 								<span class="course-list-name">{course.courseName}</span>
 								{#if course.day}
@@ -2036,6 +2056,16 @@
 		border: 1px solid #151515;
 		border-radius: 6px;
 		margin-bottom: 0.5rem;
+	}
+
+	.list-item.clickable {
+		cursor: pointer;
+		transition: background 0.15s, border-color 0.15s;
+	}
+
+	.list-item.clickable:hover {
+		background: #111;
+		border-color: #252525;
 	}
 
 	.list-item.added {
@@ -2589,6 +2619,10 @@
 	}
 
 	/* Course Details Modal */
+	.course-details-overlay {
+		z-index: 1100;
+	}
+
 	.course-modal {
 		max-width: 450px;
 		text-align: left;
@@ -2620,6 +2654,10 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
+	}
+
+	.course-modal-item.full-width {
+		grid-column: 1 / -1;
 	}
 
 	.modal-label {
@@ -2718,6 +2756,28 @@
 		gap: 0.25rem;
 		flex: 1;
 		min-width: 0;
+		cursor: pointer;
+		padding: 0.25rem;
+		margin: -0.25rem;
+		border-radius: 4px;
+		transition: background 0.15s;
+	}
+
+	.course-list-info:hover {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	.course-list-info:hover .info-hint,
+	.list-item.clickable:hover .info-hint {
+		opacity: 1;
+	}
+
+	.info-hint {
+		font-size: 0.75rem;
+		color: #888;
+		opacity: 0.5;
+		transition: opacity 0.15s;
+		margin-left: 0.35rem;
 	}
 
 	.course-list-header {
