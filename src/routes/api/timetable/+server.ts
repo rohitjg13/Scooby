@@ -47,7 +47,11 @@ export const GET: RequestHandler = async ({ fetch }) => {
             courses = parseData(jsonData);
         }
 
-        return json({ courses });
+        return json({ courses }, {
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+            }
+        });
     } catch (error) {
         console.error('Error loading timetable:', error);
         return json({ error: 'Failed to load timetable: ' + String(error) }, { status: 500 });
