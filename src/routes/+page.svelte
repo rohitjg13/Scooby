@@ -732,7 +732,8 @@
 					<span
 						>Add <strong>all</strong> your batches. e.g. ECE 2nd
 						years have both <strong>ELC2X</strong> and
-						<strong>ELC2YR</strong>.</span
+						<strong>ELC2YR</strong>. CSE 2nd years have both
+						<strong>CSDXX</strong> and <strong>CSD2YR</strong>.</span
 					>
 				</div>
 				<form
