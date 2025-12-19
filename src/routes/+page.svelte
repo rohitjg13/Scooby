@@ -421,7 +421,7 @@
 		if (conflicts.length > 0) return;
 
 		selectedCourses.update((courses) => {
-			if (courses.find((c) => c.courseCode === course.courseCode))
+			if (courses.find((c) => c.sno === course.sno))
 				return courses;
 			return [...courses, course];
 		});
@@ -431,13 +431,17 @@
 
 	function removeCourse(course: Course) {
 		selectedCourses.update((courses) =>
-			courses.filter((c) => c.courseCode !== course.courseCode),
+			courses.filter((c) => c.sno !== course.sno),
 		);
 	}
 
 	function isSelected(course: Course): boolean {
-		return $selectedCourses.some((c) => c.courseCode === course.courseCode);
+		return $selectedCourses.some((c) => c.sno === course.sno);
 	}
+
+	// function isSelected(course: Course): boolean {
+	// 	return $selectedCourses.some((c) => c.courseCode === course.courseCode);
+	// }
 
 	function isBatchCourse(course: Course): boolean {
 		return $batchCourses.some((c) => c.courseCode === course.courseCode);
