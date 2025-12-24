@@ -89,7 +89,7 @@ function parseData(jsonData: Record<string, unknown>[]): Course[] {
         const days = getValue(['Day', 'Days', 'Weekday']);
         const startTime = getValue(['Start Time', 'StartTime', 'Start', 'From']);
         const endTime = getValue(['End Time', 'EndTime', 'End', 'To']);
-        const credits = getNumericValue(['Credits', 'Credit', 'Cr']);
+        const credits = getNumericValue(['L/T/P Hour']);
         const faculty = getValue(['Faculty', 'Instructor', 'Teacher', 'Professor']);
 
         // Course type: Major, Elective, etc - separate from code

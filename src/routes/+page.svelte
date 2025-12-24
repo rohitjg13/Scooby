@@ -27,6 +27,33 @@
 	let showUWEList = $state(false);
 	let showCCCList = $state(false);
 	let searchInputRef: HTMLInputElement | null = $state(null);
+	let maxCredits = $state(25);
+
+	let totalCredits = $derived.by(() => {
+		const effectiveBatch = getUniqueDisplayCourses($batchCourses)
+			.filter((o) => !o.isExcluded)
+			.map((o) => o.effective);
+		const effectiveSelected = getUniqueDisplayCourses($selectedCourses).map(
+			(o) => o.effective,
+		);
+		const all = [...effectiveBatch, ...effectiveSelected];
+
+		const seen = new Set<string>();
+		let sum = 0;
+
+		for (const c of all) {
+			const baseCode = c.courseCode.split("-")[0];
+			// Only count CCC courses
+			if (
+				!seen.has(baseCode) &&
+				baseCode.toUpperCase().startsWith("CCC")
+			) {
+				sum += c.credits || 0;
+				seen.add(baseCode);
+			}
+		}
+		return sum;
+	});
 
 	// Helper to safely trigger download
 	function triggerDownload(blobOrUrl: Blob | string, filename: string) {
@@ -176,7 +203,8 @@
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger shortcuts when typing in inputs
 		const target = e.target as HTMLElement;
-		const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA";
+		const isInput =
+			target.tagName === "INPUT" || target.tagName === "TEXTAREA";
 
 		// Escape closes modals/dropdowns
 		if (e.key === "Escape") {
@@ -421,8 +449,7 @@
 		if (conflicts.length > 0) return;
 
 		selectedCourses.update((courses) => {
-			if (courses.find((c) => c.sno === course.sno))
-				return courses;
+			if (courses.find((c) => c.sno === course.sno)) return courses;
 			return [...courses, course];
 		});
 		searchInput = "";
@@ -682,8 +709,16 @@
 		const visibleMax = maxTime;
 
 		// Always show Mon-Fri, only include Saturday if there are classes
-		const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-		const days = usedDays.has('Saturday') ? [...weekdays, 'Saturday'] : weekdays;
+		const weekdays = [
+			"Monday",
+			"Tuesday",
+			"Wednesday",
+			"Thursday",
+			"Friday",
+		];
+		const days = usedDays.has("Saturday")
+			? [...weekdays, "Saturday"]
+			: weekdays;
 		return { days, minTime, maxTime, visibleMin, visibleMax, blocks };
 	}
 
@@ -740,7 +775,8 @@
 						>Add <strong>all</strong> your batches. e.g. ECE 2nd
 						years have both <strong>ELC2X</strong> and
 						<strong>ELC2YR</strong>. CSE 2nd years have both
-						<strong>CSDXX</strong> and <strong>CSD2YR</strong>.</span
+						<strong>CSDXX</strong> and
+						<strong>CSD2YR</strong>.</span
 					>
 				</div>
 				<form
@@ -837,10 +873,11 @@
 										type="checkbox"
 										bind:checked={onlyShowUWE}
 									/>
-									<span class="toggle-label">Open as UWE</span>
+									<span class="toggle-label">Open as UWE</span
+									>
 								</label>
 							</div>
-							{#each onlyShowUWE ? $filteredCourses.filter(c => c.openAsUWE) : $filteredCourses as course}
+							{#each onlyShowUWE ? $filteredCourses.filter((c) => c.openAsUWE) : $filteredCourses as course}
 								{@const conflicts = getConflicts(
 									course,
 									getEffectiveCoursesList($batchCourses),
@@ -865,6 +902,13 @@
 														)})</span
 													>{/if}</span
 											>
+											{#if course.credits && course.courseCode
+													.toUpperCase()
+													.startsWith("CCC")}
+												<span class="cr-badge"
+													>{course.credits} Cr</span
+												>
+											{/if}
 											{#if course.day}
 												<span class="muted small"
 													>{course.day}
@@ -978,10 +1022,22 @@
 						</span>
 						Export Calendar
 					</button>
-					<button class="btn secondary" onclick={() => showUWEList = true} title="View all UWE courses">UWE List</button>
-					<button class="btn secondary" onclick={() => showCCCList = true} title="View all CCC courses">CCC List</button>
+					<button
+						class="btn secondary"
+						onclick={() => (showUWEList = true)}
+						title="View all UWE courses">UWE List</button
+					>
+					<button
+						class="btn secondary"
+						onclick={() => (showCCCList = true)}
+						title="View all CCC courses">CCC List</button
+					>
 					<button class="btn" onclick={reset}>Reset</button>
-					<button class="btn keyboard-help-btn" onclick={() => showKeyboardHelp = true} title="Keyboard shortcuts (?)">
+					<button
+						class="btn keyboard-help-btn"
+						onclick={() => (showKeyboardHelp = true)}
+						title="Keyboard shortcuts (?)"
+					>
 						<span class="kbd-icon">⌨</span>
 					</button>
 				</div>
@@ -1067,10 +1123,17 @@
 													class="course-block"
 													class:added={block.isAdded}
 													style="top: {top}%; height: {height}%; min-height: 45px"
-													onclick={() => openCourseDetails(block.course)}
+													onclick={() =>
+														openCourseDetails(
+															block.course,
+														)}
 													role="button"
 													tabindex="0"
-													onkeydown={(e) => e.key === 'Enter' && openCourseDetails(block.course)}
+													onkeydown={(e) =>
+														e.key === "Enter" &&
+														openCourseDetails(
+															block.course,
+														)}
 												>
 													<span class="block-code">
 														{block.course.courseCode.split(
@@ -1091,11 +1154,26 @@
 															.courseName}</span
 													>
 													{#if block.course.courseType || block.course.component}
-														<span class="block-type">
-															{block.course.courseType}
-															{block.course.courseType && block.course.component ? " • " : ""}
-															{block.course.component}
-															{(block.course.courseType || block.course.component) && block.course.room ? " • " : ""}
+														<span
+															class="block-type"
+														>
+															{block.course
+																.courseType}
+															{block.course
+																.courseType &&
+															block.course
+																.component
+																? " • "
+																: ""}
+															{block.course
+																.component}
+															{(block.course
+																.courseType ||
+																block.course
+																	.component) &&
+															block.course.room
+																? " • "
+																: ""}
 															{block.course.room}
 														</span>
 													{/if}
@@ -1119,7 +1197,8 @@
 				<div class="list-box">
 					<h3>
 						Your Courses <span class="muted"
-							>({getEffectiveCoursesList($batchCourses).length})</span
+							>({getEffectiveCoursesList($batchCourses)
+								.length})</span
 						>
 					</h3>
 					<div class="courses-grid">
@@ -1133,7 +1212,9 @@
 									onclick={() => openCourseDetails(course)}
 									role="button"
 									tabindex="0"
-									onkeydown={(e) => e.key === 'Enter' && openCourseDetails(course)}
+									onkeydown={(e) =>
+										e.key === "Enter" &&
+										openCourseDetails(course)}
 									title="Click for details"
 								>
 									<div class="course-main-info">
@@ -1398,60 +1479,101 @@
 
 	<!-- Course Details Modal -->
 	{#if selectedCourseDetails}
-		<div class="modal-overlay course-details-overlay" onclick={() => selectedCourseDetails = null} role="button" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (selectedCourseDetails = null)}>
+		<div
+			class="modal-overlay course-details-overlay"
+			onclick={() => (selectedCourseDetails = null)}
+			role="button"
+			tabindex="-1"
+			onkeydown={(e) =>
+				e.key === "Escape" && (selectedCourseDetails = null)}
+		>
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-			<div class="modal course-modal" onclick={(e) => e.stopPropagation()} role="dialog" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (selectedCourseDetails = null)}>
-				<button class="modal-close" onclick={() => selectedCourseDetails = null}>×</button>
+			<div
+				class="modal course-modal"
+				onclick={(e) => e.stopPropagation()}
+				role="dialog"
+				tabindex="-1"
+				onkeydown={(e) =>
+					e.key === "Escape" && (selectedCourseDetails = null)}
+			>
+				<button
+					class="modal-close"
+					onclick={() => (selectedCourseDetails = null)}>×</button
+				>
 				<h2>{selectedCourseDetails.courseCode.split("-")[0]}</h2>
-				<p class="course-modal-name">{selectedCourseDetails.courseName}</p>
-				
+				<p class="course-modal-name">
+					{selectedCourseDetails.courseName}
+				</p>
+
 				<div class="course-modal-grid">
 					{#if selectedCourseDetails.faculty}
 						<div class="course-modal-item">
 							<span class="modal-label">Faculty</span>
-							<span class="modal-value">{selectedCourseDetails.faculty}</span>
+							<span class="modal-value"
+								>{selectedCourseDetails.faculty}</span
+							>
 						</div>
 					{/if}
 					{#if selectedCourseDetails.room}
 						<div class="course-modal-item">
 							<span class="modal-label">Room</span>
-							<span class="modal-value">{selectedCourseDetails.room}</span>
+							<span class="modal-value"
+								>{selectedCourseDetails.room}</span
+							>
 						</div>
 					{/if}
 					{#if selectedCourseDetails.day}
 						<div class="course-modal-item">
 							<span class="modal-label">Schedule</span>
-							<span class="modal-value">{selectedCourseDetails.day} {selectedCourseDetails.startTime}-{selectedCourseDetails.endTime}</span>
+							<span class="modal-value"
+								>{selectedCourseDetails.day}
+								{selectedCourseDetails.startTime}-{selectedCourseDetails.endTime}</span
+							>
 						</div>
 					{/if}
-					{#if selectedCourseDetails.credits}
+					{#if selectedCourseDetails.credits && selectedCourseDetails.courseCode
+							.toUpperCase()
+							.startsWith("CCC")}
 						<div class="course-modal-item">
 							<span class="modal-label">Credits</span>
-							<span class="modal-value">{selectedCourseDetails.credits}</span>
+							<span class="modal-value"
+								>{selectedCourseDetails.credits}</span
+							>
 						</div>
 					{/if}
 					{#if selectedCourseDetails.courseType}
 						<div class="course-modal-item">
 							<span class="modal-label">Type</span>
-							<span class="modal-value">{selectedCourseDetails.courseType}</span>
+							<span class="modal-value"
+								>{selectedCourseDetails.courseType}</span
+							>
 						</div>
 					{/if}
 					{#if selectedCourseDetails.component || selectedCourseDetails.slot}
 						<div class="course-modal-item">
 							<span class="modal-label">Section</span>
-							<span class="modal-value">{selectedCourseDetails.slot || selectedCourseDetails.component}</span>
+							<span class="modal-value"
+								>{selectedCourseDetails.slot ||
+									selectedCourseDetails.component}</span
+							>
 						</div>
 					{/if}
 					{#if selectedCourseDetails.openAsUWE !== undefined}
 						<div class="course-modal-item">
 							<span class="modal-label">Open as UWE</span>
-							<span class="modal-value">{selectedCourseDetails.openAsUWE ? "Yes" : "No"}</span>
+							<span class="modal-value"
+								>{selectedCourseDetails.openAsUWE
+									? "Yes"
+									: "No"}</span
+							>
 						</div>
 					{/if}
 					{#if selectedCourseDetails.remarks}
 						<div class="course-modal-item full-width">
 							<span class="modal-label">Remarks</span>
-							<span class="modal-value">{selectedCourseDetails.remarks}</span>
+							<span class="modal-value"
+								>{selectedCourseDetails.remarks}</span
+							>
 						</div>
 					{/if}
 				</div>
@@ -1461,12 +1583,28 @@
 
 	<!-- Keyboard Shortcuts Help Modal -->
 	{#if showKeyboardHelp}
-		<div class="modal-overlay" onclick={() => showKeyboardHelp = false} role="button" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showKeyboardHelp = false)}>
+		<div
+			class="modal-overlay"
+			onclick={() => (showKeyboardHelp = false)}
+			role="button"
+			tabindex="-1"
+			onkeydown={(e) => e.key === "Escape" && (showKeyboardHelp = false)}
+		>
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-			<div class="modal keyboard-modal" onclick={(e) => e.stopPropagation()} role="dialog" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showKeyboardHelp = false)}>
-				<button class="modal-close" onclick={() => showKeyboardHelp = false}>×</button>
+			<div
+				class="modal keyboard-modal"
+				onclick={(e) => e.stopPropagation()}
+				role="dialog"
+				tabindex="-1"
+				onkeydown={(e) =>
+					e.key === "Escape" && (showKeyboardHelp = false)}
+			>
+				<button
+					class="modal-close"
+					onclick={() => (showKeyboardHelp = false)}>×</button
+				>
 				<h2>Keyboard Shortcuts</h2>
-				
+
 				<div class="shortcuts-list">
 					<div class="shortcut-item">
 						<kbd>/</kbd> or <kbd>S</kbd>
@@ -1493,54 +1631,112 @@
 						<span>Show this help</span>
 					</div>
 				</div>
-				
-				<button class="btn primary" onclick={() => showKeyboardHelp = false}>Got it</button>
+
+				<button
+					class="btn primary"
+					onclick={() => (showKeyboardHelp = false)}>Got it</button
+				>
 			</div>
 		</div>
 	{/if}
 
 	<!-- UWE Courses List Modal -->
 	{#if showUWEList}
-		{@const uweCourses = $allCourses.filter(c => c.openAsUWE)}
-		<div class="modal-overlay" onclick={() => showUWEList = false} role="button" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showUWEList = false)}>
+		{@const uweCourses = $allCourses.filter((c) => c.openAsUWE)}
+		<div
+			class="modal-overlay"
+			onclick={() => (showUWEList = false)}
+			role="button"
+			tabindex="-1"
+			onkeydown={(e) => e.key === "Escape" && (showUWEList = false)}
+		>
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-			<div class="modal course-list-modal" onclick={(e) => e.stopPropagation()} role="dialog" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showUWEList = false)}>
-				<button class="modal-close" onclick={() => showUWEList = false}>×</button>
+			<div
+				class="modal course-list-modal"
+				onclick={(e) => e.stopPropagation()}
+				role="dialog"
+				tabindex="-1"
+				onkeydown={(e) => e.key === "Escape" && (showUWEList = false)}
+			>
+				<button
+					class="modal-close"
+					onclick={() => (showUWEList = false)}>×</button
+				>
 				<h2>Open as UWE Courses ({uweCourses.length})</h2>
-				
+
 				<div class="course-list-container">
 					{#each uweCourses as course}
-						{@const conflicts = getConflicts(course, getEffectiveCoursesList($batchCourses), $selectedCourses)}
+						{@const conflicts = getConflicts(
+							course,
+							getEffectiveCoursesList($batchCourses),
+							$selectedCourses,
+						)}
 						{@const hasConflict = conflicts.length > 0}
 						{@const selected = isSelected(course)}
 						{@const batch = isBatchCourse(course)}
 						{@const compType = getComponentType(course.component)}
-						<div class="course-list-item" class:dimmed={hasConflict}>
-							<div class="course-list-info" onclick={() => openCourseDetails(course)} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && openCourseDetails(course)} title="Click for details">
+						<div
+							class="course-list-item"
+							class:dimmed={hasConflict}
+						>
+							<div
+								class="course-list-info"
+								onclick={() => openCourseDetails(course)}
+								role="button"
+								tabindex="0"
+								onkeydown={(e) =>
+									e.key === "Enter" &&
+									openCourseDetails(course)}
+								title="Click for details"
+							>
 								<div class="course-list-header">
-									<span class="mono">{course.courseCode.split("-")[0]}</span>
+									<span class="mono"
+										>{course.courseCode.split("-")[0]}</span
+									>
 									{#if compType}
-										<span class="comp-badge">{compType}</span>
+										<span class="comp-badge"
+											>{compType}</span
+										>
 									{/if}
 									<span class="info-hint">ⓘ</span>
 								</div>
-								<span class="course-list-name">{course.courseName}</span>
+								<span class="course-list-name"
+									>{course.courseName}</span
+								>
 								{#if course.day}
-									<span class="muted small">{course.day} {course.startTime}-{course.endTime}</span>
+									<span class="muted small"
+										>{course.day}
+										{course.startTime}-{course.endTime}</span
+									>
 								{/if}
 								{#if hasConflict}
-									<span class="conflict-info">⚠️ Conflicts with: {conflicts.map(c => c.courseCode.split("-")[0]).join(", ")}</span>
+									<span class="conflict-info"
+										>⚠️ Conflicts with: {conflicts
+											.map(
+												(c) =>
+													c.courseCode.split("-")[0],
+											)
+											.join(", ")}</span
+									>
 								{/if}
 							</div>
 							<div class="course-list-actions">
 								{#if batch}
 									<span class="badge">Batch</span>
 								{:else if selected}
-									<button class="btn small danger" onclick={() => removeCourse(course)}>Remove</button>
+									<button
+										class="btn small danger"
+										onclick={() => removeCourse(course)}
+										>Remove</button
+									>
 								{:else if hasConflict}
 									<span class="badge warning">Conflict</span>
 								{:else}
-									<button class="btn small" onclick={() => addCourse(course)}>Add</button>
+									<button
+										class="btn small"
+										onclick={() => addCourse(course)}
+										>Add</button
+									>
 								{/if}
 							</div>
 						</div>
@@ -1548,54 +1744,119 @@
 						<p class="muted">No UWE courses found.</p>
 					{/each}
 				</div>
-				
-				<button class="btn primary" onclick={() => showUWEList = false}>Close</button>
+
+				<button
+					class="btn primary"
+					onclick={() => (showUWEList = false)}>Close</button
+				>
 			</div>
 		</div>
 	{/if}
 
 	<!-- CCC Courses List Modal -->
 	{#if showCCCList}
-		{@const cccCourses = $allCourses.filter(c => c.courseCode.toUpperCase().startsWith('CCC'))}
-		<div class="modal-overlay" onclick={() => showCCCList = false} role="button" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showCCCList = false)}>
+		{@const cccCourses = $allCourses.filter((c) =>
+			c.courseCode.toUpperCase().startsWith("CCC"),
+		)}
+		<div
+			class="modal-overlay"
+			onclick={() => (showCCCList = false)}
+			role="button"
+			tabindex="-1"
+			onkeydown={(e) => e.key === "Escape" && (showCCCList = false)}
+		>
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-			<div class="modal course-list-modal" onclick={(e) => e.stopPropagation()} role="dialog" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showCCCList = false)}>
-				<button class="modal-close" onclick={() => showCCCList = false}>×</button>
+			<div
+				class="modal course-list-modal"
+				onclick={(e) => e.stopPropagation()}
+				role="dialog"
+				tabindex="-1"
+				onkeydown={(e) => e.key === "Escape" && (showCCCList = false)}
+			>
+				<button
+					class="modal-close"
+					onclick={() => (showCCCList = false)}>×</button
+				>
 				<h2>CCC Courses ({cccCourses.length})</h2>
-				
+
 				<div class="course-list-container">
 					{#each cccCourses as course}
-						{@const conflicts = getConflicts(course, getEffectiveCoursesList($batchCourses), $selectedCourses)}
+						{@const conflicts = getConflicts(
+							course,
+							getEffectiveCoursesList($batchCourses),
+							$selectedCourses,
+						)}
 						{@const hasConflict = conflicts.length > 0}
 						{@const selected = isSelected(course)}
 						{@const batch = isBatchCourse(course)}
 						{@const compType = getComponentType(course.component)}
-						<div class="course-list-item" class:dimmed={hasConflict}>
-							<div class="course-list-info" onclick={() => openCourseDetails(course)} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && openCourseDetails(course)} title="Click for details">
+						<div
+							class="course-list-item"
+							class:dimmed={hasConflict}
+						>
+							<div
+								class="course-list-info"
+								onclick={() => openCourseDetails(course)}
+								role="button"
+								tabindex="0"
+								onkeydown={(e) =>
+									e.key === "Enter" &&
+									openCourseDetails(course)}
+								title="Click for details"
+							>
 								<div class="course-list-header">
-									<span class="mono">{course.courseCode.split("-")[0]}</span>
+									<span class="mono"
+										>{course.courseCode.split("-")[0]}</span
+									>
 									{#if compType}
-										<span class="comp-badge">{compType}</span>
+										<span class="comp-badge"
+											>{compType}</span
+										>
+									{/if}
+									{#if course.credits}
+										<span class="cr-badge"
+											>{course.credits} Cr</span
+										>
 									{/if}
 									<span class="info-hint">ⓘ</span>
 								</div>
-								<span class="course-list-name">{course.courseName}</span>
+								<span class="course-list-name"
+									>{course.courseName}</span
+								>
 								{#if course.day}
-									<span class="muted small">{course.day} {course.startTime}-{course.endTime}</span>
+									<span class="muted small"
+										>{course.day}
+										{course.startTime}-{course.endTime}</span
+									>
 								{/if}
 								{#if hasConflict}
-									<span class="conflict-info">⚠️ Conflicts with: {conflicts.map(c => c.courseCode.split("-")[0]).join(", ")}</span>
+									<span class="conflict-info"
+										>⚠️ Conflicts with: {conflicts
+											.map(
+												(c) =>
+													c.courseCode.split("-")[0],
+											)
+											.join(", ")}</span
+									>
 								{/if}
 							</div>
 							<div class="course-list-actions">
 								{#if batch}
 									<span class="badge">Batch</span>
 								{:else if selected}
-									<button class="btn small danger" onclick={() => removeCourse(course)}>Remove</button>
+									<button
+										class="btn small danger"
+										onclick={() => removeCourse(course)}
+										>Remove</button
+									>
 								{:else if hasConflict}
 									<span class="badge warning">Conflict</span>
 								{:else}
-									<button class="btn small" onclick={() => addCourse(course)}>Add</button>
+									<button
+										class="btn small"
+										onclick={() => addCourse(course)}
+										>Add</button
+									>
 								{/if}
 							</div>
 						</div>
@@ -1603,8 +1864,11 @@
 						<p class="muted">No CCC courses found.</p>
 					{/each}
 				</div>
-				
-				<button class="btn primary" onclick={() => showCCCList = false}>Close</button>
+
+				<button
+					class="btn primary"
+					onclick={() => (showCCCList = false)}>Close</button
+				>
 			</div>
 		</div>
 	{/if}
@@ -1758,6 +2022,70 @@
 	.tag.small {
 		font-size: 0.65rem;
 		padding: 0.15rem 0.4rem;
+	}
+
+	.credits-pill {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		background: #111;
+		border: 1px solid #222;
+		padding: 0.2rem 0.5rem;
+		border-radius: 4px;
+		font-size: 0.8rem;
+		margin-left: 0.5rem;
+	}
+
+	.credits-val {
+		font-weight: 600;
+		color: #fff;
+	}
+	.credits-val.over {
+		color: #ffaa00;
+	}
+
+	.credits-sep {
+		color: #555;
+		margin: 0 1px;
+	}
+
+	.credits-max {
+		background: transparent;
+		border: none;
+		color: #888;
+		width: 2ch;
+		font-size: 0.8rem;
+		padding: 0;
+		text-align: center;
+		font-family: inherit;
+		cursor: text;
+		-moz-appearance: textfield;
+		appearance: textfield;
+	}
+	.credits-max:focus {
+		outline: none;
+		color: #fff;
+		border-bottom: 1px solid #444;
+	}
+	.credits-max::-webkit-outer-spin-button,
+	.credits-max::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+	.credits-label {
+		color: #444;
+		font-size: 0.7rem;
+		margin-left: 2px;
+	}
+
+	.cr-badge {
+		font-size: 0.65rem;
+		background: #1a1a1a;
+		color: #888;
+		padding: 1px 4px;
+		border-radius: 3px;
+		border: 1px solid #222;
+		font-family: "SF Mono", monospace;
 	}
 
 	.search-wrap {
@@ -2064,7 +2392,9 @@
 
 	.list-item.clickable {
 		cursor: pointer;
-		transition: background 0.15s, border-color 0.15s;
+		transition:
+			background 0.15s,
+			border-color 0.15s;
 	}
 
 	.list-item.clickable:hover {
