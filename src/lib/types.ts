@@ -39,6 +39,9 @@ export const DAY_ABBREV: Record<string, string[]> = {
 
 export function parseDays(dayStr: string): string[] {
     if (!dayStr) return [];
+    if (dayStr == "SAT"){
+        return ['Saturday'];
+    }
     const cleaned = dayStr.trim().replace(/\s+/g, '');
 
     if (DAY_ABBREV[cleaned]) return DAY_ABBREV[cleaned];
