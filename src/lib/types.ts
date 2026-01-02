@@ -54,6 +54,10 @@ export function parseDays(dayStr: string): string[] {
         if (cleaned.substring(i, i + 2) === 'Th') {
             result.push('Thursday');
             i += 2;
+        }
+        else if (cleaned[i] === 'SAT') {
+            result.push('Saturday');
+            i++;
         } else if (cleaned[i] === 'M') {
             result.push('Monday');
             i++;
