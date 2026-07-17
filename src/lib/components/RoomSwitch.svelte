@@ -223,6 +223,34 @@
 				{#if error}<p class="err">{error}</p>{/if}
 			</section>
 		{:else}
+			<!-- One hostel control for the whole page: drives the board and where you post -->
+			<div class="hostel-bar">
+				<svg
+					class="hostel-ico"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true"
+				>
+					<path d="M3 21h18" />
+					<path d="M5 21V6l7-3 7 3v15" />
+					<path d="M9 21v-4h6v4" />
+					<path d="M9 9h.01M15 9h.01M9 13h.01M15 13h.01" />
+				</svg>
+				<span class="label">Hostel</span>
+				<select
+					class="input hostel-sel"
+					value={hostel}
+					onchange={(e) => chooseHostel(e.currentTarget.value)}
+					aria-label="Your hostel"
+				>
+					{#each HOSTELS as h}<option value={h}>{h}</option>{/each}
+				</select>
+			</div>
+
 			<!-- Your listing, or the form to post one -->
 			{#if myListing}
 				<section class="panel mine-panel">
@@ -234,23 +262,54 @@
 					</div>
 					<div class="tags">
 						<span class="badge strong">{myListing.hostel}</span>
-						<span class="badge">Room {myListing.roomNo}</span>
+						{#if myListing.roomNo}<span class="badge">Room {myListing.roomNo}</span>{/if}
 						<span class="badge">Floor {myListing.floor}</span>
 					</div>
 					<p class="desc">{myListing.description}</p>
 				</section>
 			{:else}
-				<section class="panel">
-					<div class="post-head">
-						<h2>Post your room</h2>
-						<span class="badge strong">{hostel}</span>
-					</div>
-					<p class="panel-sub">Let others know you're looking to swap. Optional — you can just browse.</p>
+				<!-- Collapsed by default so the board is what you see first -->
+				<details class="panel post-panel">
+					<summary class="post-summary">
+						<span class="post-summary-text">
+							<h2>Post your room</h2>
+							<span class="post-summary-sub">Optional — you can just browse.</span>
+						</span>
+						<svg
+							class="chev"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+						>
+							<path d="M6 9l6 6 6-6" />
+						</svg>
+					</summary>
 					<form onsubmit={(e) => (e.preventDefault(), submit())} class="post-form">
 						<div class="row3">
-							<label class="field">
-								<span>Room no.</span>
-								<input class="input" bind:value={form.roomNo} placeholder="521" required />
+							<label class="field field-room">
+								<span>Room no. <em class="opt">optional</em></span>
+								<input class="input" bind:value={form.roomNo} placeholder="528" />
+								<span class="hint-inline">
+									<svg
+										class="hint-ico"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="1.5"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										aria-hidden="true"
+									>
+										<circle cx="12" cy="12" r="9" />
+										<path d="M12 11.5v4.5" />
+										<path d="M12 8h.01" />
+									</svg>
+									Not out yet? Floor alone works.
+								</span>
 							</label>
 							<label class="field">
 								<span>Floor</span>
@@ -268,7 +327,7 @@
 								bind:value={form.description}
 								rows="2"
 								maxlength="300"
-								placeholder="Any room on the 5th floor, or any room near 521"
+								placeholder="Ex: Any room on the 5th floor, or any room near 528"
 								required
 							></textarea>
 						</label>
@@ -277,7 +336,7 @@
 							{posting ? "Posting…" : "Post listing"}
 						</button>
 					</form>
-				</section>
+				</details>
 			{/if}
 
 			<!-- Board -->
@@ -285,14 +344,6 @@
 				<div class="board-head">
 					<h2>Looking to swap</h2>
 					<div class="filters">
-						<select
-							class="input"
-							value={hostel}
-							onchange={(e) => chooseHostel(e.currentTarget.value)}
-							aria-label="Hostel"
-						>
-							{#each HOSTELS as h}<option value={h}>{h}</option>{/each}
-						</select>
 						<select class="input" bind:value={floorFilter} aria-label="Filter by floor">
 							<option value="">All floors</option>
 							{#each floors as f}<option value={String(f)}>Floor {f}</option>{/each}
@@ -311,8 +362,12 @@
 						{#each board as l (l.id)}
 							<div class="card">
 								<div class="card-top">
-									<span class="badge strong">Room {l.roomNo}</span>
-									<span class="badge">Floor {l.floor}</span>
+									{#if l.roomNo}
+										<span class="badge strong">Room {l.roomNo}</span>
+										<span class="badge">Floor {l.floor}</span>
+									{:else}
+										<span class="badge strong">Floor {l.floor}</span>
+									{/if}
 								</div>
 								<p class="desc">{l.description}</p>
 								<div class="card-meta">— {l.name}</div>
@@ -453,13 +508,86 @@
 		margin-bottom: 0.75rem;
 	}
 
-	/* Post form */
-	.post-head {
+	/* Hostel bar — the single hostel control for the page */
+	.hostel-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.6rem 0.9rem;
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		background: var(--bg-card);
+		margin-bottom: 1.25rem;
+	}
+	.hostel-ico {
+		width: 17px;
+		height: 17px;
+		flex: none;
+		color: var(--text-secondary);
+	}
+	.hostel-bar .label {
+		flex: none;
+	}
+	.hostel-sel {
+		flex: 1;
+		min-width: 0;
+		width: auto;
+		padding: 0.3rem 0.4rem;
+		font-size: 0.95rem;
+		font-weight: 600;
+		background: transparent;
+		border-color: transparent;
+	}
+	.hostel-sel:hover {
+		border-color: var(--border-hover);
+	}
+
+	/* Post form (collapsible) */
+	.post-panel {
+		padding: 0;
+	}
+	.post-summary {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 0.75rem;
-		flex-wrap: wrap;
+		gap: 1rem;
+		padding: 1.25rem 1.5rem;
+		cursor: pointer;
+		list-style: none;
+		user-select: none;
+	}
+	.post-summary::-webkit-details-marker {
+		display: none;
+	}
+	.post-summary:hover {
+		background: var(--bg-hover);
+		border-radius: 14px;
+	}
+	.post-summary-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		min-width: 0;
+	}
+	.post-summary-sub {
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+	}
+	.chev {
+		width: 18px;
+		height: 18px;
+		flex: none;
+		color: var(--text-secondary);
+		transition: transform 0.2s ease;
+	}
+	.post-panel[open] .chev {
+		transform: rotate(180deg);
+	}
+	.post-panel[open] .post-summary:hover {
+		border-radius: 14px 14px 0 0;
+	}
+	.post-panel .post-form {
+		padding: 0 1.5rem 1.5rem;
 	}
 	.post-form {
 		display: flex;
@@ -478,6 +606,30 @@
 		display: grid;
 		grid-template-columns: 1.4fr 0.8fr 1.6fr;
 		gap: 0.85rem;
+	}
+	.opt {
+		font-style: normal;
+		color: var(--text-muted);
+		font-size: 0.68rem;
+		padding: 0.05rem 0.3rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		vertical-align: 1px;
+	}
+	/* Help text sits inside the room field so it stays under it at every width. */
+	.hint-inline {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		margin-top: 0.1rem;
+		font-size: 0.72rem;
+		line-height: 1.3;
+		color: var(--text-muted);
+	}
+	.hint-ico {
+		width: 12px;
+		height: 12px;
+		flex: none;
 	}
 	textarea.input {
 		resize: vertical;
@@ -618,10 +770,11 @@
 		.panel {
 			padding: 1.25rem;
 		}
+		/* Room (+ its hint) full width, then Floor | Phone share the next row. */
 		.row3 {
-			grid-template-columns: 1fr 1fr;
+			grid-template-columns: 0.8fr 1.6fr;
 		}
-		.row3 .field:last-child {
+		.row3 .field-room {
 			grid-column: 1 / -1;
 		}
 		.onboard-row {

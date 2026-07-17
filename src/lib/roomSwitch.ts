@@ -12,11 +12,11 @@ export const HOSTELS: string[] = [
 	"Sariska (6A)",
 	"Satpura (6B)",
 	"Tower 6",
-	"Manas",
-	"Marine",
+	"Manas (4A)",
+	"Marine (4B)",
 	"Tower 9",
 	"Hemis",
-	"Mudumalai",
+	"Mudumalai(4C)",
 	"Betla",
 ];
 
