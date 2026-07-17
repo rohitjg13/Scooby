@@ -195,7 +195,7 @@
 				</div>
 				<div class="tags">
 					<span class="badge strong">{myListing.hostel}</span>
-					<span class="badge">Room {myListing.roomNo}</span>
+					{#if myListing.roomNo}<span class="badge">Room {myListing.roomNo}</span>{/if}
 					<span class="badge">Floor {myListing.floor}</span>
 				</div>
 				<p class="desc">{myListing.description}</p>
@@ -220,7 +220,7 @@
 							{#if l.email !== me?.email}
 								<div class="card">
 									<div class="card-top">
-										<span class="badge strong">Room {l.roomNo}</span>
+										{#if l.roomNo}<span class="badge strong">Room {l.roomNo}</span>{/if}
 										<span class="badge">Floor {l.floor}</span>
 									</div>
 									<p class="desc">{l.description}</p>
@@ -254,7 +254,11 @@
 					<div class="row3">
 						<label class="field">
 							<span>Room no.</span>
-							<input class="input" bind:value={form.roomNo} placeholder="521" required />
+							<input class="input" bind:value={form.roomNo} placeholder="521" />
+							<span class="field-hint">
+								Since room no. isn't released yet, you can leave this empty and opt for floor
+								alone.
+							</span>
 						</label>
 						<label class="field">
 							<span>Floor</span>
@@ -418,6 +422,11 @@
 		display: grid;
 		grid-template-columns: 1.4fr 0.8fr 1.6fr;
 		gap: 0.85rem;
+	}
+	.field-hint {
+		font-size: 0.72rem;
+		color: var(--text-muted);
+		line-height: 1.35;
 	}
 	textarea.input {
 		resize: vertical;

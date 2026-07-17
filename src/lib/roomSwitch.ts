@@ -66,8 +66,7 @@ export function waLink(raw: string): string {
 // Validate + normalize a listing input. Returns an error string or null.
 export function validateListing(input: Partial<ListingInput>): string | null {
 	if (!input.hostel || !HOSTELS.includes(input.hostel)) return "Pick a valid hostel.";
-	if (!input.roomNo || !input.roomNo.trim()) return "Room number is required.";
-	if (input.roomNo.trim().length > 20) return "Room number too long.";
+	if (input.roomNo && input.roomNo.trim().length > 20) return "Room number too long.";
 	const floor = Number(input.floor);
 	if (!Number.isInteger(floor) || floor < 0 || floor > 50) return "Enter a valid floor.";
 	if (!input.description || !input.description.trim()) return "Add a short preference.";

@@ -26,7 +26,8 @@ assert.equal(waLink("+91 98765 43210"), "https://wa.me/919876543210"); // not do
 const ok = { hostel: "Kaziranga", roomNo: "521", floor: 5, description: "near 521", phone: "9876543210" };
 assert.equal(validateListing(ok), null);
 assert.equal(validateListing({ ...ok, hostel: "Nope" }) !== null, true);
-assert.equal(validateListing({ ...ok, roomNo: "" }) !== null, true);
+assert.equal(validateListing({ ...ok, roomNo: "" }), null); // room no. is optional
+assert.equal(validateListing({ ...ok, roomNo: "x".repeat(21) }) !== null, true);
 assert.equal(validateListing({ ...ok, phone: "12" }) !== null, true);
 assert.equal(validateListing({ ...ok, description: "x".repeat(301) }) !== null, true);
 
