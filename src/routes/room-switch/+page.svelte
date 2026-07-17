@@ -5,8 +5,8 @@
 
 <Seo
 	title="Room Switch"
-	description="Find someone in your hostel who wants to swap rooms. Post your room, browse others, and sort it out over WhatsApp."
-	image="default"
+	description="Swap hostel rooms at Shiv Nadar University. Post your room, browse everyone in your hostel looking to switch, and sort it out over WhatsApp."
+	image="room-switch"
 />
 
 <RoomSwitch />
