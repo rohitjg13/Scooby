@@ -1,40 +1,40 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { env } from "$env/dynamic/public";
-	import {
-		HOSTELS,
-		waLink,
-		validateListing,
-		type Listing,
-		type ListingInput,
-	} from "$lib/roomSwitch";
+	import { HOSTELS, waLink, validateListing, type Listing, type ListingInput } from "$lib/roomSwitch";
 
 	const CLIENT_ID = env.PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
 	let token = $state<string | null>(null);
 	let me = $state<{ name: string; email: string } | null>(null);
 
-	// Server returns only the board for the signed-in user's own hostel.
-	let all = $state<Listing[]>([]);
+	// The hostel you're browsing — asked once on first sign-in, changeable any time.
+	let hostel = $state<string>("");
+	let pickHostel = $state(""); // onboarding dropdown
+
+	let all = $state<Listing[]>([]); // board for `hostel`
+	let myListing = $state<Listing | null>(null); // yours, whatever hostel it's in
 	let loading = $state(false);
 	let error = $state("");
 
 	let floorFilter = $state<string>("");
 
-	// post form
-	let form = $state<ListingInput>({ hostel: "", roomNo: "", floor: 0, description: "", phone: "" });
+	// post form — hostel comes from the selected hostel, not a field
+	let form = $state<Omit<ListingInput, "hostel">>({ roomNo: "", floor: 0, description: "", phone: "" });
 	let posting = $state(false);
 	let formError = $state("");
 
 	let gisReady = $state(false);
 	let buttonEl = $state<HTMLDivElement>();
 
-	const myListing = $derived(all.find((l) => l.email === me?.email) ?? null);
-	const boardHostel = $derived(myListing?.hostel ?? "");
 	const board = $derived(
-		all.filter((l) => (floorFilter === "" ? true : l.floor === Number(floorFilter))),
+		all
+			.filter((l) => l.email !== me?.email)
+			.filter((l) => (floorFilter === "" ? true : l.floor === Number(floorFilter))),
 	);
-	const floors = $derived([...new Set(all.map((l) => l.floor))].sort((a, b) => a - b));
+	const floors = $derived(
+		[...new Set(all.filter((l) => l.email !== me?.email).map((l) => l.floor))].sort((a, b) => a - b),
+	);
 
 	function decodeJwt(t: string): { name: string; email: string } | null {
 		try {
@@ -50,7 +50,8 @@
 		loading = true;
 		error = "";
 		try {
-			const res = await fetch("/api/listings", { headers: { authorization: `Bearer ${token}` } });
+			const qs = hostel ? `?hostel=${encodeURIComponent(hostel)}` : "";
+			const res = await fetch(`/api/listings${qs}`, { headers: { authorization: `Bearer ${token}` } });
 			if (res.status === 401) {
 				signOut();
 				error = "Your session expired — sign in again.";
@@ -59,11 +60,26 @@
 			const data = await res.json();
 			if (!res.ok) throw new Error(data.error || "Failed to load listings.");
 			all = data.listings;
+			myListing = data.myListing;
+			// Server resolves the hostel from your listing when we didn't send one.
+			if (data.hostel && data.hostel !== hostel) setHostelLocal(data.hostel);
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		} finally {
 			loading = false;
 		}
+	}
+
+	function setHostelLocal(h: string) {
+		hostel = h;
+		localStorage.setItem("rs_hostel", h);
+	}
+
+	function chooseHostel(h: string) {
+		if (!h || h === hostel) return;
+		setHostelLocal(h);
+		floorFilter = "";
+		loadListings();
 	}
 
 	function handleCredential(response: { credential: string }) {
@@ -77,14 +93,18 @@
 		token = null;
 		me = null;
 		all = [];
+		myListing = null;
+		hostel = "";
 		floorFilter = "";
 		localStorage.removeItem("rs_token");
+		localStorage.removeItem("rs_hostel");
 		(window as any).google?.accounts?.id?.disableAutoSelect?.();
 	}
 
 	async function submit() {
 		formError = "";
-		const err = validateListing(form);
+		const payload = { ...form, hostel };
+		const err = validateListing(payload);
 		if (err) {
 			formError = err;
 			return;
@@ -94,7 +114,7 @@
 			const res = await fetch("/api/listings", {
 				method: "POST",
 				headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-				body: JSON.stringify(form),
+				body: JSON.stringify(payload),
 			});
 			const data = await res.json();
 			if (!res.ok) throw new Error(data.error || "Could not post listing.");
@@ -108,11 +128,10 @@
 
 	async function takeDown() {
 		if (!token) return;
-		if (!confirm("Take down your listing? You can post again with a different hostel.")) return;
+		if (!confirm("Take down your listing?")) return;
 		posting = true;
 		try {
 			await fetch("/api/listings", { method: "DELETE", headers: { authorization: `Bearer ${token}` } });
-			floorFilter = "";
 			await loadListings();
 		} finally {
 			posting = false;
@@ -120,6 +139,7 @@
 	}
 
 	onMount(() => {
+		hostel = localStorage.getItem("rs_hostel") ?? "";
 		const saved = localStorage.getItem("rs_token");
 		if (saved) {
 			token = saved;
@@ -153,8 +173,8 @@
 		<a href="/" class="back">← Home</a>
 		<h1>Room Switch</h1>
 		<p class="sub">
-			Find someone in your hostel who wants to swap rooms. Post your room, browse others in the
-			same hostel, and sort it out over WhatsApp.
+			Find someone in your hostel who wants to swap rooms. Browse who's looking, post your own
+			room, and sort it out over WhatsApp.
 		</p>
 	</header>
 
@@ -173,7 +193,6 @@
 		</div>
 
 		{#if loading}
-			<!-- Fetching your listing / board -->
 			<section class="panel" aria-busy="true">
 				<div class="skel skel-label"></div>
 				<div class="skel-row">
@@ -184,107 +203,130 @@
 				<div class="skel skel-line"></div>
 				<div class="skel skel-line short"></div>
 			</section>
-		{:else if myListing}
-			<!-- Your active listing -->
-			<section class="panel mine-panel">
-				<div class="mine-head">
-					<span class="label">Your listing</span>
-					<button class="btn btn-sm btn-danger" onclick={takeDown} disabled={posting}>
-						Take down
+		{:else if !hostel}
+			<!-- Onboarding: ask the hostel once, then they can browse without posting -->
+			<section class="panel onboard">
+				<span class="label">Step 1 of 1</span>
+				<h2>Which hostel are you in?</h2>
+				<p class="panel-sub">
+					We'll show you everyone in that hostel looking to swap. You can change it later.
+				</p>
+				<div class="onboard-row">
+					<select class="input" bind:value={pickHostel}>
+						<option value="" disabled>Select your hostel</option>
+						{#each HOSTELS as h}<option value={h}>{h}</option>{/each}
+					</select>
+					<button class="btn btn-primary" disabled={!pickHostel} onclick={() => chooseHostel(pickHostel)}>
+						Continue
 					</button>
 				</div>
-				<div class="tags">
-					<span class="badge strong">{myListing.hostel}</span>
-					{#if myListing.roomNo}<span class="badge">Room {myListing.roomNo}</span>{/if}
-					<span class="badge">Floor {myListing.floor}</span>
-				</div>
-				<p class="desc">{myListing.description}</p>
-				<p class="hint">To browse a different hostel, take this down and post again.</p>
+				{#if error}<p class="err">{error}</p>{/if}
 			</section>
+		{:else}
+			<!-- Your listing, or the form to post one -->
+			{#if myListing}
+				<section class="panel mine-panel">
+					<div class="mine-head">
+						<span class="label">Your listing</span>
+						<button class="btn btn-sm btn-danger" onclick={takeDown} disabled={posting}>
+							Take down
+						</button>
+					</div>
+					<div class="tags">
+						<span class="badge strong">{myListing.hostel}</span>
+						<span class="badge">Room {myListing.roomNo}</span>
+						<span class="badge">Floor {myListing.floor}</span>
+					</div>
+					<p class="desc">{myListing.description}</p>
+				</section>
+			{:else}
+				<section class="panel">
+					<div class="post-head">
+						<h2>Post your room</h2>
+						<span class="badge strong">{hostel}</span>
+					</div>
+					<p class="panel-sub">Let others know you're looking to swap. Optional — you can just browse.</p>
+					<form onsubmit={(e) => (e.preventDefault(), submit())} class="post-form">
+						<div class="row3">
+							<label class="field">
+								<span>Room no.</span>
+								<input class="input" bind:value={form.roomNo} placeholder="521" required />
+							</label>
+							<label class="field">
+								<span>Floor</span>
+								<input class="input" type="number" min="0" bind:value={form.floor} placeholder="5" required />
+							</label>
+							<label class="field">
+								<span>Phone (WhatsApp)</span>
+								<input class="input" type="tel" bind:value={form.phone} placeholder="10-digit mobile" required />
+							</label>
+						</div>
+						<label class="field">
+							<span>What room do you want?</span>
+							<textarea
+								class="input"
+								bind:value={form.description}
+								rows="2"
+								maxlength="300"
+								placeholder="Any room on the 5th floor, or any room near 521"
+								required
+							></textarea>
+						</label>
+						{#if formError}<p class="err">{formError}</p>{/if}
+						<button class="btn btn-primary submit" type="submit" disabled={posting}>
+							{posting ? "Posting…" : "Post listing"}
+						</button>
+					</form>
+				</section>
+			{/if}
 
-			<!-- Board (locked to your hostel) -->
+			<!-- Board -->
 			<section class="panel">
 				<div class="board-head">
-					<h2>Swaps in {boardHostel}</h2>
-					<select class="input floor-sel" bind:value={floorFilter} aria-label="Filter by floor">
-						<option value="">All floors</option>
-						{#each floors as f}<option value={String(f)}>Floor {f}</option>{/each}
-					</select>
+					<h2>Looking to swap</h2>
+					<div class="filters">
+						<select
+							class="input"
+							value={hostel}
+							onchange={(e) => chooseHostel(e.currentTarget.value)}
+							aria-label="Hostel"
+						>
+							{#each HOSTELS as h}<option value={h}>{h}</option>{/each}
+						</select>
+						<select class="input" bind:value={floorFilter} aria-label="Filter by floor">
+							<option value="">All floors</option>
+							{#each floors as f}<option value={String(f)}>Floor {f}</option>{/each}
+						</select>
+					</div>
 				</div>
 
-				{#if board.filter((l) => l.email !== me?.email).length === 0}
-					<p class="muted">No one else in {boardHostel} has posted yet. Check back later.</p>
+				{#if board.length === 0}
+					<p class="muted">
+						{floorFilter
+							? `No one on floor ${floorFilter} in ${hostel} right now.`
+							: `No one else in ${hostel} has posted yet. Check back later.`}
+					</p>
 				{:else}
 					<div class="cards">
 						{#each board as l (l.id)}
-							{#if l.email !== me?.email}
-								<div class="card">
-									<div class="card-top">
-										{#if l.roomNo}<span class="badge strong">Room {l.roomNo}</span>{/if}
-										<span class="badge">Floor {l.floor}</span>
-									</div>
-									<p class="desc">{l.description}</p>
-									<div class="card-meta">— {l.name}</div>
-									<div class="card-actions">
-										<a class="btn btn-sm btn-primary" href={waLink(l.phone)} target="_blank" rel="noopener">
-											WhatsApp
-										</a>
-										<a class="btn btn-sm" href={`mailto:${l.email}`}>Email</a>
-									</div>
+							<div class="card">
+								<div class="card-top">
+									<span class="badge strong">Room {l.roomNo}</span>
+									<span class="badge">Floor {l.floor}</span>
 								</div>
-							{/if}
+								<p class="desc">{l.description}</p>
+								<div class="card-meta">— {l.name}</div>
+								<div class="card-actions">
+									<a class="btn btn-sm btn-primary" href={waLink(l.phone)} target="_blank" rel="noopener">
+										WhatsApp
+									</a>
+									<a class="btn btn-sm" href={`mailto:${l.email}`}>Email</a>
+								</div>
+							</div>
 						{/each}
 					</div>
 				{/if}
 				{#if error}<p class="err">{error}</p>{/if}
-			</section>
-		{:else}
-			<!-- No listing yet → post one to unlock the board -->
-			<section class="panel">
-				<h2>Post your room</h2>
-				<p class="panel-sub">Post your room to see everyone else in your hostel looking to swap.</p>
-				<form onsubmit={(e) => (e.preventDefault(), submit())} class="post-form">
-					<label class="field">
-						<span>Hostel</span>
-						<select class="input" bind:value={form.hostel} required>
-							<option value="" disabled>Select your hostel</option>
-							{#each HOSTELS as h}<option value={h}>{h}</option>{/each}
-						</select>
-					</label>
-					<div class="row3">
-						<label class="field">
-							<span>Room no.</span>
-							<input class="input" bind:value={form.roomNo} placeholder="521" />
-							<span class="field-hint">
-								Since room no. isn't released yet, you can leave this empty and opt for floor
-								alone.
-							</span>
-						</label>
-						<label class="field">
-							<span>Floor</span>
-							<input class="input" type="number" min="0" bind:value={form.floor} placeholder="5" required />
-						</label>
-						<label class="field">
-							<span>Phone (WhatsApp)</span>
-							<input class="input" type="tel" bind:value={form.phone} placeholder="10-digit mobile" required />
-						</label>
-					</div>
-					<label class="field">
-						<span>What room do you want?</span>
-						<textarea
-							class="input"
-							bind:value={form.description}
-							rows="2"
-							maxlength="300"
-							placeholder="Any room on the 5th floor, or any room near 521"
-							required
-						></textarea>
-					</label>
-					{#if formError}<p class="err">{formError}</p>{/if}
-					<button class="btn btn-primary submit" type="submit" disabled={posting}>
-						{posting ? "Posting…" : "Post listing"}
-					</button>
-				</form>
 			</section>
 		{/if}
 	{/if}
@@ -373,6 +415,25 @@
 		color: var(--text-secondary);
 		font-size: 0.875rem;
 	}
+	.label {
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	/* Onboarding */
+	.onboard h2 {
+		margin-top: 0.6rem;
+	}
+	.onboard-row {
+		display: flex;
+		gap: 0.6rem;
+	}
+	.onboard-row .input {
+		flex: 1;
+	}
 
 	/* Your listing */
 	.mine-panel {
@@ -385,26 +446,21 @@
 		gap: 1rem;
 		margin-bottom: 1rem;
 	}
-	.label {
-		font-family: var(--font-mono);
-		font-size: 0.68rem;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		color: var(--text-muted);
-	}
 	.tags {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.4rem;
 		margin-bottom: 0.75rem;
 	}
-	.hint {
-		margin-top: 0.75rem;
-		font-size: 0.78rem;
-		color: var(--text-muted);
-	}
 
 	/* Post form */
+	.post-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+	}
 	.post-form {
 		display: flex;
 		flex-direction: column;
@@ -422,11 +478,6 @@
 		display: grid;
 		grid-template-columns: 1.4fr 0.8fr 1.6fr;
 		gap: 0.85rem;
-	}
-	.field-hint {
-		font-size: 0.72rem;
-		color: var(--text-muted);
-		line-height: 1.35;
 	}
 	textarea.input {
 		resize: vertical;
@@ -447,7 +498,12 @@
 		flex-wrap: wrap;
 		margin-bottom: 1.25rem;
 	}
-	.floor-sel {
+	.filters {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.filters .input {
 		width: auto;
 		padding: 0.45rem 0.7rem;
 		font-size: 0.85rem;
@@ -500,8 +556,19 @@
 		color: var(--text-muted);
 		font-size: 0.9rem;
 	}
+	.err {
+		color: #ff6b6b;
+		font-size: 0.85rem;
+	}
+	.notice {
+		padding: 1rem;
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		color: var(--text-secondary);
+		font-size: 0.9rem;
+	}
 
-	/* Loading skeleton for the your-listing / board fetch */
+	/* Loading skeleton */
 	.skel {
 		border-radius: 6px;
 		background: linear-gradient(90deg, var(--bg-input) 25%, var(--bg-hover) 37%, var(--bg-input) 63%);
@@ -543,17 +610,6 @@
 			animation: none;
 		}
 	}
-	.err {
-		color: #ff6b6b;
-		font-size: 0.85rem;
-	}
-	.notice {
-		padding: 1rem;
-		border: 1px solid var(--border);
-		border-radius: 12px;
-		color: var(--text-secondary);
-		font-size: 0.9rem;
-	}
 
 	@media (max-width: 560px) {
 		.rs {
@@ -567,6 +623,16 @@
 		}
 		.row3 .field:last-child {
 			grid-column: 1 / -1;
+		}
+		.onboard-row {
+			flex-direction: column;
+		}
+		.filters {
+			width: 100%;
+		}
+		.filters .input {
+			flex: 1;
+			min-width: 0;
 		}
 		.cards {
 			grid-template-columns: 1fr;

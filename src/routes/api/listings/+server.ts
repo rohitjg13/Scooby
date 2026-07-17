@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { listings, verifyGoogle } from "$lib/server/roomSwitch";
-import { validateListing, type Listing } from "$lib/roomSwitch";
+import { HOSTELS, validateListing, type Listing } from "$lib/roomSwitch";
 
 // Token comes in the Authorization header: "Bearer <google-id-token>".
 function bearer(request: Request): string {
@@ -13,16 +13,27 @@ function toListing(doc: any): Listing {
 	return { id: String(_id), ...rest } as Listing;
 }
 
-// GET /api/listings — the board for YOUR hostel only. You see listings from the
-// hostel of your own active listing; no listing → empty board (post one first).
-export const GET: RequestHandler = async ({ request }) => {
+// GET /api/listings?hostel=X — the board for hostel X, plus your own listing
+// (whatever hostel it's in). Omit ?hostel and we fall back to your listing's
+// hostel, so a returning user skips the hostel prompt.
+export const GET: RequestHandler = async ({ request, url }) => {
 	const user = await verifyGoogle(bearer(request));
 	if (!user) return json({ error: "Sign in with your SNU account." }, { status: 401 });
+
 	const col = await listings();
 	const mine = await col.findOne({ email: user.email });
-	if (!mine) return json({ listings: [], me: user.email, myHostel: null });
-	const docs = await col.find({ hostel: mine.hostel }).sort({ createdAt: -1 }).toArray();
-	return json({ listings: docs.map(toListing), me: user.email, myHostel: mine.hostel });
+
+	const asked = url.searchParams.get("hostel");
+	const hostel = asked ?? mine?.hostel ?? null;
+	if (hostel !== null && !HOSTELS.includes(hostel)) {
+		return json({ error: "Pick a valid hostel." }, { status: 400 });
+	}
+
+	const myListing = mine ? toListing(mine) : null;
+	if (!hostel) return json({ listings: [], me: user.email, hostel: null, myListing });
+
+	const docs = await col.find({ hostel }).sort({ createdAt: -1 }).toArray();
+	return json({ listings: docs.map(toListing), me: user.email, hostel, myListing });
 };
 
 // POST /api/listings  — create/replace my listing
