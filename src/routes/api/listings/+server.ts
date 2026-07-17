@@ -39,7 +39,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		name: user.name,
 		email: user.email,
 		hostel: body.hostel,
-		roomNo: String(body.roomNo).trim(),
+		roomNo: String(body.roomNo || "").trim(),
 		floor: Number(body.floor),
 		description: String(body.description).trim(),
 		phone: String(body.phone).replace(/\D/g, ""),
