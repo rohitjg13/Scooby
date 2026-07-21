@@ -112,6 +112,8 @@
 	let mobile = $state(false);
 	let sheet = $state(0);
 	let dragging = $state(false);
+	let kb = $state(0); // on-screen keyboard + password-bar overlap (px)
+	let vvh = $state(0); // visual viewport height (px)
 	const openHeight = () => Math.min(window.innerHeight * 0.6, window.innerHeight - 110);
 	const openSheet = () => { if (mobile) sheet = openHeight(); };
 	const closeSheet = () => { sheet = 0; };
@@ -196,6 +198,16 @@
 		};
 		mq.addEventListener("change", onMq);
 
+		// lift the sheet above the on-screen keyboard / password-manager bar
+		const vv = window.visualViewport;
+		const onVV = () => {
+			vvh = vv ? vv.height : window.innerHeight;
+			kb = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+		};
+		onVV();
+		vv?.addEventListener("resize", onVV);
+		vv?.addEventListener("scroll", onVV);
+
 		(async () => {
 			const leaflet = await import("leaflet");
 			L = (leaflet as any).default ?? leaflet;
@@ -235,6 +247,8 @@
 		return () => {
 			document.body.style.overflow = prev;
 			mq.removeEventListener("change", onMq);
+			vv?.removeEventListener("resize", onVV);
+			vv?.removeEventListener("scroll", onVV);
 			map?.remove();
 		};
 	});
@@ -260,7 +274,7 @@
 		<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
 	</a>
 
-	<aside class="panel">
+	<aside class="panel" style={mobile && kb > 0 ? `bottom:${kb}px;max-height:${vvh - 12}px` : ""}>
 		<div class="drag-head" onpointerdown={grabDown} onpointermove={grabMove} onpointerup={grabUp}>
 			<div class="grab"><span></span></div>
 			<span class="eyebrow"><span class="sq"></span>Shiv Nadar Institute of Eminence</span>
