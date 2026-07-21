@@ -156,6 +156,7 @@
 	let lastT = 0;
 	let vel = 0; // px/ms, +down / -up
 	function grabDown(e: PointerEvent) {
+		if (!mobile) return;
 		dragging = true;
 		startY = lastY = e.clientY;
 		startSheet = sheet;
@@ -260,10 +261,12 @@
 	</a>
 
 	<aside class="panel">
-		<div class="grab" onpointerdown={grabDown} onpointermove={grabMove} onpointerup={grabUp}><span></span></div>
-		<div class="phead">
+		<div class="drag-head" onpointerdown={grabDown} onpointermove={grabMove} onpointerup={grabUp}>
+			<div class="grab"><span></span></div>
 			<span class="eyebrow"><span class="sq"></span>Shiv Nadar Institute of Eminence</span>
 			<h1>Scooby <em>Maps</em></h1>
+		</div>
+		<div class="phead">
 			<label class="search">
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
 				<input type="text" placeholder="Search a hostel, block, mess…" autocomplete="off" bind:value={term} onfocus={openSheet} />
@@ -355,11 +358,12 @@
 		overflow: hidden;
 	}
 	.grab { display: none; }
-	.phead { padding: 22px 22px 16px; border-bottom: 2px solid var(--ink); }
+	.drag-head { padding: 22px 22px 0; }
+	.phead { padding: 0 22px 16px; border-bottom: 2px solid var(--ink); }
 	.eyebrow { display: flex; align-items: center; gap: 8px; font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; color: var(--ink-soft); }
 	.eyebrow .sq { width: 8px; height: 8px; background: var(--accent); border: 1.5px solid var(--ink); }
-	.phead h1 { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 46px; line-height: 0.9; letter-spacing: 0.01em; text-transform: uppercase; margin: 12px 0 0; }
-	.phead h1 em { font-style: normal; color: var(--accent); }
+	.drag-head h1 { font-family: "Big Shoulders Display", sans-serif; font-weight: 800; font-size: 46px; line-height: 0.9; letter-spacing: 0.01em; text-transform: uppercase; margin: 12px 0 0; }
+	.drag-head h1 em { font-style: normal; color: var(--accent); }
 	.search { display: flex; align-items: center; gap: 10px; margin-top: 17px; padding: 11px 14px; border: 1.5px solid var(--ink); border-radius: 3px; background: var(--paper); }
 	.search svg { flex: none; stroke: var(--ink); }
 	.search input { flex: 1; background: none; border: none; outline: none; color: var(--ink); font-family: inherit; font-size: 14.5px; }
@@ -389,11 +393,14 @@
 			top: auto; bottom: 0; left: 0; right: 0; width: 100%; max-width: 100%; max-height: none;
 			border-radius: 20px 20px 0 0; border-bottom: none; box-shadow: 0 -10px 34px rgba(25, 23, 18, 0.24);
 		}
-		.grab { display: flex; justify-content: center; padding: 10px 0 4px; touch-action: none; cursor: grab; }
+		/* the whole title block is the drag handle; none so the drag doesn't scroll.
+		   chips live outside it (in .phead) so their horizontal swipe still works. */
+		.drag-head { padding: 2px 18px 0; touch-action: none; cursor: grab; }
+		.grab { display: flex; justify-content: center; padding: 10px 0 4px; }
 		.grab span { width: 44px; height: 5px; border-radius: 99px; background: var(--ink); opacity: 0.28; }
 		.eyebrow { display: none; }
-		.phead { padding: 2px 18px 14px; border-bottom: none; }
-		.phead h1 { font-size: 34px; margin-top: 2px; }
+		.phead { padding: 0 18px 14px; border-bottom: none; }
+		.drag-head h1 { font-size: 34px; margin-top: 2px; }
 		.search { margin-top: 12px; }
 		.chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; margin-top: 14px; }
 		.chips::-webkit-scrollbar { display: none; }
