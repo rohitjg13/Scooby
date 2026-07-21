@@ -107,7 +107,14 @@
 
 	let active = $state("All");
 	let term = $state("");
-	let panelOpen = $state(false);
+
+	// Mobile bottom sheet: `sheet` is the body's live height in px (0 = peek).
+	let mobile = $state(false);
+	let sheet = $state(0);
+	let dragging = $state(false);
+	const openHeight = () => Math.min(window.innerHeight * 0.6, window.innerHeight - 110);
+	const openSheet = () => { if (mobile) sheet = openHeight(); };
+	const closeSheet = () => { sheet = 0; };
 
 	const shown = $derived(
 		PLACES.filter(
@@ -122,7 +129,6 @@
 	const dirUrl = (p: Place) => `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
 	const esc = (s: string) =>
 		(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
-	const isMobile = () => typeof window !== "undefined" && window.matchMedia("(max-width:640px)").matches;
 
 	// Leaflet lives only on the client — everything below is set up in onMount.
 	let L: any;
@@ -137,31 +143,57 @@
 	}
 
 	function focus(p: Place) {
-		if (isMobile()) panelOpen = false;
+		closeSheet();
 		const m = markers.get(p);
 		if (cluster && m) cluster.zoomToShowLayer(m, () => m.openPopup());
 	}
 
-	// bottom-sheet handle: drag up/down to expand/collapse, or tap to toggle
-	let sy = 0;
-	let dragging = false;
+	// Draggable bottom-sheet handle — the sheet follows the pointer live, then
+	// snaps open/closed on release based on position + flick velocity.
+	let startY = 0;
+	let startSheet = 0;
+	let lastY = 0;
+	let lastT = 0;
+	let vel = 0; // px/ms, +down / -up
 	function grabDown(e: PointerEvent) {
-		sy = e.clientY;
 		dragging = true;
+		startY = lastY = e.clientY;
+		startSheet = sheet;
+		lastT = performance.now();
+		vel = 0;
 		(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+	}
+	function grabMove(e: PointerEvent) {
+		if (!dragging) return;
+		const now = performance.now();
+		vel = (e.clientY - lastY) / Math.max(1, now - lastT);
+		lastY = e.clientY;
+		lastT = now;
+		sheet = Math.max(0, Math.min(openHeight(), startSheet + (startY - e.clientY)));
 	}
 	function grabUp(e: PointerEvent) {
 		if (!dragging) return;
 		dragging = false;
-		const dy = e.clientY - sy;
-		if (dy < -24) panelOpen = true;
-		else if (dy > 24) panelOpen = false;
-		else panelOpen = !panelOpen;
+		const moved = Math.abs(e.clientY - startY);
+		let open: boolean;
+		if (moved < 6) open = sheet === 0; // treat as a tap → toggle
+		else if (vel < -0.35) open = true; // flick up
+		else if (vel > 0.35) open = false; // flick down
+		else open = sheet > openHeight() * 0.4; // settle by position
+		sheet = open ? openHeight() : 0;
 	}
 
 	onMount(() => {
 		const prev = document.body.style.overflow;
 		document.body.style.overflow = "hidden";
+
+		const mq = window.matchMedia("(max-width:640px)");
+		mobile = mq.matches;
+		const onMq = (e: MediaQueryListEvent) => {
+			mobile = e.matches;
+			sheet = 0;
+		};
+		mq.addEventListener("change", onMq);
 
 		(async () => {
 			const leaflet = await import("leaflet");
@@ -201,6 +233,7 @@
 
 		return () => {
 			document.body.style.overflow = prev;
+			mq.removeEventListener("change", onMq);
 			map?.remove();
 		};
 	});
@@ -226,22 +259,27 @@
 		<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
 	</a>
 
-	<aside class="panel" class:open={panelOpen}>
-		<div class="grab" onpointerdown={grabDown} onpointerup={grabUp}><span></span></div>
+	<aside class="panel">
+		<div class="grab" onpointerdown={grabDown} onpointermove={grabMove} onpointerup={grabUp}><span></span></div>
 		<div class="phead">
 			<span class="eyebrow"><span class="sq"></span>Shiv Nadar Institute of Eminence</span>
 			<h1>Scooby <em>Maps</em></h1>
 			<label class="search">
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-				<input type="text" placeholder="Search a hostel, block, mess…" autocomplete="off" bind:value={term} onfocus={() => (panelOpen = true)} />
+				<input type="text" placeholder="Search a hostel, block, mess…" autocomplete="off" bind:value={term} onfocus={openSheet} />
 			</label>
 			<div class="chips">
 				{#each types as t}
-					<button class="chip" class:active={active === t} onclick={() => { active = t; panelOpen = true; }}>{t}</button>
+					<button class="chip" class:active={active === t} onclick={() => { active = t; openSheet(); }}>{t}</button>
 				{/each}
 			</div>
 		</div>
-		<div class="body">
+		<div
+			class="body"
+			style={mobile
+				? `max-height:${sheet}px;transition:${dragging ? "none" : "max-height .42s cubic-bezier(.32,.72,0,1)"}`
+				: ""}
+		>
 			<div class="list">
 				{#each shown as p (p.name)}
 					<div class="item" role="button" tabindex="0" onclick={() => focus(p)} onkeydown={(e) => (e.key === "Enter" || e.key === " ") && focus(p)}>
@@ -360,8 +398,8 @@
 		.chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; margin-top: 14px; }
 		.chips::-webkit-scrollbar { display: none; }
 		.chip { flex: none; }
-		.body { max-height: 0; overflow: hidden; transition: max-height 0.34s cubic-bezier(0.4, 0, 0.2, 1); border-top: 2px solid var(--ink); }
-		.panel.open .body { max-height: 60vh; }
+		/* height + easing come from the inline style (live drag / snap) */
+		.body { max-height: 0; overflow: hidden; border-top: 2px solid var(--ink); }
 		.foot { padding: 9px 16px; }
 		:global(.leaflet-control-zoom) { display: none; }
 	}
