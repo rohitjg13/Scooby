@@ -344,6 +344,7 @@
 		padding: 9px;
 		background: var(--card);
 		color: var(--ink);
+		opacity: 0.7;
 		border: 2px solid var(--ink);
 		border-radius: 3px;
 		box-shadow: 4px 4px 0 var(--ink);
