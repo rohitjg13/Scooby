@@ -25,6 +25,7 @@ const ICONS = {
 		'<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18"/><path d="M8 2.5v4M16 2.5v4"/>',
 	exam: '<path d="M6 4a1 1 0 0 1 1-1h6l5 5v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4z"/><path d="M13 3v5h5"/><path d="M9 13l1.75 1.75L14 11.5"/>',
 	switch: '<path d="M4 8h13M13 4l4 4-4 4"/><path d="M20 16H7M11 20l-4-4 4-4"/>',
+	map: '<path d="M12 21s-6.5-5.2-6.5-10a6.5 6.5 0 0 1 13 0c0 4.8-6.5 10-6.5 10z"/><circle cx="12" cy="11" r="2.5"/>',
 };
 
 const PAGES = [
@@ -33,6 +34,7 @@ const PAGES = [
 	{ slug: "collision-checker", title: "Clash Checker", subtitle: "Spot UWE / CCC timetable clashes instantly", icon: "calendar" },
 	{ slug: "exam", title: "Exam Timetable", subtitle: "Mid-sem & end-sem exam schedules", icon: "exam" },
 	{ slug: "room-switch", title: "Room Switch", subtitle: "Find someone in your hostel to swap rooms with", icon: "switch" },
+	{ slug: "maps", title: "Campus Map", subtitle: "Every hostel, block & mess — with directions", icon: "map" },
 ];
 
 const esc = (s) =>

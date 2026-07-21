@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Seo from "$lib/components/Seo.svelte";
 
-	type IconName = "calendar" | "exam" | "clubs" | "switch" | "plus";
+	type IconName = "calendar" | "exam" | "clubs" | "switch" | "map" | "plus";
 
 	type Feature = {
 		title: string;
@@ -26,6 +26,14 @@
 				"Browse every cultural and technical club on campus — what they do, their logos, and where to follow them.",
 			href: "/clubs",
 			icon: "clubs",
+			tag: "Campus",
+		},
+		{
+			title: "Campus Map",
+			description:
+				"Find any hostel, block, mess, court or facility on campus — tap a pin for one-tap Google Maps directions.",
+			href: "/maps",
+			icon: "map",
 			tag: "Campus",
 		},
 		{
@@ -72,6 +80,9 @@
 			<path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
 			<path d="M16 5.5a3 3 0 0 1 0 5.5" />
 			<path d="M17 14.2a5.5 5.5 0 0 1 3.5 4.8" />
+		{:else if name === "map"}
+			<path d="M12 21s-6.5-5.2-6.5-10a6.5 6.5 0 0 1 13 0c0 4.8-6.5 10-6.5 10z" />
+			<circle cx="12" cy="11" r="2.5" />
 		{:else if name === "switch"}
 			<path d="M4 8h13M13 4l4 4-4 4" />
 			<path d="M20 16H7M11 20l-4-4 4-4" />
