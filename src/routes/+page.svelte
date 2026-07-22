@@ -9,6 +9,7 @@
 		href: string;
 		icon: IconName;
 		tag: string;
+		external?: boolean;
 	};
 
 	const features: Feature[] = [
@@ -31,10 +32,11 @@
 		{
 			title: "Campus Map",
 			description:
-				"Find any hostel, block, mess, court or facility on campus — tap a pin for one-tap Google Maps directions.",
-			href: "/maps",
+				"Find any hostel, block, mess, court or facility on campus — tap a pin for Google Maps directions.",
+			href: "https://maps.rohitjg.com",
 			icon: "map",
 			tag: "Campus",
+			external: true,
 		},
 		{
 			title: "Exam Timetable",
@@ -109,7 +111,7 @@
 
 	<section class="grid" aria-label="Features">
 		{#each features as feature, i}
-			<a class="card" href={feature.href}>
+			<a class="card" href={feature.href} target={feature.external ? "_blank" : undefined} rel={feature.external ? "noopener noreferrer" : undefined}>
 				<div class="card-top">
 					<span class="card-badge">{@render icon(feature.icon)}</span>
 					<span class="card-index">{String(i + 1).padStart(2, "0")}</span>
