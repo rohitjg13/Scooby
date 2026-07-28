@@ -21,14 +21,14 @@
 			icon: "calendar",
 			tag: "Timetable",
 		},
-		{
-			title: "Club Info",
-			description:
-				"Browse every cultural and technical club on campus — what they do, their logos, and where to follow them.",
-			href: "/clubs",
-			icon: "clubs",
-			tag: "Campus",
-		},
+		// {
+		// 	title: "Club Info",
+		// 	description:
+		// 		"Browse every cultural and technical club on campus — what they do, their logos, and where to follow them.",
+		// 	href: "/clubs",
+		// 	icon: "clubs",
+		// 	tag: "Campus",  
+		// },
 		{
 			title: "Campus Map",
 			description:
