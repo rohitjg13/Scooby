@@ -1,6 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import type { Course } from './types';
-import { parseDays, timesOverlap } from './types';
+import { hasTimeConflict } from './types';
 
 // Store for all courses loaded from the spreadsheet
 export const allCourses = writable<Course[]>([]);
@@ -53,21 +53,7 @@ export const filteredCourses = derived(
     }
 );
 
-// Check if two courses have a time conflict
-export function hasTimeConflict(course1: Course, course2: Course): boolean {
-    if (!course1.day || !course1.startTime || !course1.endTime) return false;
-    if (!course2.day || !course2.startTime || !course2.endTime) return false;
-
-    const days1 = parseDays(course1.day);
-    const days2 = parseDays(course2.day);
-
-    // Check if any days overlap
-    const commonDays = days1.filter(d => days2.includes(d));
-    if (commonDays.length === 0) return false;
-
-    // Check if times overlap
-    return timesOverlap(course1.startTime, course1.endTime, course2.startTime, course2.endTime);
-}
+export { hasTimeConflict };
 
 // Get all conflicting courses for a given course
 export function getConflicts(course: Course, batchCourses: Course[], selectedCourses: Course[]): Course[] {

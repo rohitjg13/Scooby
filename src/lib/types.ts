@@ -119,6 +119,19 @@ export function timesOverlap(start1: string, end1: string, start2: string, end2:
     return s1 < e2 && s2 < e1;
 }
 
+// Do two class rows overlap on a shared day?
+export function hasTimeConflict(course1: Course, course2: Course): boolean {
+    if (!course1.day || !course1.startTime || !course1.endTime) return false;
+    if (!course2.day || !course2.startTime || !course2.endTime) return false;
+
+    const days1 = parseDays(course1.day);
+    const days2 = parseDays(course2.day);
+
+    if (!days1.some(d => days2.includes(d))) return false;
+
+    return timesOverlap(course1.startTime, course1.endTime, course2.startTime, course2.endTime);
+}
+
 // Club info (parsed from the Recruitment Forms workbook)
 export interface Club {
     name: string;

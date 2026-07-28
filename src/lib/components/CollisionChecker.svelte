@@ -11,6 +11,16 @@
 		filteredCourses,
 		getConflicts,
 	} from "$lib/timetableStore";
+	import type { Group } from "$lib/coursePlanner";
+	import {
+		GROUP_LABEL,
+		getBaseCourseCode,
+		getComponentPrefix,
+		getDepartment,
+		groupSections,
+		sectionConflicts,
+		findCombo,
+	} from "$lib/coursePlanner";
 	import { toPng } from "html-to-image";
 	import { createEvents } from "ics";
 	import type { EventAttributes } from "ics";
@@ -208,6 +218,17 @@
 
 		// Escape closes modals/dropdowns
 		if (e.key === "Escape") {
+			if (plannerBase) {
+				plannerBase = null;
+				e.preventDefault();
+				return;
+			}
+			if (showBrowse) {
+				if (browseDept) browseDept = null;
+				else showBrowse = false;
+				e.preventDefault();
+				return;
+			}
 			if (selectedCourseDetails) {
 				selectedCourseDetails = null;
 				e.preventDefault();
@@ -440,30 +461,17 @@
 		searchQuery.set(searchInput);
 	}
 
-	function addCourse(course: Course) {
-		const conflicts = getConflicts(
-			course,
-			getEffectiveCoursesList($batchCourses),
-			$selectedCourses,
-		);
-		if (conflicts.length > 0) return;
-
-		selectedCourses.update((courses) => {
-			if (courses.find((c) => c.sno === course.sno)) return courses;
-			return [...courses, course];
-		});
-		searchInput = "";
-		searchQuery.set("");
-	}
-
+	// Removes every row of the section (a section can meet on several rows)
 	function removeCourse(course: Course) {
 		selectedCourses.update((courses) =>
-			courses.filter((c) => c.sno !== course.sno),
+			courses.filter((c) => c.courseCode !== course.courseCode),
 		);
 	}
 
 	function isSelected(course: Course): boolean {
-		return $selectedCourses.some((c) => c.sno === course.sno);
+		return $selectedCourses.some(
+			(c) => c.courseCode === course.courseCode,
+		);
 	}
 
 	// function isSelected(course: Course): boolean {
@@ -499,24 +507,6 @@
 
 	// Store for excluded/removed batch courses: courseCode
 	let excludedCourseCodes = $state<Set<string>>(new Set());
-
-	function getBaseCourseCode(courseCode: string): string {
-		return courseCode.split("-")[0];
-	}
-
-	function getComponentPrefix(course: Course): string {
-		const compVal = course.component?.toUpperCase() || "";
-		if (compVal.startsWith("LEC")) return "LEC";
-		if (compVal.startsWith("TUT")) return "TUT";
-		if (compVal.startsWith("PRAC")) return "PRAC";
-
-		const slotVal = course.slot?.toUpperCase() || "";
-		if (slotVal.startsWith("LEC")) return "LEC";
-		if (slotVal.startsWith("TUT")) return "TUT";
-		if (slotVal.startsWith("PRAC")) return "PRAC";
-
-		return "";
-	}
 
 	function getSection(course: Course): string {
 		return course.slot || course.component || "";
@@ -629,6 +619,199 @@
 			return { original, effective, isSwapped, isExcluded };
 		});
 	}
+
+	/* ---- Whole-course planner ----
+	   A course = one section from each component group (one LEC, one TUT,
+	   one PRAC). "Fits" means some combination of those has no clash. */
+
+	function getCourseGroups(baseCode: string): Group[] {
+		return groupSections(
+			$allCourses.filter(
+				(c) => getBaseCourseCode(c.courseCode) === baseCode,
+			),
+		);
+	}
+
+	// Everything on the timetable except the course being planned
+	function timetableExcluding(baseCode: string): Course[] {
+		return [
+			...getEffectiveCoursesList($batchCourses),
+			...getEffectiveCoursesList($selectedCourses),
+		].filter((c) => getBaseCourseCode(c.courseCode) !== baseCode);
+	}
+
+	function inTimetable(sectionCode: string): boolean {
+		return [...getEffectiveCoursesList($batchCourses), ...$selectedCourses]
+			.some((c) => c.courseCode === sectionCode);
+	}
+
+	// Sections of this course the user already has — those are fixed
+	function lockedSections(groups: Group[]): Record<string, string> {
+		const locked: Record<string, string> = {};
+		for (const g of groups) {
+			const added = g.sections.find((s) => inTimetable(s.code));
+			if (added) locked[g.prefix] = added.code;
+		}
+		return locked;
+	}
+
+	let plannerBase = $state<string | null>(null);
+	let plannerPicks = $state<Record<string, string>>({});
+	let plannerGroups = $derived(
+		plannerBase ? getCourseGroups(plannerBase) : [],
+	);
+
+	function openPlanner(course: Course) {
+		const base = getBaseCourseCode(course.courseCode);
+		const groups = getCourseGroups(base);
+		const existing = timetableExcluding(base);
+		const locked = lockedSections(groups);
+		const clickedPrefix = getComponentPrefix(course) || "OTHER";
+
+		// Prefer a combination that keeps the section the user clicked
+		const combo =
+			findCombo(groups, existing, {
+				...locked,
+				[clickedPrefix]: course.courseCode,
+			}) ?? findCombo(groups, existing, locked);
+
+		const picks = { ...locked, ...(combo ?? {}) };
+		if (!combo) {
+			for (const g of groups) {
+				if (picks[g.prefix]) continue;
+				picks[g.prefix] =
+					g.prefix === clickedPrefix
+						? course.courseCode
+						: g.sections[0].code;
+			}
+		}
+
+		plannerPicks = picks;
+		plannerBase = base;
+	}
+
+	// Rows of the picked sections of every *other* group
+	function pickedRowsExcept(prefix: string): Course[] {
+		return plannerGroups
+			.filter((g) => g.prefix !== prefix)
+			.flatMap(
+				(g) =>
+					g.sections.find((s) => s.code === plannerPicks[g.prefix])
+						?.rows ?? [],
+			);
+	}
+
+	function addPlannedCourse() {
+		const rows = plannerGroups.flatMap((g) => {
+			const s = g.sections.find((x) => x.code === plannerPicks[g.prefix]);
+			return s && !inTimetable(s.code) ? s.rows : [];
+		});
+
+		selectedCourses.update((cur) => [
+			...cur,
+			...rows.filter((r) => !cur.some((c) => c.sno === r.sno)),
+		]);
+		plannerBase = null;
+		searchInput = "";
+		searchQuery.set("");
+	}
+
+	/* ---- Browse by department ---- */
+
+	let showBrowse = $state(false);
+	let browseDept = $state<string | null>(null);
+	let browseFilter = $state("");
+
+	// dept -> base course codes, both sorted
+	let departments = $derived.by(() => {
+		const map = new Map<string, string[]>();
+		const seen = new Set<string>();
+		for (const c of $allCourses) {
+			const base = getBaseCourseCode(c.courseCode);
+			if (seen.has(base)) continue;
+			seen.add(base);
+			const dept = getDepartment(c.courseCode) || "OTHER";
+			if (!map.has(dept)) map.set(dept, []);
+			map.get(dept)!.push(base);
+		}
+		return new Map(
+			[...map]
+				.sort((a, b) => a[0].localeCompare(b[0]))
+				.map(([dept, codes]) => [dept, codes.sort()] as const),
+		);
+	});
+
+	// Courses of the open department, with whether the whole course still fits
+	let browseCourses = $derived.by(() => {
+		if (!browseDept) return [];
+		const query = browseFilter.toLowerCase().trim();
+
+		return (departments.get(browseDept) ?? []).flatMap((base) => {
+			const sample = $allCourses.find(
+				(c) => getBaseCourseCode(c.courseCode) === base,
+			);
+			if (!sample) return [];
+			if (
+				query &&
+				!base.toLowerCase().includes(query) &&
+				!sample.courseName.toLowerCase().includes(query) &&
+				!sample.faculty.toLowerCase().includes(query)
+			)
+				return [];
+
+			const groups = getCourseGroups(base);
+			return [
+				{
+					base,
+					sample,
+					groups,
+					added: groups.some((g) =>
+						g.sections.some((s) => inTimetable(s.code)),
+					),
+					fits: !!findCombo(
+						groups,
+						timetableExcluding(base),
+						lockedSections(groups),
+					),
+				},
+			];
+		});
+	});
+
+	function openBrowseDept(dept: string) {
+		browseDept = dept;
+		browseFilter = "";
+	}
+
+	// Whole-course fit status for the current search results
+	let courseFitInfo = $derived.by(() => {
+		const map = new Map<string, { fits: boolean; multi: boolean }>();
+		for (const c of $filteredCourses) {
+			const base = getBaseCourseCode(c.courseCode);
+			if (map.has(base)) continue;
+			const groups = getCourseGroups(base);
+			map.set(base, {
+				fits: !!findCombo(
+					groups,
+					timetableExcluding(base),
+					lockedSections(groups),
+				),
+				multi:
+					groups.length > 1 ||
+					groups.some((g) => g.sections.length > 1),
+			});
+		}
+		return map;
+	});
+
+	// One entry per added section (a section can span several rows)
+	let uniqueSelected = $derived(
+		[
+			...new Map(
+				$selectedCourses.map((c) => [c.courseCode, c] as const),
+			).values(),
+		],
+	);
 
 	// Track which course is showing swap dropdown
 	let showingSwapFor = $state<string | null>(null);
@@ -892,6 +1075,9 @@
 								{@const hasConflict = conflicts.length > 0}
 								{@const selected = isSelected(course)}
 								{@const batch = isBatchCourse(course)}
+								{@const fit = courseFitInfo.get(
+									course.courseCode.split("-")[0],
+								)}
 								<div
 									class="dropdown-item"
 									class:dimmed={hasConflict}
@@ -943,6 +1129,16 @@
 													.join(", ")}</span
 											>
 										{/if}
+										{#if fit?.multi}
+											<span
+												class="fit-note"
+												class:bad={!fit.fits}
+											>
+												{fit.fits
+													? "✓ Full course fits"
+													: "✕ Full course can't fit"}
+											</span>
+										{/if}
 									</div>
 									<div class="item-action">
 										{#if batch}
@@ -958,12 +1154,9 @@
 											<button
 												class="btn small"
 												onclick={() =>
-													addCourse(course)}
-												disabled={hasConflict}
+													openPlanner(course)}
 											>
-												{hasConflict
-													? "Conflict"
-													: "Add"}
+												Add
 											</button>
 										{/if}
 									</div>
@@ -971,6 +1164,13 @@
 							{/each}
 						</div>
 					{/if}
+					<button
+						class="browse-link"
+						onclick={() => (showBrowse = true)}
+						title="Browse courses by department"
+					>
+						Browse by department →
+					</button>
 				</div>
 
 				<div class="header-actions">
@@ -1028,11 +1228,6 @@
 						</span>
 						Export Calendar
 					</button>
-					<a
-						href="/exam"
-						class="btn secondary"
-						title="View Exam Timetable">Exam Timetable</a
-					>
 					<button
 						class="btn secondary"
 						onclick={() => (showUWEList = true)}
@@ -1420,14 +1615,14 @@
 					{/if}
 				</div>
 
-				{#if $selectedCourses.length > 0}
+				{#if uniqueSelected.length > 0}
 					<div class="list-box">
 						<h3>
 							Added <span class="muted"
-								>({$selectedCourses.length})</span
+								>({uniqueSelected.length})</span
 							>
 						</h3>
-						{#each $selectedCourses as course}
+						{#each uniqueSelected as course}
 							<div class="list-item added">
 								<div>
 									<span class="mono"
@@ -1740,12 +1935,10 @@
 										onclick={() => removeCourse(course)}
 										>Remove</button
 									>
-								{:else if hasConflict}
-									<span class="badge warning">Conflict</span>
 								{:else}
 									<button
 										class="btn small"
-										onclick={() => addCourse(course)}
+										onclick={() => openPlanner(course)}
 										>Add</button
 									>
 								{/if}
@@ -1860,12 +2053,10 @@
 										onclick={() => removeCourse(course)}
 										>Remove</button
 									>
-								{:else if hasConflict}
-									<span class="badge warning">Conflict</span>
 								{:else}
 									<button
 										class="btn small"
-										onclick={() => addCourse(course)}
+										onclick={() => openPlanner(course)}
 										>Add</button
 									>
 								{/if}
@@ -1880,6 +2071,258 @@
 					class="btn primary"
 					onclick={() => (showCCCList = false)}>Close</button
 				>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Browse by department -->
+	{#if showBrowse}
+		<div
+			class="modal-overlay"
+			onclick={() => (showBrowse = false)}
+			role="button"
+			tabindex="-1"
+			onkeydown={(e) => e.key === "Escape" && (showBrowse = false)}
+		>
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<div
+				class="modal course-list-modal"
+				onclick={(e) => e.stopPropagation()}
+				role="dialog"
+				tabindex="-1"
+			>
+				<button class="modal-close" onclick={() => (showBrowse = false)}
+					>×</button
+				>
+
+				{#if !browseDept}
+					<h2>Browse by Department</h2>
+					<div class="dept-grid">
+						{#each departments as [dept, codes]}
+							<button
+								class="dept-card"
+								onclick={() => openBrowseDept(dept)}
+							>
+								<span class="mono dept-code">{dept}</span>
+								<span class="muted small"
+									>{codes.length} courses</span
+								>
+							</button>
+						{/each}
+					</div>
+				{:else}
+					<h2>
+						<button
+							class="dept-back"
+							onclick={() => (browseDept = null)}>←</button
+						>
+						{browseDept}
+						<span class="muted small"
+							>({browseCourses.length})</span
+						>
+					</h2>
+
+					<input
+						type="text"
+						class="input dept-filter"
+						placeholder="Filter this department…"
+						bind:value={browseFilter}
+						autocomplete="off"
+					/>
+
+					<div class="course-list-container">
+						{#each browseCourses as { base, sample, groups, added, fits }}
+							<div class="course-list-item" class:dimmed={!fits}>
+								<div class="course-list-info">
+									<div class="course-list-header">
+										<span class="mono">{base}</span>
+										{#if sample.openAsUWE}
+											<span class="comp-badge">UWE</span>
+										{/if}
+										{#if sample.credits}
+											<span class="cr-badge"
+												>{sample.credits} Cr</span
+											>
+										{/if}
+									</div>
+									<span class="course-list-name"
+										>{sample.courseName}</span
+									>
+									<span class="muted small">
+										{groups
+											.map(
+												(g) =>
+													`${GROUP_LABEL[g.prefix]} ×${g.sections.length}`,
+											)
+											.join(" • ")}
+									</span>
+									<span
+										class="fit-note"
+										class:bad={!fits && !added}
+									>
+										{#if added}
+											✓ In your timetable
+										{:else if fits}
+											✓ Fits your timetable
+										{:else}
+											✕ Clashes — no free combination
+										{/if}
+									</span>
+								</div>
+								<div class="course-list-actions">
+									<button
+										class="btn small"
+										onclick={() => openPlanner(sample)}
+										>{added ? "Sections" : "Add"}</button
+									>
+								</div>
+							</div>
+						{:else}
+							<p class="muted">No courses match.</p>
+						{/each}
+					</div>
+				{/if}
+
+				<button class="btn primary" onclick={() => (showBrowse = false)}
+					>Close</button
+				>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Whole-course planner -->
+	{#if plannerBase}
+		{@const existing = timetableExcluding(plannerBase)}
+		{@const sample = $allCourses.find(
+			(c) => getBaseCourseCode(c.courseCode) === plannerBase,
+		)}
+		{@const unresolved = plannerGroups.filter((g) => {
+			const s = g.sections.find((x) => x.code === plannerPicks[g.prefix]);
+			return (
+				!s ||
+				sectionConflicts(s.rows, [
+					...existing,
+					...pickedRowsExcept(g.prefix),
+				]).length > 0
+			);
+		})}
+		<div
+			class="modal-overlay planner-overlay"
+			onclick={() => (plannerBase = null)}
+			role="button"
+			tabindex="-1"
+			onkeydown={(e) => e.key === "Escape" && (plannerBase = null)}
+		>
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<div
+				class="modal planner-modal"
+				onclick={(e) => e.stopPropagation()}
+				role="dialog"
+				tabindex="-1"
+			>
+				<button class="modal-close" onclick={() => (plannerBase = null)}
+					>×</button
+				>
+				<h2>{plannerBase}</h2>
+				<p class="planner-name">{sample?.courseName ?? ""}</p>
+
+				<div
+					class="planner-status"
+					class:bad={unresolved.length > 0}
+				>
+					{#if unresolved.length === 0}
+						✓ This whole course fits your timetable
+					{:else}
+						✕ Clash in {unresolved
+							.map((g) => GROUP_LABEL[g.prefix])
+							.join(", ")} — try another section
+					{/if}
+				</div>
+
+				<div class="planner-groups">
+					{#each plannerGroups as group}
+						<div class="planner-group">
+							<h3 class="planner-group-title">
+								{GROUP_LABEL[group.prefix]}
+								<span class="muted small"
+									>pick one of {group.sections.length}</span
+								>
+							</h3>
+							{#each group.sections as section}
+								{@const conflicts = sectionConflicts(
+									section.rows,
+									[
+										...existing,
+										...pickedRowsExcept(group.prefix),
+									],
+								)}
+								{@const already = inTimetable(section.code)}
+								<button
+									class="planner-option"
+									class:picked={plannerPicks[group.prefix] ===
+										section.code}
+									class:already
+									class:has-conflict={conflicts.length > 0}
+									disabled={already}
+									onclick={() =>
+										(plannerPicks = {
+											...plannerPicks,
+											[group.prefix]: section.code,
+										})}
+								>
+									<span class="planner-option-head">
+										<span class="mono"
+											>{section.code.split("-")[1] ??
+												section.code}</span
+										>
+										{#if already}
+											<span class="badge ok"
+												>Already in your timetable</span
+											>
+										{:else if conflicts.length > 0}
+											<span class="badge warning"
+												>Clash</span
+											>
+										{:else}
+											<span class="badge ok">Free</span>
+										{/if}
+									</span>
+									{#each section.rows as row}
+										<span class="muted small"
+											>{row.day}
+											{row.startTime}-{row.endTime} • {row.room}</span
+										>
+									{/each}
+									{#if conflicts.length > 0 && !already}
+										<span class="planner-conflict"
+											>⚠ Clashes with {conflicts
+												.map(
+													(c) =>
+														c.courseCode.split(
+															"-",
+														)[0],
+												)
+												.join(", ")}</span
+										>
+									{/if}
+								</button>
+							{/each}
+						</div>
+					{/each}
+				</div>
+
+				<div class="planner-actions">
+					<button class="btn" onclick={() => (plannerBase = null)}
+						>Cancel</button
+					>
+					<button
+						class="btn primary"
+						onclick={addPlannedCourse}
+						disabled={unresolved.length > 0}
+					>
+						Add course
+					</button>
+				</div>
 			</div>
 		</div>
 	{/if}
@@ -3185,8 +3628,208 @@
 		color: #aaa;
 	}
 
-	.course-list-actions .badge.warning {
+	/* Browse by department */
+	.browse-link {
+		display: block;
+		margin-top: 0.35rem;
+		padding: 0;
+		background: none;
+		border: none;
+		color: #888;
+		font-size: 0.78rem;
+		cursor: pointer;
+		transition: color 0.15s;
+	}
+
+	.browse-link:hover {
+		color: #fff;
+	}
+
+	.dept-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+		gap: 0.5rem;
+		max-height: 60vh;
+		overflow-y: auto;
+		margin-bottom: 1rem;
+	}
+
+	.dept-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		align-items: flex-start;
+		padding: 0.6rem 0.7rem;
+		background: #1a1a1a;
+		border: 1px solid #333;
+		border-radius: 6px;
+		color: #ddd;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.dept-card:hover {
+		border-color: #666;
+		background: #222;
+	}
+
+	.dept-code {
+		font-size: 1rem;
+	}
+
+	.dept-back {
+		background: none;
+		border: none;
+		color: #888;
+		font-size: 1.1rem;
+		cursor: pointer;
+		padding: 0 0.4rem 0 0;
+	}
+
+	.dept-back:hover {
+		color: #fff;
+	}
+
+	.dept-filter {
+		width: 100%;
+		margin-bottom: 0.75rem;
+	}
+
+	/* Whole-course planner */
+	.fit-note {
+		font-size: 0.7rem;
+		color: #22c55e;
+	}
+
+	.fit-note.bad {
+		color: #f59e0b;
+	}
+
+	.planner-overlay {
+		z-index: 1200;
+	}
+
+	.planner-modal {
+		max-width: 560px;
+		width: 92vw;
+		text-align: left;
+		position: relative;
+	}
+
+	.planner-modal h2 {
+		font-family: "SF Mono", monospace;
+		margin-bottom: 0.25rem;
+	}
+
+	.planner-name {
+		color: #aaa;
+		font-size: 0.9rem;
+		margin-bottom: 1rem;
+	}
+
+	.planner-status {
+		padding: 0.6rem 0.8rem;
+		border-radius: 6px;
+		font-size: 0.85rem;
+		background: rgba(34, 197, 94, 0.12);
+		color: #22c55e;
+		margin-bottom: 1rem;
+	}
+
+	.planner-status.bad {
+		background: rgba(245, 158, 11, 0.12);
+		color: #f59e0b;
+	}
+
+	.planner-groups {
+		max-height: 55vh;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.planner-group-title {
+		font-size: 0.8rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: #888;
+		margin-bottom: 0.5rem;
+		display: flex;
+		gap: 0.5rem;
+		align-items: baseline;
+	}
+
+	.planner-option {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		width: 100%;
+		text-align: left;
+		padding: 0.6rem 0.75rem;
+		margin-bottom: 0.4rem;
+		background: #1a1a1a;
+		border: 1px solid #333;
+		border-radius: 6px;
+		color: #ddd;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.planner-option:hover:not(:disabled) {
+		border-color: #666;
+	}
+
+	.planner-option.picked {
+		border-color: #fff;
+		background: #222;
+	}
+
+	.planner-option.has-conflict {
+		opacity: 0.6;
+	}
+
+	.planner-option.already {
+		cursor: default;
+		border-color: rgba(34, 197, 94, 0.5);
+		background: rgba(34, 197, 94, 0.1);
+		opacity: 1;
+	}
+
+	.planner-option-head {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		justify-content: space-between;
+	}
+
+	.planner-option .badge {
+		padding: 0.15rem 0.45rem;
+		font-size: 0.68rem;
+		border-radius: 4px;
+		background: #333;
+		color: #aaa;
+	}
+
+	.planner-option .badge.ok {
+		background: rgba(34, 197, 94, 0.18);
+		color: #22c55e;
+	}
+
+	.planner-option .badge.warning {
 		background: rgba(245, 158, 11, 0.2);
 		color: #f59e0b;
+	}
+
+	.planner-conflict {
+		font-size: 0.72rem;
+		color: #f59e0b;
+	}
+
+	.planner-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.5rem;
+		margin-top: 1.25rem;
 	}
 </style>
