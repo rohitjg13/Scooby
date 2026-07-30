@@ -23,6 +23,7 @@
 	const HOSTEL_MAPS: Record<string, string> = {
 		"Mudumalai(4C)": "/hostel-maps/mudumalai.jpeg",
 	};
+	let mapDialog = $state<HTMLDialogElement>();
 
 	// post form — hostel comes from the selected hostel, not a field
 	let form = $state<Omit<ListingInput, "hostel">>({ roomNo: "", floor: 0, description: "", phone: "" });
@@ -258,11 +259,15 @@
 
 			{#if HOSTEL_MAPS[hostel]}
 				<div class="map-row">
-					<a class="btn btn-sm" href={HOSTEL_MAPS[hostel]} target="_blank" rel="noopener">
+					<button type="button" class="btn btn-sm" onclick={() => mapDialog?.showModal()}>
 						View floor layout
-					</a>
+					</button>
 					<span class="map-credit">Map: @wrongbora</span>
 				</div>
+				<dialog bind:this={mapDialog} class="map-dialog" onclick={(e) => e.target === mapDialog && mapDialog.close()}>
+					<img src={HOSTEL_MAPS[hostel]} alt="{hostel} floor layout" />
+					<button type="button" class="btn btn-sm map-close" onclick={() => mapDialog?.close()}>Close</button>
+				</dialog>
 			{/if}
 
 			<!-- Your listing, or the form to post one -->
@@ -562,6 +567,26 @@
 	.map-credit {
 		font-size: 0.75rem;
 		color: var(--text-muted);
+	}
+	.map-dialog {
+		border: 1px solid var(--border);
+		border-radius: 14px;
+		background: var(--bg-card);
+		padding: 1rem;
+		max-width: min(90vw, 640px);
+		max-height: 85vh;
+	}
+	.map-dialog::backdrop {
+		background: rgba(0, 0, 0, 0.6);
+	}
+	.map-dialog img {
+		display: block;
+		max-width: 100%;
+		max-height: 70vh;
+		border-radius: 8px;
+	}
+	.map-close {
+		margin-top: 0.75rem;
 	}
 	.hostel-sel:hover {
 		border-color: var(--border-hover);
