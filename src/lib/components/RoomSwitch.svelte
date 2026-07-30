@@ -20,10 +20,14 @@
 	let floorFilter = $state<string>("");
 
 	// Floor layout images, added per hostel as they come in.
-	const HOSTEL_MAPS: Record<string, string> = {
-		"Mudumalai(4C)": "/hostel-maps/mudumalai.jpeg",
+	const HOSTEL_MAPS: Record<string, { label: string; src: string }[]> = {
+		"Mudumalai(4C)": [
+			{ label: "1st floor", src: "/hostel-maps/mudumalai-1st-floor.jpeg" },
+			{ label: "Other floors", src: "/hostel-maps/mudumalai.jpeg" },
+		],
 	};
 	let mapDialog = $state<HTMLDialogElement>();
+	let mapIndex = $state(0);
 
 	// post form — hostel comes from the selected hostel, not a field
 	let form = $state<Omit<ListingInput, "hostel">>({ roomNo: "", floor: 0, description: "", phone: "" });
@@ -259,13 +263,29 @@
 
 			{#if HOSTEL_MAPS[hostel]}
 				<div class="map-row">
-					<button type="button" class="btn btn-sm" onclick={() => mapDialog?.showModal()}>
+					<button type="button" class="btn btn-sm" onclick={() => (mapIndex = 0, mapDialog?.showModal())}>
 						View floor layout
 					</button>
 					<span class="map-credit">Map: @wrongbora</span>
 				</div>
 				<dialog bind:this={mapDialog} class="map-dialog" onclick={(e) => e.target === mapDialog && mapDialog.close()}>
-					<img src={HOSTEL_MAPS[hostel]} alt="{hostel} floor layout" />
+					{#if HOSTEL_MAPS[hostel].length > 1}
+						<div class="map-picker" role="tablist" aria-label="Floor">
+							{#each HOSTEL_MAPS[hostel] as m, i}
+								<button
+									type="button"
+									role="tab"
+									aria-selected={i === mapIndex}
+									class="map-picker-btn"
+									class:active={i === mapIndex}
+									onclick={() => (mapIndex = i)}
+								>
+									{m.label}
+								</button>
+							{/each}
+						</div>
+					{/if}
+					<img src={HOSTEL_MAPS[hostel][mapIndex].src} alt="{hostel} — {HOSTEL_MAPS[hostel][mapIndex].label}" />
 					<button type="button" class="btn btn-sm map-close" onclick={() => mapDialog?.close()}>Close</button>
 				</dialog>
 			{/if}
@@ -567,6 +587,30 @@
 	.map-credit {
 		font-size: 0.75rem;
 		color: var(--text-muted);
+	}
+	.map-picker {
+		display: flex;
+		gap: 0.3rem;
+		padding: 0.25rem;
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		background: var(--bg-input);
+	}
+	.map-picker-btn {
+		font-family: inherit;
+		font-size: 0.85rem;
+		font-weight: 500;
+		padding: 0.4rem 0.9rem;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: var(--text-secondary);
+		cursor: pointer;
+	}
+	.map-picker-btn.active {
+		background: var(--bg-card);
+		color: var(--text);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 	}
 	.map-dialog {
 		position: fixed;
