@@ -578,6 +578,8 @@
 		padding: 1rem;
 		width: min(90vw, 640px);
 		max-height: 85vh;
+	}
+	.map-dialog[open] {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
