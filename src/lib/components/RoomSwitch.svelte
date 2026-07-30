@@ -19,6 +19,11 @@
 
 	let floorFilter = $state<string>("");
 
+	// Floor layout images, added per hostel as they come in.
+	const HOSTEL_MAPS: Record<string, string> = {
+		"Mudumalai(4C)": "/hostel-maps/mudumalai.jpeg",
+	};
+
 	// post form — hostel comes from the selected hostel, not a field
 	let form = $state<Omit<ListingInput, "hostel">>({ roomNo: "", floor: 0, description: "", phone: "" });
 	let posting = $state(false);
@@ -250,6 +255,15 @@
 					{#each HOSTELS as h}<option value={h}>{h}</option>{/each}
 				</select>
 			</div>
+
+			{#if HOSTEL_MAPS[hostel]}
+				<div class="map-row">
+					<a class="btn btn-sm" href={HOSTEL_MAPS[hostel]} target="_blank" rel="noopener">
+						View floor layout
+					</a>
+					<span class="map-credit">Map: @wrongbora</span>
+				</div>
+			{/if}
 
 			<!-- Your listing, or the form to post one -->
 			{#if myListing}
@@ -537,6 +551,17 @@
 		font-weight: 600;
 		background: transparent;
 		border-color: transparent;
+	}
+
+	.map-row {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin-bottom: 1.25rem;
+	}
+	.map-credit {
+		font-size: 0.75rem;
+		color: var(--text-muted);
 	}
 	.hostel-sel:hover {
 		border-color: var(--border-hover);
