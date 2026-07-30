@@ -22,8 +22,8 @@
 	// Floor layout images, added per hostel as they come in.
 	const HOSTEL_MAPS: Record<string, { label: string; src: string }[]> = {
 		"Mudumalai(4C)": [
-			{ label: "1st floor", src: "/hostel-maps/mudumalai-1st-floor.jpeg" },
 			{ label: "Other floors", src: "/hostel-maps/mudumalai.jpeg" },
+			{ label: "1st floor", src: "/hostel-maps/mudumalai-1st-floor.jpeg" },
 		],
 	};
 	let mapDialog = $state<HTMLDialogElement>();
