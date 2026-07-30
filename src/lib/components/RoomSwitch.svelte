@@ -569,12 +569,19 @@
 		color: var(--text-muted);
 	}
 	.map-dialog {
+		position: fixed;
+		inset: 0;
+		margin: auto;
 		border: 1px solid var(--border);
 		border-radius: 14px;
 		background: var(--bg-card);
 		padding: 1rem;
-		max-width: min(90vw, 640px);
+		width: min(90vw, 640px);
 		max-height: 85vh;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.75rem;
 	}
 	.map-dialog::backdrop {
 		background: rgba(0, 0, 0, 0.6);
@@ -583,10 +590,23 @@
 		display: block;
 		max-width: 100%;
 		max-height: 70vh;
+		width: auto;
 		border-radius: 8px;
+		object-fit: contain;
 	}
 	.map-close {
-		margin-top: 0.75rem;
+		align-self: center;
+	}
+
+	@media (max-width: 640px) {
+		.map-dialog {
+			width: 92vw;
+			max-height: 80vh;
+			padding: 0.75rem;
+		}
+		.map-dialog img {
+			max-height: 62vh;
+		}
 	}
 	.hostel-sel:hover {
 		border-color: var(--border-hover);
