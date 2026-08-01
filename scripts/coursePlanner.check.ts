@@ -8,6 +8,7 @@ import {
 	sectionConflicts,
 	findCombo,
 	getDepartment,
+	assignLanes,
 } from "../src/lib/coursePlanner.ts";
 
 // department bucketing
@@ -131,5 +132,68 @@ const half = (term: string): Course => ({
 assert.equal(hasTimeConflict(half("First half"), half("Second half")), false);
 assert.equal(hasTimeConflict(half("First half"), half("First half")), true);
 assert.equal(hasTimeConflict(half("Full semester"), half("Second half")), true);
+
+// Overlapping calendar blocks get their own lane instead of stacking
+const lane = (startMin: number, endMin: number) => ({
+	startMin,
+	endMin,
+	col: 0,
+	cols: 1,
+});
+
+// Two classes at the same time -> two lanes
+const pair = [lane(540, 600), lane(540, 600)];
+assignLanes(pair);
+assert.deepEqual(
+	pair.map((b) => [b.col, b.cols]),
+	[
+		[0, 2],
+		[1, 2],
+	],
+);
+
+// No overlap -> both full width, and the later one reuses lane 0
+const apart = [lane(540, 600), lane(600, 660)];
+assignLanes(apart);
+assert.deepEqual(
+	apart.map((b) => [b.col, b.cols]),
+	[
+		[0, 1],
+		[0, 1],
+	],
+	"touching but not overlapping stays full width",
+);
+
+// A long block spanning two short ones. Shorter-ending blocks are laid out
+// first, so the long one takes lane 1 and the two short ones share lane 0.
+const chain = [lane(540, 720), lane(540, 600), lane(600, 660)];
+assignLanes(chain);
+assert.deepEqual(
+	chain.map((b) => [b.col, b.cols]),
+	[
+		[1, 2],
+		[0, 2],
+		[0, 2],
+	],
+	"the second short block reuses the lane the first one freed",
+);
+
+// Independent clusters are sized separately, not by the busiest one
+const two = [lane(540, 600), lane(540, 600), lane(700, 760)];
+assignLanes(two);
+assert.equal(two[2].cols, 1, "a later, non-overlapping block stays full width");
+
+// Three-way clash
+const triple = [lane(540, 660), lane(560, 620), lane(570, 700)];
+assignLanes(triple);
+assert.deepEqual(
+	triple.map((b) => b.cols),
+	[3, 3, 3],
+);
+assert.deepEqual(
+	triple.map((b) => b.col).sort(),
+	[0, 1, 2],
+	"no two overlapping blocks share a lane",
+);
 
 console.log("coursePlanner: all checks passed");

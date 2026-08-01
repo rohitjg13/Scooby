@@ -64,6 +64,43 @@ export function sectionConflicts(rows: Course[], existing: Course[]): Course[] {
     return [...out.values()];
 }
 
+// Calendar blocks that overlap in time have to sit side by side, or the later
+// one just covers the earlier. Split a day into clusters of overlapping blocks
+// and give each block a lane within its cluster.
+export type Lane = { startMin: number; endMin: number; col: number; cols: number };
+
+export function assignLanes(dayBlocks: Lane[]): void {
+    const sorted = [...dayBlocks].sort(
+        (a, b) => a.startMin - b.startMin || a.endMin - b.endMin
+    );
+
+    let cluster: Lane[] = [];
+    let clusterEnd = -1;
+
+    const close = () => {
+        const cols = Math.max(...cluster.map((b) => b.col)) + 1;
+        for (const b of cluster) b.cols = cols;
+        cluster = [];
+    };
+
+    for (const block of sorted) {
+        // A gap means nothing from here on can overlap what came before
+        if (cluster.length && block.startMin >= clusterEnd) close();
+
+        const taken = new Set(
+            cluster.filter((b) => b.endMin > block.startMin).map((b) => b.col)
+        );
+        let col = 0;
+        while (taken.has(col)) col++;
+
+        block.col = col;
+        block.cols = 1;
+        cluster.push(block);
+        clusterEnd = Math.max(clusterEnd, block.endMin);
+    }
+    if (cluster.length) close();
+}
+
 // One section per group with no clashes, or null if the course can't fit.
 // `locked` pins a group to a section (e.g. one the user already has).
 // ponytail: plain DFS — a handful of groups with a handful of sections each.

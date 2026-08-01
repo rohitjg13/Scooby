@@ -20,6 +20,7 @@
 		groupSections,
 		sectionConflicts,
 		findCombo,
+		assignLanes,
 	} from "$lib/coursePlanner";
 	import { toPng } from "html-to-image";
 	import { createEvents } from "ics";
@@ -1067,6 +1068,8 @@
 		startMin: number;
 		endMin: number;
 		isAdded: boolean;
+		col: number; // which lane it sits in when classes overlap
+		cols: number; // how many lanes that cluster needs
 	}
 
 	function buildCalendar(): {
@@ -1107,6 +1110,8 @@
 					startMin,
 					endMin,
 					isAdded: isSelected(course),
+					col: 0,
+					cols: 1,
 				});
 			});
 		});
@@ -1138,6 +1143,10 @@
 		const days = usedDays.has("Saturday")
 			? [...weekdays, "Saturday"]
 			: weekdays;
+
+		for (const day of days)
+			assignLanes(blocks.filter((b) => b.day === day));
+
 		return { days, minTime, maxTime, visibleMin, visibleMax, blocks };
 	}
 
@@ -1529,9 +1538,11 @@
 												<div
 													class="course-block"
 													class:added={block.isAdded}
-													style="top: {top}%; height: {height}%; min-height: 45px; --accent: {courseAccent(
-														block.course,
-													)}"
+												style="top: {top}%; height: {height}%; min-height: 45px; left: calc({(100 /
+													block.cols) *
+													block.col}% + 2px); width: calc({100 / block.cols}% - 4px); --accent: {courseAccent(
+													block.course,
+												)}"
 													onclick={() =>
 														openCourseDetails(
 															block.course,
@@ -2975,10 +2986,9 @@
 		background: #1a1a1a;
 	}
 
+	/* left/width come from the lane assignment inline */
 	.course-block {
 		position: absolute;
-		left: 2px;
-		right: 2px;
 		background: color-mix(in srgb, var(--accent, #111) 8%, #111);
 		border: 1px solid #222;
 		border-left: 2px solid var(--accent, #2a2a2a);
@@ -2995,7 +3005,11 @@
 			box-shadow 0.15s;
 	}
 
+	/* !important beats the inline lane geometry — a 33%-wide block cannot
+	   show its own name, so hovering expands it over its neighbours. */
 	.course-block:hover {
+		left: 2px !important;
+		width: calc(100% - 4px) !important;
 		z-index: 50;
 		transform: scale(1.05);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
