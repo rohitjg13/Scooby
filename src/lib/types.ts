@@ -16,6 +16,11 @@ export interface Course {
     component?: string;  // LEC, TUT, PRAC, etc.
     openAsUWE?: boolean; // Whether course is open as UWE
     remarks?: string;    // Additional remarks/notes
+    term?: string;       // "Full semester" | "First half" | "Second half"
+}
+
+export function isMajorElective(course: Course): boolean {
+    return (course.courseType ?? '').trim().toLowerCase() === 'major elective';
 }
 
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -84,6 +89,35 @@ export function parseDays(dayStr: string): string[] {
     return [...new Set(result)];
 }
 
+// Batch codes as the sheet writes them: "CSD21, CSD22", "ECE29 to ECE215",
+// "CSD310 to CSD311". Ranges expand to every code in between.
+export function expandBatchCodes(raw: string): string[] {
+    if (!raw) return [];
+    return raw
+        .split(',')
+        .flatMap((part) => {
+            const range = part.trim().match(/^(\S+)\s+to\s+(\S+)$/i);
+            return range ? expandRange(range[1], range[2]) : [part.trim()];
+        })
+        .filter(Boolean);
+}
+
+// "ECE29".."ECE215" -> shared prefix "ECE2", numeric tail 9..15
+function expandRange(from: string, to: string): string[] {
+    for (let i = Math.min(from.length, to.length) - 1; i > 0; i--) {
+        const prefix = from.slice(0, i);
+        if (!to.startsWith(prefix)) continue;
+        const start = from.slice(i);
+        const end = to.slice(i);
+        if (!/^\d+$/.test(start) || !/^\d+$/.test(end)) continue;
+        const s = Number(start);
+        const e = Number(end);
+        if (s > e || e - s > 100) continue;
+        return Array.from({ length: e - s + 1 }, (_, n) => prefix + (s + n));
+    }
+    return [from, to];
+}
+
 export function timeToMinutes(time: string): number {
     if (!time) return 0;
     const cleaned = time.trim().toUpperCase();
@@ -123,6 +157,10 @@ export function timesOverlap(start1: string, end1: string, start2: string, end2:
 export function hasTimeConflict(course1: Course, course2: Course): boolean {
     if (!course1.day || !course1.startTime || !course1.endTime) return false;
     if (!course2.day || !course2.startTime || !course2.endTime) return false;
+
+    // Half-semester courses in opposite halves never run at the same time
+    if (course1.term && course2.term && course1.term !== course2.term
+        && !/full/i.test(course1.term) && !/full/i.test(course2.term)) return false;
 
     const days1 = parseDays(course1.day);
     const days2 = parseDays(course2.day);

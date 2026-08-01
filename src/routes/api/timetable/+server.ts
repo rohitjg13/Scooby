@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import * as XLSX from 'xlsx';
 import type { Course } from '$lib/types';
+import { expandBatchCodes } from '$lib/types';
 
 // Import data files dynamically using Vite
 const dataFiles = import.meta.glob('$lib/data/*.{xlsx,xls,csv}', { query: '?url', import: 'default', eager: true });
@@ -81,16 +82,24 @@ function parseData(jsonData: Record<string, unknown>[]): Course[] {
             return isNaN(parsed) ? 0 : parsed;
         };
 
-        const courseName = getValue(['Course Name', 'CourseName', 'Name', 'Title']);
+        const courseName = getValue(['Course Name', 'Course Title', 'CourseName', 'Name', 'Title']);
         const courseCode = getValue(['Course Code', 'CourseCode', 'Code']);
         const section = getValue(['Section', 'Sec']); // LEC1, TUT1, PRAC1
-        const batch = getValue(['Batch', 'Major', 'Batches', 'Program']);
+        // Batch = programme (CSD2YR) plus any student blocks (CSD21, CSD22)
+        const batch = [
+            ...new Set([
+                ...expandBatchCodes(getValue(['Batch', 'Major', 'Batches', 'Program', 'Programme'])),
+                ...expandBatchCodes(getValue(['Student Block', 'Block']))
+            ])
+        ].join(', ');
         const room = getValue(['Room', 'Venue', 'Location', 'Classroom', 'Rooms']);
         const days = getValue(['Day', 'Days', 'Weekday']);
         const startTime = getValue(['Start Time', 'StartTime', 'Start', 'From']);
         const endTime = getValue(['End Time', 'EndTime', 'End', 'To']);
         const credits = getNumericValue(['L/T/P Hour']);
-        const faculty = getValue(['Faculty', 'Instructor', 'Teacher', 'Professor']);
+        const faculty = getValue(['Faculty', 'Instructor(s)', 'Instructor', 'Teacher', 'Professor']);
+        // Full semester / First half / Second half — halves never clash with each other
+        const term = getValue(['Term']);
 
         // Course type: Major, Elective, etc - separate from code
         const courseType = getValue(['Type', 'CourseType', 'Category']);
@@ -103,7 +112,7 @@ function parseData(jsonData: Record<string, unknown>[]): Course[] {
         const openAsUWE = openAsUWEVal.toLowerCase() === 'yes' || openAsUWEVal.toLowerCase() === 'true';
 
         // Remarks
-        const remarks = getValue(['Remarks']);
+        const remarks = getValue(['Remarks', 'Scheduling Note', 'Class Notes']);
 
         // Create code with section or component
         let fullCode = courseCode;
@@ -129,6 +138,7 @@ function parseData(jsonData: Record<string, unknown>[]): Course[] {
             component,
             openAsUWE,
             remarks,
+            term,
         };
     }).filter(course => course.courseCode && course.courseCode !== '-');
 }

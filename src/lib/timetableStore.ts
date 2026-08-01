@@ -1,6 +1,20 @@
 import { writable, derived } from 'svelte/store';
 import type { Course } from './types';
-import { hasTimeConflict } from './types';
+import { hasTimeConflict, isMajorElective } from './types';
+import { getDepartment } from './coursePlanner';
+
+function normalizeBatches(batches: string[]): string[] {
+    return batches.map(b => b.toUpperCase().trim()).filter(b => b.length > 0);
+}
+
+// Is this row offered to one of the user's batches?
+function offeredTo(course: Course, validBatches: string[]): boolean {
+    if (!course.major) return false;
+    // Exact match: ranges are expanded at parse time, and a substring
+    // match would put ECE21 students into every ECE215 class.
+    const majors = course.major.toUpperCase().split(/[\s,]+/);
+    return validBatches.some(userBatch => majors.includes(userBatch));
+}
 
 // Store for all courses loaded from the spreadsheet
 export const allCourses = writable<Course[]>([]);
@@ -19,21 +33,33 @@ export const batchCourses = derived(
     [allCourses, currentBatches],
     ([$allCourses, $currentBatches]) => {
         if (!$currentBatches || $currentBatches.length === 0) return [];
-
-        // Optimize: Convert batches to Set/canonical form for faster lookup if needed, 
-        // but for <3 items and string matching logic, simple iteration is fine.
-        const validBatches = $currentBatches
-            .map(b => b.toUpperCase().trim())
-            .filter(b => b.length > 0);
-
+        const validBatches = normalizeBatches($currentBatches);
         if (validBatches.length === 0) return [];
 
+        // Major Electives are offered to a programme, not assigned to it — a
+        // 4th year is not enrolled in all seven at once. They stay opt-in.
+        return $allCourses.filter(
+            course => offeredTo(course, validBatches) && !isMajorElective(course)
+        );
+    }
+);
+
+// Major Electives the user's own programme can take. The same course is just a
+// UWE to everyone else (when it is open as one).
+export const myElectives = derived(
+    [allCourses, currentBatches],
+    ([$allCourses, $currentBatches]) => {
+        const validBatches = normalizeBatches($currentBatches);
+        if (validBatches.length === 0) return [];
+        const myDepts = new Set(validBatches.map(getDepartment).filter(Boolean));
+
         return $allCourses.filter(course => {
-            if (!course.major) return false;
-            const majors = course.major.toUpperCase().split(/[\s,]+/);
-            // Check if ANY of the user's batches matches ANY of the course's majors
-            return validBatches.some(userBatch =>
-                majors.some(m => m.includes(userBatch) || userBatch.includes(m))
+            if (!isMajorElective(course)) return false;
+            // Offered to my batch, or failing that (141 rows carry no
+            // programme) an elective from my own department.
+            return (
+                offeredTo(course, validBatches) ||
+                myDepts.has(getDepartment(course.courseCode))
             );
         });
     }

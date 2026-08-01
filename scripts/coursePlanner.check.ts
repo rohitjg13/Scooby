@@ -2,6 +2,7 @@
 //   node scripts/coursePlanner.check.ts
 import assert from "node:assert";
 import type { Course } from "../src/lib/types.ts";
+import { parseDays, timeToMinutes, hasTimeConflict, expandBatchCodes } from "../src/lib/types.ts";
 import {
 	groupSections,
 	sectionConflicts,
@@ -95,5 +96,40 @@ assert.deepEqual(findCombo(clashy, []), {
 	LEC: "EE101-LEC1",
 	PRAC: "EE101-PRAC2",
 });
+
+// Monsoon 2026 sheet: 3-letter days and "01:00 PM" times
+assert.deepEqual(parseDays("Mon"), ["Monday"]);
+assert.deepEqual(parseDays("Tue"), ["Tuesday"]);
+assert.deepEqual(parseDays("Wed"), ["Wednesday"]);
+assert.deepEqual(parseDays("Thu"), ["Thursday"]);
+assert.deepEqual(parseDays("Fri"), ["Friday"]);
+assert.deepEqual(parseDays("Sat"), ["Saturday"]);
+assert.equal(timeToMinutes("01:00 PM"), 13 * 60);
+assert.equal(timeToMinutes("09:35 AM"), 9 * 60 + 35);
+
+// Student Block codes, including the sheet's "X to Y" ranges
+assert.deepEqual(expandBatchCodes("CSD21, CSD22"), ["CSD21", "CSD22"]);
+assert.deepEqual(expandBatchCodes("CSD21,CSD22"), ["CSD21", "CSD22"]);
+assert.deepEqual(expandBatchCodes("ECE29 to ECE215"), [
+	"ECE29",
+	"ECE210",
+	"ECE211",
+	"ECE212",
+	"ECE213",
+	"ECE214",
+	"ECE215",
+]);
+assert.deepEqual(expandBatchCodes("CSD310 to CSD311"), ["CSD310", "CSD311"]);
+assert.deepEqual(expandBatchCodes("BIO4YR"), ["BIO4YR"]);
+assert.deepEqual(expandBatchCodes(""), []);
+
+// Opposite half-semester courses share a slot without clashing
+const half = (term: string): Course => ({
+	...row("XX101", "LEC1", "Mon", "01:00 PM", "02:55 PM"),
+	term,
+});
+assert.equal(hasTimeConflict(half("First half"), half("Second half")), false);
+assert.equal(hasTimeConflict(half("First half"), half("First half")), true);
+assert.equal(hasTimeConflict(half("Full semester"), half("Second half")), true);
 
 console.log("coursePlanner: all checks passed");
