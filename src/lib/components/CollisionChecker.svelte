@@ -526,6 +526,30 @@
 	// Store for excluded/removed batch courses: courseCode
 	let excludedCourseCodes = $state<Set<string>>(new Set());
 
+	// A section meets on one day per row in this sheet — 382 of 727 sections
+	// span several. Collapse them back into "Mon, Wed 01:00 PM-02:55 PM",
+	// keeping differing times apart.
+	function meetingTimes(courseCode: string): string[] {
+		const byTime = new Map<string, string[]>();
+
+		for (const row of $allCourses) {
+			if (row.courseCode !== courseCode || !row.day) continue;
+			const time = `${row.startTime}-${row.endTime}`;
+			if (!byTime.has(time)) byTime.set(time, []);
+			const days = byTime.get(time)!;
+			for (const day of parseDays(row.day))
+				if (!days.includes(day)) days.push(day);
+		}
+
+		return [...byTime].map(([time, days]) => {
+			const label = days
+				.sort((a, b) => DAYS.indexOf(a) - DAYS.indexOf(b))
+				.map((d) => d.slice(0, 3))
+				.join(", ");
+			return `${label} ${time}`;
+		});
+	}
+
 	function getSection(course: Course): string {
 		return course.slot || course.component || "";
 	}
@@ -758,6 +782,32 @@
 				.map(([dept, codes]) => [dept, codes.sort()] as const),
 		);
 	});
+
+	// What's actually blocking a course that won't fit. A group whose every
+	// section is taken out counts as a blocker; the courses doing that are
+	// what you'd have to drop. Cross-group clashes (each part free on its
+	// own, no combination free together) leave this empty by design.
+	function clashesWith(base: string): string[] {
+		const groups = getCourseGroups(base);
+		const existing = timetableExcluding(base);
+		const locked = lockedSections(groups);
+		const out = new Set<string>();
+
+		for (const group of groups) {
+			const options = locked[group.prefix]
+				? group.sections.filter((s) => s.code === locked[group.prefix])
+				: group.sections;
+			const perSection = options.map((s) =>
+				sectionConflicts(s.rows, existing),
+			);
+			if (!perSection.length || !perSection.every((c) => c.length))
+				continue;
+			for (const list of perSection)
+				for (const c of list)
+					out.add(getBaseCourseCode(c.courseCode));
+		}
+		return [...out].sort();
+	}
 
 	// Is the whole course already in, or still placeable without a clash?
 	function courseStatus(base: string) {
@@ -1145,7 +1195,12 @@
 				{:else if fits}
 					✓ Fits your timetable
 				{:else}
-					✕ Clashes — no free combination
+					{@const blockers = clashesWith(base)}
+					{#if blockers.length}
+						✕ Clashes with {blockers.join(", ")}
+					{:else}
+						✕ Clashes — no free combination
+					{/if}
 				{/if}
 			</span>
 		</div>
@@ -1618,11 +1673,11 @@
 													: ""}{course.component}
 											</span>
 										{/if}
-										<span class="muted small">
-											{course.day}
-											{course.startTime}-{course.endTime} •
-											{course.room}
-										</span>
+										{#each meetingTimes(course.courseCode) as meeting}
+											<span class="muted small">
+												{meeting} • {course.room}
+											</span>
+										{/each}
 										{#if isSwapped}
 											<button
 												class="reset-swap-btn"
@@ -1780,10 +1835,9 @@
 												: ""}{course.component}</span
 										>
 									{/if}
-									<span class="muted small"
-										>{course.day}
-										{course.startTime}-{course.endTime}</span
-									>
+									{#each meetingTimes(course.courseCode) as meeting}
+										<span class="muted small">{meeting}</span>
+									{/each}
 								</div>
 								<button
 									class="btn small"
@@ -1865,10 +1919,11 @@
 					{#if selectedCourseDetails.day}
 						<div class="course-modal-item">
 							<span class="modal-label">Schedule</span>
-							<span class="modal-value"
-								>{selectedCourseDetails.day}
-								{selectedCourseDetails.startTime}-{selectedCourseDetails.endTime}</span
-							>
+							<span class="modal-value">
+								{meetingTimes(
+									selectedCourseDetails.courseCode,
+								).join(" / ")}
+							</span>
 						</div>
 					{/if}
 					{#if selectedCourseDetails.credits && selectedCourseDetails.courseCode
