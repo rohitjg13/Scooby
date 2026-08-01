@@ -31,7 +31,7 @@ const ICONS = {
 const PAGES = [
 	{ slug: "default", title: "Scooby", subtitle: "Your one-stop university app", icon: "grid" },
 	{ slug: "clubs", title: "Club Info", subtitle: "Every cultural & technical club on campus", icon: "clubs" },
-	{ slug: "collision-checker", title: "Clash Checker", subtitle: "Spot UWE / CCC timetable clashes instantly", icon: "calendar" },
+	{ slug: "collision-checker", title: "Timetable Planner", subtitle: "Plan your week and spot clashes instantly", icon: "calendar" },
 	{ slug: "exam", title: "Exam Timetable", subtitle: "Mid-sem & end-sem exam schedules", icon: "exam" },
 	{ slug: "room-switch", title: "Room Switch", subtitle: "Find someone in your hostel to swap rooms with", icon: "switch" },
 	{ slug: "maps", title: "Campus Map", subtitle: "Every hostel, block & mess — with directions", icon: "map" },

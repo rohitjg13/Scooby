@@ -14,9 +14,9 @@
 
 	const features: Feature[] = [
 		{
-			title: "UWE / CCC Clash Checker",
+			title: "Timetable Planner",
 			description:
-				"Load your batch timetable, add UWE or CCC electives, and instantly spot clashes. Export as an image or to your calendar.",
+				"Load your batch timetable, add UWE, CCC or major electives, and instantly spot clashes. Export as an image or to your calendar.",
 			href: "/collision-checker",
 			icon: "calendar",
 			tag: "Timetable",
@@ -96,7 +96,7 @@
 
 <Seo
 	title="Scooby"
-	description="Scooby is a one-stop university app — check UWE/CCC timetable clashes, view your exam schedule, browse campus clubs, and more."
+	description="Scooby is a one-stop university app — plan your timetable and spot clashes, view your exam schedule, browse campus clubs, and more."
 	image="default"
 />
 
