@@ -1909,6 +1909,9 @@
 
 	<!-- Course Details Modal -->
 	{#if selectedCourseDetails}
+		{@const detailBatches = batchesFor(
+			getBaseCourseCode(selectedCourseDetails.courseCode),
+		)}
 		<div
 			class="modal-overlay course-details-overlay"
 			onclick={() => (selectedCourseDetails = null)}
@@ -1996,6 +1999,14 @@
 								>{selectedCourseDetails.openAsUWE
 									? "Yes"
 									: "No"}</span
+							>
+						</div>
+					{/if}
+					{#if detailBatches.length}
+						<div class="course-modal-item wide">
+							<span class="modal-label">Runs for</span>
+							<span class="modal-value mono-sm"
+								>{detailBatches.join(", ")}</span
 							>
 						</div>
 					{/if}
@@ -3725,6 +3736,18 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
+	}
+
+	/* A course can list 21 batches — give that the full row */
+	.course-modal-item.wide {
+		grid-column: 1 / -1;
+	}
+
+	.mono-sm {
+		font-family: "SF Mono", monospace;
+		font-size: 0.75rem;
+		line-height: 1.5;
+		word-break: break-word;
 	}
 
 
