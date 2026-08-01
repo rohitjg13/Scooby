@@ -6,9 +6,7 @@
 		allCourses,
 		currentBatches,
 		selectedCourses,
-		searchQuery,
 		batchCourses,
-		filteredCourses,
 		getConflicts,
 		myElectives,
 	} from "$lib/timetableStore";
@@ -30,17 +28,14 @@
 	let loading = $state(true);
 	let error = $state("");
 	let batchInputs = $state([""]);
-	let searchInput = $state("");
 	let batchError = $state("");
 	let showDownloadModal = $state(false);
-	let onlyShowUWE = $state(false);
 	let selectedCourseDetails: Course | null = $state(null);
 	let showKeyboardHelp = $state(false);
 	let onlyFits = $state(false);
 	let showUWEList = $state(false);
 	let showCCCList = $state(false);
 	let showElectiveList = $state(false);
-	let searchInputRef: HTMLInputElement | null = $state(null);
 	let maxCredits = $state(25);
 
 	let totalCredits = $derived.by(() => {
@@ -248,12 +243,6 @@
 				e.preventDefault();
 				return;
 			}
-			if (searchInput && !isInput) {
-				searchInput = "";
-				searchQuery.set("");
-				e.preventDefault();
-				return;
-			}
 			if (isInput) {
 				(target as HTMLInputElement).blur();
 				e.preventDefault();
@@ -264,10 +253,12 @@
 		// Skip other shortcuts if typing
 		if (isInput) return;
 
-		// "/" or "s" focuses search
+		// "/" or "s" opens the add modal on its search box
 		if (e.key === "/" || e.key === "s") {
 			e.preventDefault();
-			searchInputRef?.focus();
+			showBrowse = true;
+			browseDept = null;
+			requestAnimationFrame(() => browseSearchRef?.focus());
 			return;
 		}
 
@@ -489,10 +480,6 @@
 		}
 	}
 
-	function handleSearch() {
-		searchQuery.set(searchInput);
-	}
-
 	// Removes every row of the section (a section can meet on several rows)
 	function removeCourse(course: Course) {
 		selectedCourses.update((courses) =>
@@ -518,8 +505,7 @@
 		currentBatches.set([]);
 		selectedCourses.set([]);
 		batchInputs = [""];
-		searchInput = "";
-		searchQuery.set("");
+		browseSearch = "";
 		swappedCourseCodes = new Map();
 		excludedCourseCodes = new Set();
 	}
@@ -745,8 +731,7 @@
 			...rows.filter((r) => !cur.some((c) => c.sno === r.sno)),
 		]);
 		plannerBase = null;
-		searchInput = "";
-		searchQuery.set("");
+		browseSearch = "";
 	}
 
 	/* ---- Browse by department ---- */
@@ -820,6 +805,45 @@
 		return counts;
 	});
 
+	// Search across every department, from the department-picker screen.
+	// Replaces the old header search box.
+	let browseSearch = $state("");
+
+	let searchResults = $derived.by(() => {
+		const query = browseSearch.toLowerCase().trim();
+		if (query.length < 2) return [];
+
+		const out: {
+			base: string;
+			sample: Course;
+			groups: Group[];
+			added: boolean;
+			fits: boolean;
+		}[] = [];
+
+		for (const codes of departments.values()) {
+			for (const base of codes) {
+				const sample = $allCourses.find(
+					(c) => getBaseCourseCode(c.courseCode) === base,
+				);
+				if (!sample) continue;
+				if (
+					!base.toLowerCase().includes(query) &&
+					!sample.courseName.toLowerCase().includes(query) &&
+					!sample.faculty.toLowerCase().includes(query)
+				)
+					continue;
+				if (!courseOpen(base)) continue;
+
+				const status = courseStatus(base);
+				if (onlyFits && !status.fits && !status.added) continue;
+				out.push({ base, sample, ...status });
+				if (out.length >= 40) return out;
+			}
+		}
+		return out;
+	});
+
 	// Courses of the open department, with whether the whole course still fits
 	let browseCourses = $derived.by(() => {
 		if (!browseDept) return [];
@@ -846,54 +870,13 @@
 	});
 
 	let browseFilterRef: HTMLInputElement | null = $state(null);
+	let browseSearchRef: HTMLInputElement | null = $state(null);
 
 	function openBrowseDept(dept: string) {
 		browseDept = dept;
 		browseFilter = "";
 		requestAnimationFrame(() => browseFilterRef?.focus());
 	}
-
-	// Whole-course fit status for the current search results
-	let courseFitInfo = $derived.by(() => {
-		const map = new Map<string, { fits: boolean; multi: boolean }>();
-		for (const c of $filteredCourses) {
-			const base = getBaseCourseCode(c.courseCode);
-			if (map.has(base)) continue;
-			const groups = getCourseGroups(base);
-			map.set(base, {
-				fits: !!findCombo(
-					groups,
-					timetableExcluding(base),
-					lockedSections(groups),
-				),
-				multi:
-					groups.length > 1 ||
-					groups.some((g) => g.sections.length > 1),
-			});
-		}
-		return map;
-	});
-
-	// One entry per section, not per meeting: a course that meets Mon/Wed/Fri
-	// was eating three of the thirty slots with identical rows.
-	let dropdownCourses = $derived.by(() => {
-		const seen = new Set<string>();
-		return $filteredCourses
-			.filter(
-				(c) =>
-					canAdd(c) &&
-					(!onlyShowUWE || c.openAsUWE) &&
-					(!onlyFits ||
-						courseFitInfo.get(getBaseCourseCode(c.courseCode))
-							?.fits),
-			)
-			.filter((c) => {
-				if (seen.has(c.courseCode)) return false;
-				seen.add(c.courseCode);
-				return true;
-			})
-			.slice(0, 30);
-	});
 
 	/* ---- Colour coding ----
 	   Hues from a palette validated for colour-blind separation against this
@@ -973,6 +956,21 @@
 			)!,
 			...courseStatus(base),
 		}));
+	});
+
+	let electiveSearch = $state("");
+
+	let visibleElectives = $derived.by(() => {
+		const query = electiveSearch.toLowerCase().trim();
+		return myElectiveCourses.filter((c) => {
+			if (onlyFits && !c.fits && !c.added) return false;
+			if (!query) return true;
+			return (
+				c.base.toLowerCase().includes(query) ||
+				c.sample.courseName.toLowerCase().includes(query) ||
+				c.sample.faculty.toLowerCase().includes(query)
+			);
+		});
 	});
 
 	// One entry per added section (a section can span several rows)
@@ -1105,6 +1103,69 @@
 	);
 </script>
 
+
+{#snippet courseCard(item: {
+	base: string;
+	sample: Course;
+	groups: Group[];
+	added: boolean;
+	fits: boolean;
+})}
+	{@const { base, sample, groups, added, fits } = item}
+	<div
+		class="course-list-item"
+		style="--accent: {courseAccent(sample)}"
+		class:dimmed={!fits}
+	>
+		<div class="course-list-info">
+			<div class="course-list-header">
+				<span class="mono">{base}</span>
+				{#if electiveTag(sample)}
+					<span
+						class="elective-badge"
+						class:mine={myElectiveCodes.has(sample.courseCode)}
+						>{electiveTag(sample)}</span
+					>
+				{:else if sample.openAsUWE}
+					<span class="comp-badge">UWE</span>
+				{/if}
+				{#if sample.credits}
+					<span class="cr-badge">{sample.credits} Cr</span>
+				{/if}
+			</div>
+			<span class="course-list-name">{sample.courseName}</span>
+			<span class="muted small">
+				{groups
+					.map((g) => `${GROUP_LABEL[g.prefix]} ×${g.sections.length}`)
+					.join(" • ")}
+			</span>
+			<span class="fit-note" class:bad={!fits && !added}>
+				{#if added}
+					✓ In your timetable
+				{:else if fits}
+					✓ Fits your timetable
+				{:else}
+					✕ Clashes — no free combination
+				{/if}
+			</span>
+		</div>
+		<div class="course-list-actions">
+			{#if added || canAdd(sample)}
+				<button class="btn small" onclick={() => openPlanner(sample)}
+					>{added ? "Sections" : "Add"}</button
+				>
+			{:else}
+				<button
+					class="btn small"
+					disabled
+					title="Not open as UWE, and not a major elective of your department"
+					>Closed</button
+				>
+			{/if}
+		</div>
+	</div>
+{/snippet}
+
 <main class="main">
 	{#if loading}
 		<div class="center">
@@ -1215,162 +1276,22 @@
 					</div>
 				</div>
 
-				<div class="search-wrap">
-					<input
-						type="text"
-						class="input"
-						placeholder="Add course/UWE/CCC  (Press / to search)"
-						bind:value={searchInput}
-						bind:this={searchInputRef}
-						oninput={handleSearch}
-					/>
-					{#if $filteredCourses.length > 0}
-						<div class="dropdown">
-							<div class="dropdown-filter">
-								<label class="uwe-toggle">
-									<input
-										type="checkbox"
-										bind:checked={onlyShowUWE}
-									/>
-									<span class="toggle-label">Open as UWE</span
-									>
-								</label>
-								<label class="uwe-toggle">
-									<input
-										type="checkbox"
-										bind:checked={onlyFits}
-									/>
-									<span class="toggle-label">Fits my week</span
-									>
-								</label>
-							</div>
-							{#each dropdownCourses as course}
-								{@const conflicts = getConflicts(
-									course,
-									getEffectiveCoursesList($batchCourses),
-									$selectedCourses,
-								)}
-								{@const hasConflict = conflicts.length > 0}
-								{@const selected = isSelected(course)}
-								{@const batch = isBatchCourse(course)}
-								{@const fit = courseFitInfo.get(
-									course.courseCode.split("-")[0],
-								)}
-								<div
-									class="dropdown-item"
-									class:dimmed={hasConflict}
-								>
-									<div class="item-info">
-										<div class="item-row">
-											<span class="mono"
-												>{course.courseCode.split(
-													"-",
-												)[0]}{#if getComponentType(course.component)}
-													<span class="comp-label"
-														>({getComponentType(
-															course.component,
-														)})</span
-													>{/if}</span
-											>
-											{#if electiveTag(course)}
-												<span
-													class="elective-badge"
-													class:mine={myElectiveCodes.has(
-														course.courseCode,
-													)}>{electiveTag(course)}</span
-												>
-											{/if}
-											{#if course.credits && course.courseCode
-													.toUpperCase()
-													.startsWith("CCC")}
-												<span class="cr-badge"
-													>{course.credits} Cr</span
-												>
-											{/if}
-											{#if course.day}
-												<span class="muted small"
-													>{course.day}
-													{course.startTime}-{course.endTime}</span
-												>
-											{/if}
-										</div>
-										<span class="item-name"
-											>{course.courseName}</span
-										>
-										{#if course.courseType || course.component}
-											<span class="item-type"
-												>{course.courseType}{course.courseType &&
-												course.component
-													? " • "
-													: ""}{course.component}</span
-											>
-										{/if}
-										{#if hasConflict}
-											<span class="conflict-note"
-												>⚠ Conflicts: {conflicts
-													.map(
-														(c) =>
-															`${c.courseCode.split("-")[0]}${getComponentType(c.component) ? ` (${getComponentType(c.component)})` : ""}`,
-													)
-													.join(", ")}</span
-											>
-										{/if}
-										{#if fit?.multi}
-											<span
-												class="fit-note"
-												class:bad={!fit.fits}
-											>
-												{fit.fits
-													? "✓ Full course fits"
-													: "✕ Full course can't fit"}
-											</span>
-										{/if}
-									</div>
-									<div class="item-action">
-										{#if batch}
-											<span class="tag small">Yours</span>
-										{:else if selected}
-											<button
-												class="btn small"
-												onclick={() =>
-													removeCourse(course)}
-												>Remove</button
-											>
-										{:else if !canAdd(course)}
-											<button
-												class="btn small"
-												disabled
-												title="Not open as UWE, and not a major elective of your department"
-											>
-												Closed
-											</button>
-										{:else}
-											<button
-												class="btn small"
-												onclick={() =>
-													openPlanner(course)}
-											>
-												Add
-											</button>
-										{/if}
-									</div>
-								</div>
-							{:else}
-								<div class="dropdown-item">
-									<span class="muted small"
-										>No matches with these filters.</span
-									>
-								</div>
-							{/each}
-						</div>
-					{/if}
+				<div class="add-actions">
 					<button
-						class="browse-link"
+						class="btn primary add-btn"
 						onclick={() => (showBrowse = true)}
-						title="Browse courses by department"
+						title="Search and add UWE or CCC courses"
 					>
-						Browse by department →
+						+ Add UWE/CCC
 					</button>
+					{#if myElectiveCourses.length > 0}
+						<button
+							class="btn primary add-btn"
+							onclick={() => (showElectiveList = true)}
+							title="Major electives offered to your programme"
+							>+ Major Electives ({myElectiveCourses.length})</button
+						>
+					{/if}
 				</div>
 
 				<div class="header-actions">
@@ -1438,14 +1359,6 @@
 						onclick={() => (showCCCList = true)}
 						title="View all CCC courses">CCC List</button
 					>
-					{#if myElectiveCourses.length > 0}
-						<button
-							class="btn secondary"
-							onclick={() => (showElectiveList = true)}
-							title="Major electives offered to your programme"
-							>My Electives ({myElectiveCourses.length})</button
-						>
-					{/if}
 					<button class="btn" onclick={reset}>Reset</button>
 					<button
 						class="btn keyboard-help-btn"
@@ -2344,56 +2257,17 @@
 					are taking, they are not added for you.
 				</p>
 
+				<input
+					type="text"
+					class="input dept-filter"
+					placeholder="Search your electives by code, name or faculty…"
+					bind:value={electiveSearch}
+					autocomplete="off"
+				/>
+
 				<div class="course-list-container">
-					{#each myElectiveCourses.filter((c) => !onlyFits || c.fits || c.added) as { base, sample, groups, added, fits }}
-						<div
-							class="course-list-item"
-							style="--accent: {courseAccent(sample)}"
-							class:dimmed={!fits}
-						>
-							<div class="course-list-info">
-								<div class="course-list-header">
-									<span class="mono">{base}</span>
-									<span class="comp-badge">Elective</span>
-								</div>
-								<span class="course-list-name"
-									>{sample.courseName}</span
-								>
-								<span class="muted small">
-									{groups
-										.map(
-											(g) =>
-												`${GROUP_LABEL[g.prefix]} ×${g.sections.length}`,
-										)
-										.join(" • ")}
-								</span>
-								<span class="fit-note" class:bad={!fits && !added}>
-									{#if added}
-										✓ In your timetable
-									{:else if fits}
-										✓ Fits your timetable
-									{:else}
-										✕ Clashes — no free combination
-									{/if}
-								</span>
-							</div>
-							<div class="course-list-actions">
-								{#if added || canAdd(sample)}
-									<button
-										class="btn small"
-										onclick={() => openPlanner(sample)}
-										>{added ? "Sections" : "Add"}</button
-									>
-								{:else}
-									<button
-										class="btn small"
-										disabled
-										title="Not open as UWE, and not a major elective of your department"
-										>Closed</button
-									>
-								{/if}
-							</div>
-						</div>
+					{#each visibleElectives as item}
+						{@render courseCard(item)}
 					{:else}
 						<p class="muted">No electives match.</p>
 					{/each}
@@ -2433,36 +2307,53 @@
 				</label>
 
 				{#if !browseDept}
-					<h2>Browse by Department</h2>
-					<div class="dept-grid">
-						{#each [...deptCounts].filter(([, n]) => n > 0) as [dept, count]}
-							<button
-								class="dept-card"
-								style="--accent: {deptColor(dept)}"
-								onclick={() => openBrowseDept(dept)}
-							>
-								<span class="dept-code">
-									<span class="dept-dot"></span>
-									<span class="mono">{dept}</span>
-								</span>
-								<span class="muted small">{count} courses</span>
-							</button>
-						{:else}
-							<p class="muted">
-								Nothing fits your week right now.
-							</p>
-						{/each}
-					</div>
+					<h2>Add UWE / CCC</h2>
+
+					<input
+						type="text"
+						class="input dept-filter"
+						placeholder="Search all courses by code, name or faculty…"
+						bind:value={browseSearch}
+						bind:this={browseSearchRef}
+						autocomplete="off"
+					/>
+
+					{#if browseSearch.trim().length >= 2}
+						<div class="course-list-container">
+							{#each searchResults as item}
+								{@render courseCard(item)}
+							{:else}
+								<p class="muted">No courses match.</p>
+							{/each}
+						</div>
+					{:else}
+						<div class="dept-grid">
+							{#each [...deptCounts].filter(([, n]) => n > 0) as [dept, count]}
+								<button
+									class="dept-card"
+									style="--accent: {deptColor(dept)}"
+									onclick={() => openBrowseDept(dept)}
+								>
+									<span class="dept-code">
+										<span class="dept-dot"></span>
+										<span class="mono">{dept}</span>
+									</span>
+									<span class="muted small">{count} courses</span>
+								</button>
+							{:else}
+								<p class="muted">
+									Nothing fits your week right now.
+								</p>
+							{/each}
+						</div>
+					{/if}
 				{:else}
 					<h2>
-						<button
-							class="dept-back"
-							onclick={() => (browseDept = null)}>←</button
+						<button class="dept-back" onclick={() => (browseDept = null)}
+							>←</button
 						>
 						{browseDept}
-						<span class="muted small"
-							>({browseCourses.length})</span
-						>
+						<span class="muted small">({browseCourses.length})</span>
 					</h2>
 
 					<input
@@ -2475,74 +2366,8 @@
 					/>
 
 					<div class="course-list-container">
-						{#each browseCourses as { base, sample, groups, added, fits }}
-							<div
-							class="course-list-item"
-							style="--accent: {courseAccent(sample)}"
-							class:dimmed={!fits}
-						>
-								<div class="course-list-info">
-									<div class="course-list-header">
-										<span class="mono">{base}</span>
-										{#if electiveTag(sample)}
-											<span
-												class="elective-badge"
-												class:mine={myElectiveCodes.has(
-													sample.courseCode,
-												)}>{electiveTag(sample)}</span
-											>
-										{:else if sample.openAsUWE}
-											<span class="comp-badge">UWE</span>
-										{/if}
-										{#if sample.credits}
-											<span class="cr-badge"
-												>{sample.credits} Cr</span
-											>
-										{/if}
-									</div>
-									<span class="course-list-name"
-										>{sample.courseName}</span
-									>
-									<span class="muted small">
-										{groups
-											.map(
-												(g) =>
-													`${GROUP_LABEL[g.prefix]} ×${g.sections.length}`,
-											)
-											.join(" • ")}
-									</span>
-									<span
-										class="fit-note"
-										class:bad={!fits && !added}
-									>
-										{#if added}
-											✓ In your timetable
-										{:else if fits}
-											✓ Fits your timetable
-										{:else}
-											✕ Clashes — no free combination
-										{/if}
-									</span>
-								</div>
-								<div class="course-list-actions">
-									{#if added || canAdd(sample)}
-										<button
-											class="btn small"
-											onclick={() => openPlanner(sample)}
-											>{added
-												? "Sections"
-												: "Add"}</button
-										>
-									{:else}
-										<button
-											class="btn small"
-											disabled
-											title="Not open as UWE, and not a major elective of your department"
-											>Closed</button
-										>
-									{/if}
-								</div>
-							</div>
+						{#each browseCourses as item}
+							{@render courseCard(item)}
 						{:else}
 							<p class="muted">No courses match.</p>
 						{/each}
@@ -2925,41 +2750,20 @@
 		font-family: "SF Mono", monospace;
 	}
 
-	.search-wrap {
-		flex: 1;
-		min-width: 200px;
-		max-width: 450px;
-		position: relative;
-	}
 
-	.dropdown {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		background: #0a0a0a;
-		border: 1px solid #222;
-		border-radius: 8px;
-		margin-top: 4px;
-		max-height: 350px;
-		overflow-y: auto;
-		z-index: 100;
-	}
 
-	.dropdown-item {
+	/* The two add buttons sit left, next to the batch tags; everything else
+	   (export, lists, reset) stays pushed to the right. */
+	.add-actions {
 		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		gap: 1rem;
-		padding: 0.6rem 0.75rem;
-		border-bottom: 1px solid #1a1a1a;
+		align-items: center;
+		gap: 0.5rem;
 	}
-	.dropdown-item:last-child {
-		border-bottom: none;
+
+	.add-btn {
+		white-space: nowrap;
 	}
-	.dropdown-item:hover {
-		background: #111;
-	}
+
 	.header-actions {
 		display: flex;
 		align-items: center;
@@ -2967,17 +2771,6 @@
 		margin-left: auto;
 	}
 
-	.dropdown-filter {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.4rem;
-		position: sticky;
-		top: 0;
-		background: #0a0a0a;
-		padding: 0.5rem 0.75rem;
-		border-bottom: 1px solid #222;
-		z-index: 1;
-	}
 
 	.uwe-toggle {
 		display: flex;
@@ -3018,20 +2811,7 @@
 		white-space: nowrap;
 	}
 
-	.dropdown-item.dimmed {
-		opacity: 0.5;
-	}
 
-	.item-info {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-	.item-row {
-		display: flex;
-		gap: 0.75rem;
-		align-items: center;
-	}
 	.item-name {
 		font-size: 0.8rem;
 		color: #888;
@@ -3041,15 +2821,7 @@
 		color: #555;
 		font-style: italic;
 	}
-	.conflict-note {
-		font-size: 0.7rem;
-		color: #555;
-		font-style: italic;
-	}
 
-	.item-action {
-		flex-shrink: 0;
-	}
 
 	/* Calendar */
 	.calendar-section {
@@ -3710,14 +3482,48 @@
 			align-items: stretch;
 			gap: 0.75rem;
 		}
-		.search-wrap {
-			max-width: none;
+		.add-actions {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 0.5rem;
+		}
+		.add-btn {
+			font-size: 0.8rem;
+			padding: 0.5rem 0.6rem;
 		}
 		.header-actions {
 			display: grid;
 			grid-template-columns: 1fr 1fr;
 			gap: 0.5rem;
 			margin-left: 0;
+		}
+
+		/* Course pickers take the whole screen — a 90vw card with its own
+		   inner scroll is unusable on a phone. */
+		/* .modal.course-list-modal, not .course-list-modal — the plain class
+		   is redeclared later in the sheet and would win on width. */
+		.modal.course-list-modal {
+			width: 100vw;
+			max-width: none;
+			height: 100dvh;
+			max-height: none;
+			margin: 0;
+			border: none;
+			border-radius: 0;
+			padding: 1.25rem 1rem 1rem;
+			display: flex;
+			flex-direction: column;
+			animation: none;
+		}
+		.modal.course-list-modal .course-list-container,
+		.modal.course-list-modal .dept-grid {
+			flex: 1;
+			max-height: none;
+		}
+		.modal-overlay:has(.course-list-modal) {
+			padding: 0;
+			align-items: stretch;
+			justify-content: stretch;
 		}
 		.header-actions .action-btn {
 			white-space: nowrap;
@@ -4007,28 +3813,7 @@
 	/* Browse by department */
 	/* Reads as an affordance, not a footnote — this is the main way in
 	   for anyone who doesn't already know a course code. */
-	.browse-link {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.3rem;
-		margin-top: 0.45rem;
-		padding: 0.3rem 0.65rem;
-		background: #151515;
-		border: 1px solid #333;
-		border-radius: 999px;
-		color: #ddd;
-		font-size: 0.78rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.15s;
-	}
 
-	.browse-link:hover {
-		background: #222;
-		border-color: #555;
-		color: #fff;
-		transform: translateX(2px);
-	}
 
 	.dept-grid {
 		display: grid;
