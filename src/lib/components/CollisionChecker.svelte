@@ -406,6 +406,22 @@
 		return [...batches].sort();
 	}
 
+	// Examples pulled from the loaded sheet, so they can never go stale the
+	// way the hardcoded "ELC2X" did. Picks a real programme and one of its
+	// own blocks, which is exactly the pairing the tip is asking for.
+	let batchExample = $derived.by(() => {
+		const all = getAllBatches();
+		for (const programme of all.filter((b) => /\dYR$/.test(b))) {
+			// "CSD2YR" -> blocks are CSD21, CSD22… same department *and* year
+			const stem = programme.slice(0, programme.indexOf("YR"));
+			const blocks = all.filter(
+				(b) => b.startsWith(stem) && /\d$/.test(b),
+			);
+			if (blocks.length) return [programme, ...blocks.slice(0, 2)];
+		}
+		return all.slice(0, 3);
+	});
+
 	// Filter batches based on input
 	function getSuggestionsFor(input: string) {
 		if (!input || input.length < 1) return [];
@@ -666,6 +682,7 @@
 	);
 
 	function openPlanner(course: Course) {
+		if (!canAdd(course)) return;
 		const base = getBaseCourseCode(course.courseCode);
 		const groups = getCourseGroups(base);
 		const existing = timetableExcluding(base);
@@ -762,19 +779,30 @@
 		};
 	}
 
-	// Per-department count shown on the picker, honouring "Fits my week".
-	// $derived is lazy, so this only runs while the browse modal is open.
+	// A course is worth showing if any of its sections is open to you. Only
+	// one course in the sheet mixes Open as UWE across its rows, but hiding a
+	// course that has an open section would be the worse mistake.
+	function courseOpen(base: string): boolean {
+		return $allCourses.some(
+			(c) => getBaseCourseCode(c.courseCode) === base && canAdd(c),
+		);
+	}
+
+	// Per-department count shown on the picker. Matches what the list shows:
+	// courses closed to you are left out, as is anything that doesn't fit
+	// while "Fits my week" is on. $derived is lazy, so this only runs while
+	// the browse modal is open.
 	let deptCounts = $derived.by(() => {
 		const counts = new Map<string, number>();
 		for (const [dept, codes] of departments) {
 			counts.set(
 				dept,
-				onlyFits
-					? codes.filter((base) => {
-							const { added, fits } = courseStatus(base);
-							return fits || added;
-						}).length
-					: codes.length,
+				codes.filter((base) => {
+					if (!courseOpen(base)) return false;
+					if (!onlyFits) return true;
+					const { added, fits } = courseStatus(base);
+					return fits || added;
+				}).length,
 			);
 		}
 		return counts;
@@ -790,6 +818,7 @@
 				(c) => getBaseCourseCode(c.courseCode) === base,
 			);
 			if (!sample) return [];
+			if (!courseOpen(base)) return [];
 			if (
 				query &&
 				!base.toLowerCase().includes(query) &&
@@ -833,14 +862,80 @@
 		return map;
 	});
 
-	let dropdownCourses = $derived(
-		$filteredCourses.filter(
-			(c) =>
-				(!onlyShowUWE || c.openAsUWE) &&
-				(!onlyFits ||
-					courseFitInfo.get(getBaseCourseCode(c.courseCode))?.fits),
-		),
+	// One entry per section, not per meeting: a course that meets Mon/Wed/Fri
+	// was eating three of the thirty slots with identical rows.
+	let dropdownCourses = $derived.by(() => {
+		const seen = new Set<string>();
+		return $filteredCourses
+			.filter(
+				(c) =>
+					canAdd(c) &&
+					(!onlyShowUWE || c.openAsUWE) &&
+					(!onlyFits ||
+						courseFitInfo.get(getBaseCourseCode(c.courseCode))
+							?.fits),
+			)
+			.filter((c) => {
+				if (seen.has(c.courseCode)) return false;
+				seen.add(c.courseCode);
+				return true;
+			})
+			.slice(0, 30);
+	});
+
+	/* ---- Colour coding ----
+	   Hues from a palette validated for colour-blind separation against this
+	   background. CCC and UWE hold two reserved slots; departments share the
+	   other six, assigned by the department's position in the full sorted
+	   list — stable, so a course never changes colour as you add or remove
+	   things. With ~40 departments the six repeat; two departments on one
+	   screen can land on the same hue, which is why the course code is always
+	   shown next to the colour. */
+	let deptOrder = $derived(
+		new Map([...departments.keys()].map((d, i) => [d, i])),
 	);
+
+	// Every department gets its own hue, so nothing repeats. Consecutive
+	// departments are spun by the golden angle rather than stepped, which
+	// keeps neighbours in the alphabetical grid far apart on the wheel.
+	// Low chroma, high lightness — a tint, not a highlighter. Fixed L/C in
+	// OKLCH so no hue reads brighter or heavier than another.
+	function deptColor(dept: string): string {
+		const hue = ((deptOrder.get(dept) ?? 0) * 137.508) % 360;
+		return `oklch(0.82 0.085 ${hue.toFixed(1)})`;
+	}
+
+	// Colour follows the course's department, so the same course is the same
+	// colour everywhere — timetable, search, browse, department card.
+	function courseAccent(course: Course): string {
+		return deptColor(getDepartment(course.courseCode));
+	}
+
+	// Only the departments actually on screen, so the legend stays short
+	let calendarLegend = $derived.by(() => {
+		const out = new Map<string, string>();
+		for (const block of buildCalendar().blocks) {
+			const dept = getDepartment(block.course.courseCode);
+			if (dept) out.set(dept, deptColor(dept));
+		}
+		return [...out].sort((a, b) => a[0].localeCompare(b[0]));
+	});
+
+	// Can this course go on your timetable at all? Your own batch's courses
+	// always can; anything the sheet opens as UWE can; a major elective can
+	// only be taken by the programme it is offered to. Everything else is
+	// closed to you no matter how it looks in search.
+	function canAdd(course: Course): boolean {
+		if (isBatchCourse(course)) return true;
+		if (course.openAsUWE) return true;
+		// Common core is open to everyone by definition — the sheet marks no
+		// CCC row as Open as UWE, so without this every student loses all 32.
+		if (getBaseCourseCode(course.courseCode).toUpperCase().startsWith("CCC"))
+			return true;
+		return (
+			isMajorElective(course) && myElectiveCodes.has(course.courseCode)
+		);
+	}
 
 	let myElectiveCodes = $derived(
 		new Set($myElectives.map((c) => c.courseCode)),
@@ -1019,11 +1114,10 @@
 				<div class="batch-tip">
 					<span class="tip-icon">💡</span>
 					<span
-						>Add <strong>all</strong> your batches. e.g. ECE 2nd
-						years have both <strong>ELC2X</strong> and
-						<strong>ELC2YR</strong>. CSE 2nd years have both
-						<strong>CSDXX</strong> and
-						<strong>CSD2YR</strong>.</span
+						>Add <strong>all</strong> your batches — your programme
+						and your block. e.g.
+						{#each batchExample as code, i}<strong>{code}</strong
+							>{i < batchExample.length - 1 ? ", " : ""}{/each}.</span
 					>
 				</div>
 				<form
@@ -1045,7 +1139,7 @@
 									class="input"
 									class:error={!!batchError}
 									class:valid={isValid}
-									placeholder="e.g. ELC26, DES2YR, CSD21"
+									placeholder="e.g. {batchExample.join(', ')}"
 									bind:value={batchInputs[i]}
 									oninput={() => (batchError = "")}
 									autocomplete="off"
@@ -1230,6 +1324,14 @@
 													removeCourse(course)}
 												>Remove</button
 											>
+										{:else if !canAdd(course)}
+											<button
+												class="btn small"
+												disabled
+												title="Not open as UWE, and not a major elective of your department"
+											>
+												Closed
+											</button>
 										{:else}
 											<button
 												class="btn small"
@@ -1422,7 +1524,9 @@
 												<div
 													class="course-block"
 													class:added={block.isAdded}
-													style="top: {top}%; height: {height}%; min-height: 45px"
+													style="top: {top}%; height: {height}%; min-height: 45px; --accent: {courseAccent(
+														block.course,
+													)}"
 													onclick={() =>
 														openCourseDetails(
 															block.course,
@@ -1488,6 +1592,17 @@
 								{/each}
 							</div>
 						</div>
+					</div>
+
+					<div class="legend">
+						{#each calendarLegend as [label, color]}
+							<span class="legend-item">
+								<span
+									class="legend-swatch"
+									style="background: {color}"
+								></span>{label}
+							</span>
+						{/each}
 					</div>
 				</section>
 			{/if}
@@ -1977,6 +2092,7 @@
 						{@const compType = getComponentType(course.component)}
 						<div
 							class="course-list-item"
+							style="--accent: {courseAccent(course)}"
 							class:dimmed={hasConflict}
 						>
 							<div
@@ -2029,11 +2145,18 @@
 										onclick={() => removeCourse(course)}
 										>Remove</button
 									>
-								{:else}
+								{:else if canAdd(course)}
 									<button
 										class="btn small"
 										onclick={() => openPlanner(course)}
 										>Add</button
+									>
+								{:else}
+									<button
+										class="btn small"
+										disabled
+										title="Not open as UWE, and not a major elective of your department"
+										>Closed</button
 									>
 								{/if}
 							</div>
@@ -2090,6 +2213,7 @@
 						{@const compType = getComponentType(course.component)}
 						<div
 							class="course-list-item"
+							style="--accent: {courseAccent(course)}"
 							class:dimmed={hasConflict}
 						>
 							<div
@@ -2147,11 +2271,18 @@
 										onclick={() => removeCourse(course)}
 										>Remove</button
 									>
-								{:else}
+								{:else if canAdd(course)}
 									<button
 										class="btn small"
 										onclick={() => openPlanner(course)}
 										>Add</button
+									>
+								{:else}
+									<button
+										class="btn small"
+										disabled
+										title="Not open as UWE, and not a major elective of your department"
+										>Closed</button
 									>
 								{/if}
 							</div>
@@ -2203,7 +2334,11 @@
 
 				<div class="course-list-container">
 					{#each myElectiveCourses.filter((c) => !onlyFits || c.fits || c.added) as { base, sample, groups, added, fits }}
-						<div class="course-list-item" class:dimmed={!fits}>
+						<div
+							class="course-list-item"
+							style="--accent: {courseAccent(sample)}"
+							class:dimmed={!fits}
+						>
 							<div class="course-list-info">
 								<div class="course-list-header">
 									<span class="mono">{base}</span>
@@ -2231,11 +2366,20 @@
 								</span>
 							</div>
 							<div class="course-list-actions">
-								<button
-									class="btn small"
-									onclick={() => openPlanner(sample)}
-									>{added ? "Sections" : "Add"}</button
-								>
+								{#if added || canAdd(sample)}
+									<button
+										class="btn small"
+										onclick={() => openPlanner(sample)}
+										>{added ? "Sections" : "Add"}</button
+									>
+								{:else}
+									<button
+										class="btn small"
+										disabled
+										title="Not open as UWE, and not a major elective of your department"
+										>Closed</button
+									>
+								{/if}
 							</div>
 						</div>
 					{:else}
@@ -2282,9 +2426,13 @@
 						{#each [...deptCounts].filter(([, n]) => n > 0) as [dept, count]}
 							<button
 								class="dept-card"
+								style="--accent: {deptColor(dept)}"
 								onclick={() => openBrowseDept(dept)}
 							>
-								<span class="mono dept-code">{dept}</span>
+								<span class="dept-code">
+									<span class="dept-dot"></span>
+									<span class="mono">{dept}</span>
+								</span>
 								<span class="muted small">{count} courses</span>
 							</button>
 						{:else}
@@ -2316,7 +2464,11 @@
 
 					<div class="course-list-container">
 						{#each browseCourses as { base, sample, groups, added, fits }}
-							<div class="course-list-item" class:dimmed={!fits}>
+							<div
+							class="course-list-item"
+							style="--accent: {courseAccent(sample)}"
+							class:dimmed={!fits}
+						>
 								<div class="course-list-info">
 									<div class="course-list-header">
 										<span class="mono">{base}</span>
@@ -2361,11 +2513,22 @@
 									</span>
 								</div>
 								<div class="course-list-actions">
-									<button
-										class="btn small"
-										onclick={() => openPlanner(sample)}
-										>{added ? "Sections" : "Add"}</button
-									>
+									{#if added || canAdd(sample)}
+										<button
+											class="btn small"
+											onclick={() => openPlanner(sample)}
+											>{added
+												? "Sections"
+												: "Add"}</button
+										>
+									{:else}
+										<button
+											class="btn small"
+											disabled
+											title="Not open as UWE, and not a major elective of your department"
+											>Closed</button
+										>
+									{/if}
 								</div>
 							</div>
 						{:else}
@@ -2960,8 +3123,9 @@
 		position: absolute;
 		left: 2px;
 		right: 2px;
-		background: #111;
+		background: color-mix(in srgb, var(--accent, #111) 8%, #111);
 		border: 1px solid #222;
+		border-left: 2px solid var(--accent, #2a2a2a);
 		border-radius: 4px;
 		padding: 4px 6px;
 		overflow: hidden;
@@ -2981,7 +3145,7 @@
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 		overflow: visible;
 		min-height: fit-content !important;
-		background: #1a1a1a;
+		background: color-mix(in srgb, var(--accent, #1a1a1a) 14%, #1a1a1a);
 	}
 
 	.course-block:hover .block-name,
@@ -2993,8 +3157,12 @@
 		word-break: break-word;
 	}
 
+	/* "Added by you" rides on the other three edges — the left edge carries
+	   the department/UWE/CCC colour and must not be overwritten. */
 	.course-block.added {
-		border-left: 2px solid #444;
+		border-top-color: #444;
+		border-right-color: #444;
+		border-bottom-color: #444;
 	}
 
 	.block-code {
@@ -3741,7 +3909,8 @@
 		justify-content: space-between;
 		align-items: flex-start;
 		padding: 0.75rem;
-		background: #1a1a1a;
+		background: color-mix(in srgb, var(--accent, #1a1a1a) 7%, #1a1a1a);
+		border-left: 2px solid var(--accent, #2a2a2a);
 		border-radius: 6px;
 		gap: 1rem;
 	}
@@ -3858,14 +4027,36 @@
 		margin-bottom: 1rem;
 	}
 
+	.legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.9rem;
+		padding: 0.7rem 0.2rem 0;
+		font-size: 0.7rem;
+		color: #888;
+	}
+
+	.legend-item {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	.legend-swatch {
+		width: 10px;
+		height: 10px;
+		border-radius: 2px;
+	}
+
 	.dept-card {
 		display: flex;
 		flex-direction: column;
 		gap: 0.2rem;
 		align-items: flex-start;
 		padding: 0.6rem 0.7rem;
-		background: #1a1a1a;
+		background: color-mix(in srgb, var(--accent, #1a1a1a) 8%, #1a1a1a);
 		border: 1px solid #333;
+		border-left: 2px solid var(--accent, #333);
 		border-radius: 6px;
 		color: #ddd;
 		cursor: pointer;
@@ -3878,7 +4069,18 @@
 	}
 
 	.dept-code {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
 		font-size: 1rem;
+	}
+
+	.dept-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--accent, #555);
+		flex: none;
 	}
 
 	.dept-back {

@@ -71,11 +71,13 @@ export const filteredCourses = derived(
     ([$allCourses, $searchQuery]) => {
         if (!$searchQuery || $searchQuery.trim().length < 2) return [];
         const query = $searchQuery.toLowerCase().trim();
+        // No limit here: the dropdown still has to drop what you can't add,
+        // and truncating first threw away every result that would have shown.
         return $allCourses.filter(course =>
             course.courseCode.toLowerCase().includes(query) ||
             course.courseName.toLowerCase().includes(query) ||
             course.faculty.toLowerCase().includes(query)
-        ).slice(0, 30);
+        );
     }
 );
 
