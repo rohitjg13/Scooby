@@ -44,8 +44,11 @@ export const batchCourses = derived(
     }
 );
 
-// Major Electives the user's own programme can take. The same course is just a
-// UWE to everyone else (when it is open as one).
+// Major Electives the user's own department can take. Matching is by
+// department, not by exact batch: an elective offered to ECE4YR is still an ECE
+// elective to an ECE 3rd year, and CSD365 lists ECE3YR without an ECE student
+// necessarily having typed that exact code. The same course is just a UWE to
+// everyone outside those departments (when it is open as one).
 export const myElectives = derived(
     [allCourses, currentBatches],
     ([$allCourses, $currentBatches]) => {
@@ -55,12 +58,13 @@ export const myElectives = derived(
 
         return $allCourses.filter(course => {
             if (!isMajorElective(course)) return false;
-            // Offered to my batch, or failing that (141 rows carry no
-            // programme) an elective from my own department.
-            return (
-                offeredTo(course, validBatches) ||
-                myDepts.has(getDepartment(course.courseCode))
-            );
+            // Any batch it is offered to that belongs to my department...
+            if (course.major)
+                for (const code of course.major.toUpperCase().split(/[\s,]+/))
+                    if (code && myDepts.has(getDepartment(code))) return true;
+            // ...or, for the 141 rows carrying no programme at all, the
+            // department the course code itself belongs to.
+            return myDepts.has(getDepartment(course.courseCode));
         });
     }
 );

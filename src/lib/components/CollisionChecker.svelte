@@ -1992,6 +1992,14 @@
 							>
 						</div>
 					{/if}
+					{#if selectedCourseDetails.term}
+						<div class="course-modal-item">
+							<span class="modal-label">Term</span>
+							<span class="modal-value"
+								>{selectedCourseDetails.term}</span
+							>
+						</div>
+					{/if}
 					{#if selectedCourseDetails.openAsUWE !== undefined}
 						<div class="course-modal-item">
 							<span class="modal-label">Open as UWE</span>
