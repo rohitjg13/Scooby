@@ -304,33 +304,45 @@
 		selectedCourseDetails = course;
 	}
 
+	// Saved state is per-semester: bumping this sends everyone back to the
+	// batch screen instead of restoring codes that no longer exist.
+	const STORE_VERSION = "monsoon26";
+	const key = (name: string) => `scooby_${STORE_VERSION}_${name}`;
+
 	onMount(async () => {
 		// Add keyboard listener
 		window.addEventListener("keydown", handleKeydown);
 
 		// Restore state from localStorage
 		try {
-			// Migrate old single batch to new array
-			const savedBatch = localStorage.getItem("scooby_batch");
-			const savedBatches = localStorage.getItem("scooby_batches");
+			// Last semester's saved batches and courses no longer exist in
+			// this sheet, so drop them rather than restoring a timetable of
+			// codes that are gone.
+			for (const stale of [
+				"scooby_batch",
+				"scooby_batches",
+				"scooby_selected",
+				"scooby_swapped",
+				"scooby_excluded",
+			])
+				localStorage.removeItem(stale);
 
+			const savedBatches = localStorage.getItem(key("batches"));
 			if (savedBatches) {
 				currentBatches.set(JSON.parse(savedBatches));
-			} else if (savedBatch) {
-				currentBatches.set([savedBatch]);
 			}
 
-			const savedSelected = localStorage.getItem("scooby_selected");
+			const savedSelected = localStorage.getItem(key("selected"));
 			if (savedSelected) {
 				selectedCourses.set(JSON.parse(savedSelected));
 			}
 
-			const savedSwapped = localStorage.getItem("scooby_swapped");
+			const savedSwapped = localStorage.getItem(key("swapped"));
 			if (savedSwapped) {
 				swappedCourseCodes = new Map(JSON.parse(savedSwapped));
 			}
 
-			const savedExcluded = localStorage.getItem("scooby_excluded");
+			const savedExcluded = localStorage.getItem(key("excluded"));
 			if (savedExcluded) {
 				excludedCourseCodes = new Set(JSON.parse(savedExcluded));
 			}
@@ -360,7 +372,7 @@
 	$effect(() => {
 		if (stateLoaded) {
 			localStorage.setItem(
-				"scooby_batches",
+				key("batches"),
 				JSON.stringify($currentBatches),
 			);
 		}
@@ -369,7 +381,7 @@
 	$effect(() => {
 		if (stateLoaded) {
 			localStorage.setItem(
-				"scooby_selected",
+				key("selected"),
 				JSON.stringify($selectedCourses),
 			);
 		}
@@ -378,7 +390,7 @@
 	$effect(() => {
 		if (stateLoaded) {
 			localStorage.setItem(
-				"scooby_swapped",
+				key("swapped"),
 				JSON.stringify(Array.from(swappedCourseCodes.entries())),
 			);
 		}
@@ -387,7 +399,7 @@
 	$effect(() => {
 		if (stateLoaded) {
 			localStorage.setItem(
-				"scooby_excluded",
+				key("excluded"),
 				JSON.stringify(Array.from(excludedCourseCodes)),
 			);
 		}
