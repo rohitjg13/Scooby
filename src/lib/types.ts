@@ -15,7 +15,6 @@ export interface Course {
     courseType?: string; // Major, Elective, etc.
     component?: string;  // LEC, TUT, PRAC, etc.
     openAsUWE?: boolean; // Whether course is open as UWE
-    remarks?: string;    // Additional remarks/notes
     term?: string;       // "Full semester" | "First half" | "Second half"
 }
 

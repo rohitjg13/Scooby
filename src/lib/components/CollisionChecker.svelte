@@ -783,6 +783,23 @@
 		);
 	});
 
+	// Which cohorts a course already runs for. Taking it as a UWE means
+	// sitting in with these batches, so it's worth seeing before you add it.
+	function batchesFor(base: string): string[] {
+		const out = new Set<string>();
+		for (const row of $allCourses) {
+			if (getBaseCourseCode(row.courseCode) !== base || !row.major)
+				continue;
+			for (const code of row.major.split(/[\s,]+/))
+				if (code.trim()) out.add(code.trim());
+		}
+		const isProgramme = (c: string) => /\dYR$/.test(c);
+		return [...out].sort((a, b) => {
+			if (isProgramme(a) !== isProgramme(b)) return isProgramme(a) ? -1 : 1;
+			return a.localeCompare(b);
+		});
+	}
+
 	// What's actually blocking a course that won't fit. A group whose every
 	// section is taken out counts as a blocker; the courses doing that are
 	// what you'd have to drop. Cross-group clashes (each part free on its
@@ -1162,6 +1179,7 @@
 	fits: boolean;
 })}
 	{@const { base, sample, groups, added, fits } = item}
+	{@const batches = batchesFor(base)}
 	<div
 		class="course-list-item"
 		style="--accent: {courseAccent(sample)}"
@@ -1189,6 +1207,13 @@
 					.map((g) => `${GROUP_LABEL[g.prefix]} ×${g.sections.length}`)
 					.join(" • ")}
 			</span>
+			{#if batches.length}
+				<span class="muted small batch-line">
+					Runs for {batches.slice(0, 6).join(", ")}{batches.length > 6
+						? ` +${batches.length - 6} more`
+						: ""}
+				</span>
+			{/if}
 			<span class="fit-note" class:bad={!fits && !added}>
 				{#if added}
 					✓ In your timetable
@@ -1960,14 +1985,6 @@
 								>{selectedCourseDetails.openAsUWE
 									? "Yes"
 									: "No"}</span
-							>
-						</div>
-					{/if}
-					{#if selectedCourseDetails.remarks}
-						<div class="course-modal-item full-width">
-							<span class="modal-label">Remarks</span>
-							<span class="modal-value"
-								>{selectedCourseDetails.remarks}</span
 							>
 						</div>
 					{/if}
@@ -3696,9 +3713,6 @@
 		gap: 0.25rem;
 	}
 
-	.course-modal-item.full-width {
-		grid-column: 1 / -1;
-	}
 
 	.modal-label {
 		font-size: 0.7rem;
@@ -3968,6 +3982,12 @@
 	.elective-badge.mine {
 		border-color: #22c55e55;
 		color: #22c55e;
+	}
+
+	.batch-line {
+		font-family: var(--font-mono, "SF Mono", monospace);
+		font-size: 0.66rem;
+		opacity: 0.85;
 	}
 
 	.elective-note {
