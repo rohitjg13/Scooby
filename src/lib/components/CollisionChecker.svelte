@@ -37,6 +37,7 @@
 	let showUWEList = $state(false);
 	let showCCCList = $state(false);
 	let showElectiveList = $state(false);
+	let showColorSettings = $state(false);
 	let maxCredits = $state(25);
 
 	let totalCredits = $derived.by(() => {
@@ -338,6 +339,11 @@
 			if (savedExcluded) {
 				excludedCourseCodes = new Set(JSON.parse(savedExcluded));
 			}
+
+			const savedColors = localStorage.getItem(key("colors"));
+			if (savedColors) {
+				courseColors = JSON.parse(savedColors);
+			}
 		} catch (e) {
 			console.error("Failed to restore state", e);
 		} finally {
@@ -394,6 +400,12 @@
 				key("excluded"),
 				JSON.stringify(Array.from(excludedCourseCodes)),
 			);
+		}
+	});
+
+	$effect(() => {
+		if (stateLoaded) {
+			localStorage.setItem(key("colors"), JSON.stringify(courseColors));
 		}
 	});
 
@@ -968,18 +980,50 @@
 		return `oklch(0.82 0.085 ${hue.toFixed(1)})`;
 	}
 
+	// Per-course colour overrides, keyed by base code and kept in this
+	// browser only — your palette, nobody else's.
+	let courseColors = $state<Record<string, string>>({});
+
+	function setCourseColor(base: string, color: string) {
+		courseColors = { ...courseColors, [base]: color };
+	}
+
+	function clearCourseColor(base: string) {
+		const { [base]: _, ...rest } = courseColors;
+		courseColors = rest;
+	}
+
+	// Every course on your timetable, one row per course, for the colour panel
+	let myTimetableCourses = $derived.by(() => {
+		const out = new Map<string, Course>();
+		for (const course of [
+			...getEffectiveCoursesList($batchCourses),
+			...getEffectiveCoursesList($selectedCourses),
+		]) {
+			const base = getBaseCourseCode(course.courseCode);
+			if (!out.has(base)) out.set(base, course);
+		}
+		return [...out].sort((a, b) => a[0].localeCompare(b[0]));
+	});
+
 	// Colour follows the course's department, so the same course is the same
 	// colour everywhere — timetable, search, browse, department card.
 	function courseAccent(course: Course): string {
-		return deptColor(getDepartment(course.courseCode));
+		const base = getBaseCourseCode(course.courseCode);
+		return courseColors[base] ?? deptColor(getDepartment(course.courseCode));
 	}
 
 	// Only the departments actually on screen, so the legend stays short
 	let calendarLegend = $derived.by(() => {
 		const out = new Map<string, string>();
 		for (const block of buildCalendar().blocks) {
-			const dept = getDepartment(block.course.courseCode);
-			if (dept) out.set(dept, deptColor(dept));
+			// A recoloured course no longer represents its department, so it
+			// gets its own entry rather than mislabelling the department's.
+			const base = getBaseCourseCode(block.course.courseCode);
+			const label = courseColors[base]
+				? base
+				: getDepartment(block.course.courseCode);
+			if (label) out.set(label, courseAccent(block.course));
 		}
 		return [...out].sort((a, b) => a[0].localeCompare(b[0]));
 	});
@@ -1611,6 +1655,11 @@
 					</div>
 
 					<div class="legend">
+						<button
+							class="legend-edit"
+							onclick={() => (showColorSettings = true)}
+							title="Change course colours">Colours ✎</button
+						>
 						{#each calendarLegend as [label, color]}
 							<span class="legend-item">
 								<span
@@ -1909,9 +1958,8 @@
 
 	<!-- Course Details Modal -->
 	{#if selectedCourseDetails}
-		{@const detailBatches = batchesFor(
-			getBaseCourseCode(selectedCourseDetails.courseCode),
-		)}
+		{@const detailBase = getBaseCourseCode(selectedCourseDetails.courseCode)}
+		{@const detailBatches = batchesFor(detailBase)}
 		<div
 			class="modal-overlay course-details-overlay"
 			onclick={() => (selectedCourseDetails = null)}
@@ -2018,6 +2066,42 @@
 							>
 						</div>
 					{/if}
+					<div class="course-modal-item wide">
+						<span class="modal-label">Colour</span>
+						<div class="colour-row">
+							<label
+								class="colour-swatch"
+								style="background: {courseAccent(
+									selectedCourseDetails,
+								)}"
+								title="Pick a colour for this course"
+							>
+								<input
+									type="color"
+									aria-label="Pick a colour for this course"
+									value={courseColors[detailBase] ?? "#8a8a8a"}
+									oninput={(e) =>
+										setCourseColor(
+											detailBase,
+											e.currentTarget.value,
+										)}
+								/>
+							</label>
+							{#if courseColors[detailBase]}
+								<button
+									class="btn small"
+									onclick={() => clearCourseColor(detailBase)}
+									>Reset</button
+								>
+							{:else}
+								<span class="muted small"
+									>Default for {getDepartment(
+										selectedCourseDetails.courseCode,
+									)}</span
+								>
+							{/if}
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -2322,6 +2406,89 @@
 				<button
 					class="btn primary"
 					onclick={() => (showCCCList = false)}>Close</button
+				>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Course colours, kept in this browser only -->
+	{#if showColorSettings}
+		<div
+			class="modal-overlay"
+			onclick={() => (showColorSettings = false)}
+			role="button"
+			tabindex="-1"
+			onkeydown={(e) => e.key === "Escape" && (showColorSettings = false)}
+		>
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<div
+				class="modal course-list-modal"
+				onclick={(e) => e.stopPropagation()}
+				role="dialog"
+				tabindex="-1"
+			>
+				<button
+					class="modal-close"
+					onclick={() => (showColorSettings = false)}>×</button
+				>
+
+				<h2>Course Colours</h2>
+				<p class="muted small elective-note">
+					Saved in this browser only. Courses default to their
+					department's colour.
+				</p>
+
+				<div class="course-list-container">
+					{#each myTimetableCourses as [base, course]}
+						<div class="colour-item">
+							<label
+								class="colour-swatch"
+								style="background: {courseAccent(course)}"
+								title="Pick a colour for {base}"
+							>
+								<input
+									type="color"
+									aria-label="Colour for {base}"
+									value={courseColors[base] ?? "#8a8a8a"}
+									oninput={(e) =>
+										setCourseColor(
+											base,
+											e.currentTarget.value,
+										)}
+								/>
+							</label>
+							<div class="colour-item-info">
+								<span class="mono">{base}</span>
+								<span class="muted small"
+									>{course.courseName}</span
+								>
+							</div>
+							{#if courseColors[base]}
+								<button
+									class="btn small"
+									onclick={() => clearCourseColor(base)}
+									>Reset</button
+								>
+							{/if}
+						</div>
+					{:else}
+						<p class="muted">
+							Add some courses first — there's nothing to colour
+							yet.
+						</p>
+					{/each}
+				</div>
+
+				{#if Object.keys(courseColors).length}
+					<button
+						class="btn secondary"
+						onclick={() => (courseColors = {})}
+						>Reset all to department colours</button
+					>
+				{/if}
+				<button
+					class="btn primary"
+					onclick={() => (showColorSettings = false)}>Done</button
 				>
 			</div>
 		</div>
@@ -3744,6 +3911,81 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
+	}
+
+	.colour-row {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+	}
+
+	.legend-edit {
+		background: none;
+		border: 1px solid #333;
+		border-radius: 999px;
+		color: #999;
+		font-size: 0.65rem;
+		padding: 0.15rem 0.5rem;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.legend-edit:hover {
+		border-color: #555;
+		color: #fff;
+	}
+
+	.colour-item {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.6rem 0.75rem;
+		background: #1a1a1a;
+		border-radius: 6px;
+	}
+
+	.colour-item-info {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.colour-item-info .muted {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	/* The swatch IS the picker: it shows the course's real current colour
+	   (which may be an oklch default that input[type=color] cannot hold),
+	   with a transparent native picker laid over it. */
+	.colour-swatch {
+		position: relative;
+		width: 26px;
+		height: 26px;
+		border-radius: 6px;
+		border: 1px solid #333;
+		flex: none;
+		cursor: pointer;
+		transition: border-color 0.15s;
+	}
+
+	.colour-swatch:hover {
+		border-color: #777;
+	}
+
+	.colour-swatch input {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		padding: 0;
+		margin: 0;
+		border: none;
+		opacity: 0;
+		cursor: pointer;
 	}
 
 	/* A course can list 21 batches — give that the full row */
