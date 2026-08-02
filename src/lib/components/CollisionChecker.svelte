@@ -29,6 +29,8 @@
 	let loading = $state(true);
 	let error = $state("");
 	let batchInputs = $state([""]);
+	// Lets people plan from scratch with no batch loaded at all
+	let skipBatch = $state(false);
 	let batchError = $state("");
 	let showDownloadModal = $state(false);
 	let selectedCourseDetails: Course | null = $state(null);
@@ -275,21 +277,21 @@
 		}
 
 		// "r" resets
-		if (e.key === "r" && $currentBatches.length > 0) {
+		if (e.key === "r" && inApp) {
 			e.preventDefault();
 			reset();
 			return;
 		}
 
 		// "p" downloads image
-		if (e.key === "p" && $currentBatches.length > 0) {
+		if (e.key === "p" && inApp) {
 			e.preventDefault();
 			downloadImage();
 			return;
 		}
 
 		// "c" exports calendar
-		if (e.key === "c" && $currentBatches.length > 0) {
+		if (e.key === "c" && inApp) {
 			e.preventDefault();
 			exportCalendar();
 			return;
@@ -304,6 +306,9 @@
 	// batch screen instead of restoring codes that no longer exist.
 	const STORE_VERSION = "monsoon26";
 	const key = (name: string) => `scooby_${STORE_VERSION}_${name}`;
+
+	// Past the batch screen, either with a batch or on an empty slate
+	let inApp = $derived($currentBatches.length > 0 || skipBatch);
 
 	onMount(async () => {
 		// Add keyboard listener
@@ -327,6 +332,10 @@
 			if (savedBatches) {
 				currentBatches.set(JSON.parse(savedBatches));
 			}
+
+			skipBatch = localStorage.getItem(key("nobatch")) === "1";
+			// No batch means nothing is "open to you", so start unfiltered
+			if (skipBatch) showNonUWE = true;
 
 			const savedSelected = localStorage.getItem(key("selected"));
 			if (savedSelected) {
@@ -376,6 +385,7 @@
 				key("batches"),
 				JSON.stringify($currentBatches),
 			);
+			localStorage.setItem(key("nobatch"), skipBatch ? "1" : "0");
 		}
 	});
 
@@ -424,22 +434,6 @@
 		});
 		return [...batches].sort();
 	}
-
-	// Examples pulled from the loaded sheet, so they can never go stale the
-	// way the hardcoded "ELC2X" did. Picks a real programme and one of its
-	// own blocks, which is exactly the pairing the tip is asking for.
-	let batchExample = $derived.by(() => {
-		const all = getAllBatches();
-		for (const programme of all.filter((b) => /\dYR$/.test(b))) {
-			// "CSD2YR" -> blocks are CSD21, CSD22… same department *and* year
-			const stem = programme.slice(0, programme.indexOf("YR"));
-			const blocks = all.filter(
-				(b) => b.startsWith(stem) && /\d$/.test(b),
-			);
-			if (blocks.length) return [programme, ...blocks.slice(0, 2)];
-		}
-		return all.slice(0, 3);
-	});
 
 	// Filter batches based on input
 	function getSuggestionsFor(input: string) {
@@ -519,6 +513,7 @@
 
 	function reset() {
 		currentBatches.set([]);
+		skipBatch = false;
 		selectedCourses.set([]);
 		batchInputs = [""];
 		browseSearch = "";
@@ -1369,7 +1364,7 @@
 				Put your file in: <code>src/lib/data/</code>
 			</p>
 		</div>
-	{:else if $currentBatches.length === 0}
+	{:else if !inApp}
 		<div class="center">
 			<div class="batch-form">
 				<h1>Scooby</h1>
@@ -1378,9 +1373,9 @@
 					<span class="tip-icon">💡</span>
 					<span
 						>Add <strong>all</strong> your batches — your programme
-						and your block. e.g.
-						{#each batchExample as code, i}<strong>{code}</strong
-							>{i < batchExample.length - 1 ? ", " : ""}{/each}.</span
+						and your block. e.g. ECE 2nd years have both
+						<strong>ECE2YR</strong> and an
+						<strong>ECE2X</strong> block (ECE21, ECE22 …).</span
 					>
 				</div>
 				<form
@@ -1402,7 +1397,7 @@
 									class="input"
 									class:error={!!batchError}
 									class:valid={isValid}
-									placeholder="e.g. {batchExample.join(', ')}"
+									placeholder="e.g. ECE2YR, ECE21"
 									bind:value={batchInputs[i]}
 									oninput={() => (batchError = "")}
 									autocomplete="off"
@@ -1445,9 +1440,15 @@
 					{/if}
 					<button type="submit" class="btn primary">Load</button>
 				</form>
+				<button
+					type="button"
+					class="skip-batch"
+					title="Starts you on an empty timetable — no batch courses"
+					onclick={() => ((skipBatch = true), (showNonUWE = true))}
+					>Continue without a batch →</button
+				>
 				<div class="batch-form-footer">
 					<a href="/" class="btn secondary">← Home</a>
-					<a href="/exam" class="btn secondary">📝 Exam Timetable</a>
 				</div>
 			</div>
 		</div>
@@ -1462,6 +1463,12 @@
 					<div class="tags-row">
 						{#each $currentBatches as batch}
 							<span class="tag">{batch}</span>
+						{:else}
+							<button
+								class="tag tag-button"
+								onclick={reset}
+								title="Pick a batch">No batch — set one</button
+							>
 						{/each}
 					</div>
 				</div>
@@ -1917,7 +1924,9 @@
 					</div>
 					{#if $batchCourses.length === 0}
 						<p class="muted">
-							No courses for {$currentBatches.join(", ")}
+							{$currentBatches.length
+								? `No courses for ${$currentBatches.join(", ")}`
+								: "No batch loaded — add courses from Browse."}
 						</p>
 					{/if}
 
@@ -2758,6 +2767,24 @@
 		text-transform: uppercase;
 	}
 
+	/* Deliberately a quiet link, not a button — the batch flow is the norm */
+	.skip-batch {
+		display: block;
+		margin: 0.8rem auto 0;
+		padding: 0;
+		background: none;
+		border: none;
+		color: #777;
+		font-family: inherit;
+		font-size: 0.72rem;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		cursor: pointer;
+	}
+	.skip-batch:hover {
+		color: #fff;
+	}
+
 	.batch-form-footer {
 		margin-top: 1.5rem;
 		padding-top: 1.5rem;
@@ -2875,6 +2902,16 @@
 		font-size: 0.7rem;
 		color: #888;
 	}
+	.tag-button {
+		border: 1px dashed #333;
+		cursor: pointer;
+		font-family: inherit;
+	}
+	.tag-button:hover {
+		color: #fff;
+		border-color: #555;
+	}
+
 	.tag.small {
 		font-size: 0.65rem;
 		padding: 0.15rem 0.4rem;
