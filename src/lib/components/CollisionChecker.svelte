@@ -29,11 +29,16 @@
 	let loading = $state(true);
 	let error = $state("");
 	let batchInputs = $state([""]);
+	// Lets people plan from scratch with no batch loaded at all
+	let skipBatch = $state(false);
 	let batchError = $state("");
 	let showDownloadModal = $state(false);
 	let selectedCourseDetails: Course | null = $state(null);
 	let showKeyboardHelp = $state(false);
 	let onlyFits = $state(false);
+	// Off by default: only courses open to you. Turning it on lets you browse
+	// and add anything in the sheet, flagged as not a UWE.
+	let showNonUWE = $state(false);
 	let showUWEList = $state(false);
 	let showCCCList = $state(false);
 	let showElectiveList = $state(false);
@@ -272,21 +277,21 @@
 		}
 
 		// "r" resets
-		if (e.key === "r" && $currentBatches.length > 0) {
+		if (e.key === "r" && inApp) {
 			e.preventDefault();
 			reset();
 			return;
 		}
 
 		// "p" downloads image
-		if (e.key === "p" && $currentBatches.length > 0) {
+		if (e.key === "p" && inApp) {
 			e.preventDefault();
 			downloadImage();
 			return;
 		}
 
 		// "c" exports calendar
-		if (e.key === "c" && $currentBatches.length > 0) {
+		if (e.key === "c" && inApp) {
 			e.preventDefault();
 			exportCalendar();
 			return;
@@ -301,6 +306,9 @@
 	// batch screen instead of restoring codes that no longer exist.
 	const STORE_VERSION = "monsoon26";
 	const key = (name: string) => `scooby_${STORE_VERSION}_${name}`;
+
+	// Past the batch screen, either with a batch or on an empty slate
+	let inApp = $derived($currentBatches.length > 0 || skipBatch);
 
 	onMount(async () => {
 		// Add keyboard listener
@@ -324,6 +332,10 @@
 			if (savedBatches) {
 				currentBatches.set(JSON.parse(savedBatches));
 			}
+
+			skipBatch = localStorage.getItem(key("nobatch")) === "1";
+			// No batch means nothing is "open to you", so start unfiltered
+			if (skipBatch) showNonUWE = true;
 
 			const savedSelected = localStorage.getItem(key("selected"));
 			if (savedSelected) {
@@ -373,6 +385,7 @@
 				key("batches"),
 				JSON.stringify($currentBatches),
 			);
+			localStorage.setItem(key("nobatch"), skipBatch ? "1" : "0");
 		}
 	});
 
@@ -422,22 +435,6 @@
 		return [...batches].sort();
 	}
 
-	// Examples pulled from the loaded sheet, so they can never go stale the
-	// way the hardcoded "ELC2X" did. Picks a real programme and one of its
-	// own blocks, which is exactly the pairing the tip is asking for.
-	let batchExample = $derived.by(() => {
-		const all = getAllBatches();
-		for (const programme of all.filter((b) => /\dYR$/.test(b))) {
-			// "CSD2YR" -> blocks are CSD21, CSD22… same department *and* year
-			const stem = programme.slice(0, programme.indexOf("YR"));
-			const blocks = all.filter(
-				(b) => b.startsWith(stem) && /\d$/.test(b),
-			);
-			if (blocks.length) return [programme, ...blocks.slice(0, 2)];
-		}
-		return all.slice(0, 3);
-	});
-
 	// Filter batches based on input
 	function getSuggestionsFor(input: string) {
 		if (!input || input.length < 1) return [];
@@ -486,6 +483,9 @@
 
 		if (allValid) {
 			currentBatches.set(inputsToProcess);
+			// With a batch loaded, the UWE/CCC filter is the sane default again
+			skipBatch = false;
+			showNonUWE = false;
 			batchError = "";
 		} else {
 			batchError =
@@ -516,6 +516,8 @@
 
 	function reset() {
 		currentBatches.set([]);
+		skipBatch = false;
+		showNonUWE = false;
 		selectedCourses.set([]);
 		batchInputs = [""];
 		browseSearch = "";
@@ -717,7 +719,7 @@
 	);
 
 	function openPlanner(course: Course) {
-		if (!canAdd(course)) return;
+		if (!showNonUWE && !canAdd(course)) return;
 		const base = getBaseCourseCode(course.courseCode);
 		const groups = getCourseGroups(base);
 		const existing = timetableExcluding(base);
@@ -860,6 +862,7 @@
 	// one course in the sheet mixes Open as UWE across its rows, but hiding a
 	// course that has an open section would be the worse mistake.
 	function courseOpen(base: string): boolean {
+		if (showNonUWE) return true;
 		return $allCourses.some(
 			(c) => getBaseCourseCode(c.courseCode) === base && canAdd(c),
 		);
@@ -1056,6 +1059,33 @@
 		return course.openAsUWE ? "UWE" : "Not open to you";
 	}
 
+	// Search box for the UWE and CCC lists (only one is ever open)
+	let listSearch = $state("");
+
+	function matchesQuery(base: string, sample: Course, query: string): boolean {
+		if (!query) return true;
+		return (
+			base.toLowerCase().includes(query) ||
+			sample.courseName.toLowerCase().includes(query) ||
+			sample.faculty.toLowerCase().includes(query)
+		);
+	}
+
+	// One card per course, not per row — the sheet has a row per day, so a
+	// course with Mon+Wed lectures would otherwise show up twice.
+	function courseCards(rows: Course[]) {
+		const bases = [
+			...new Set(rows.map((c) => getBaseCourseCode(c.courseCode))),
+		].sort();
+		return bases.map((base) => ({
+			base,
+			sample: $allCourses.find(
+				(c) => getBaseCourseCode(c.courseCode) === base,
+			)!,
+			...courseStatus(base),
+		}));
+	}
+
 	// One card per elective course, not per section
 	let myElectiveCourses = $derived.by(() => {
 		const bases = [
@@ -1238,7 +1268,15 @@
 		style="--accent: {courseAccent(sample)}"
 		class:dimmed={!fits}
 	>
-		<div class="course-list-info">
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+		<div
+			class="course-list-info"
+			onclick={() => openCourseDetails(sample)}
+			role="button"
+			tabindex="0"
+			onkeydown={(e) => e.key === "Enter" && openCourseDetails(sample)}
+			title="Click for details"
+		>
 			<div class="course-list-header">
 				<span class="mono">{base}</span>
 				{#if electiveTag(sample)}
@@ -1250,9 +1288,13 @@
 				{:else if sample.openAsUWE}
 					<span class="comp-badge">UWE</span>
 				{/if}
+				{#if !canAdd(sample)}
+					<span class="not-uwe-badge">⚠ Not a UWE</span>
+				{/if}
 				{#if sample.credits}
 					<span class="cr-badge">{sample.credits} Cr</span>
 				{/if}
+				<span class="info-hint">ⓘ</span>
 			</div>
 			<span class="course-list-name">{sample.courseName}</span>
 			<span class="muted small">
@@ -1283,7 +1325,7 @@
 			</span>
 		</div>
 		<div class="course-list-actions">
-			{#if added || canAdd(sample)}
+			{#if added || canAdd(sample) || showNonUWE}
 				<button class="btn small" onclick={() => openPlanner(sample)}
 					>{added ? "Sections" : "Add"}</button
 				>
@@ -1296,6 +1338,20 @@
 				>
 			{/if}
 		</div>
+	</div>
+{/snippet}
+
+<!-- Filter pills for the browse modal, shown under whichever search box is up -->
+{#snippet filterChips()}
+	<div class="filter-chips">
+		<label class="chip">
+			<input type="checkbox" bind:checked={showNonUWE} />
+			<span>Show non-UWE courses</span>
+		</label>
+		<label class="chip">
+			<input type="checkbox" bind:checked={onlyFits} />
+			<span>Fits my week</span>
+		</label>
 	</div>
 {/snippet}
 
@@ -1312,7 +1368,7 @@
 				Put your file in: <code>src/lib/data/</code>
 			</p>
 		</div>
-	{:else if $currentBatches.length === 0}
+	{:else if !inApp}
 		<div class="center">
 			<div class="batch-form">
 				<h1>Scooby</h1>
@@ -1321,9 +1377,9 @@
 					<span class="tip-icon">💡</span>
 					<span
 						>Add <strong>all</strong> your batches — your programme
-						and your block. e.g.
-						{#each batchExample as code, i}<strong>{code}</strong
-							>{i < batchExample.length - 1 ? ", " : ""}{/each}.</span
+						and your block. e.g. ECE 2nd years have both
+						<strong>ECE2YR</strong> and an
+						<strong>ECE2X</strong> block (ECE21, ECE22 …).</span
 					>
 				</div>
 				<form
@@ -1345,7 +1401,7 @@
 									class="input"
 									class:error={!!batchError}
 									class:valid={isValid}
-									placeholder="e.g. {batchExample.join(', ')}"
+									placeholder="e.g. ECE2YR, ECE21"
 									bind:value={batchInputs[i]}
 									oninput={() => (batchError = "")}
 									autocomplete="off"
@@ -1388,9 +1444,15 @@
 					{/if}
 					<button type="submit" class="btn primary">Load</button>
 				</form>
+				<button
+					type="button"
+					class="skip-batch"
+					title="Starts you on an empty timetable — no batch courses"
+					onclick={() => ((skipBatch = true), (showNonUWE = true))}
+					>Continue without a batch →</button
+				>
 				<div class="batch-form-footer">
 					<a href="/" class="btn secondary">← Home</a>
-					<a href="/exam" class="btn secondary">📝 Exam Timetable</a>
 				</div>
 			</div>
 		</div>
@@ -1405,6 +1467,12 @@
 					<div class="tags-row">
 						{#each $currentBatches as batch}
 							<span class="tag">{batch}</span>
+						{:else}
+							<button
+								class="tag tag-button"
+								onclick={reset}
+								title="Pick a batch">No batch — set one</button
+							>
 						{/each}
 					</div>
 				</div>
@@ -1484,12 +1552,12 @@
 					</button>
 					<button
 						class="btn secondary"
-						onclick={() => (showUWEList = true)}
+						onclick={() => ((listSearch = ""), (showUWEList = true))}
 						title="View all UWE courses">UWE List</button
 					>
 					<button
 						class="btn secondary"
-						onclick={() => (showCCCList = true)}
+						onclick={() => ((listSearch = ""), (showCCCList = true))}
 						title="View all CCC courses">CCC List</button
 					>
 					<button class="btn" onclick={reset}>Reset</button>
@@ -1860,7 +1928,9 @@
 					</div>
 					{#if $batchCourses.length === 0}
 						<p class="muted">
-							No courses for {$currentBatches.join(", ")}
+							{$currentBatches.length
+								? `No courses for ${$currentBatches.join(", ")}`
+								: "No batch loaded — add courses from Browse."}
 						</p>
 					{/if}
 
@@ -2168,7 +2238,11 @@
 
 	<!-- UWE Courses List Modal -->
 	{#if showUWEList}
-		{@const uweCourses = $allCourses.filter((c) => c.openAsUWE)}
+		{@const uweCourses = courseCards(
+			$allCourses.filter((c) => c.openAsUWE),
+		).filter((c) =>
+			matchesQuery(c.base, c.sample, listSearch.toLowerCase().trim()),
+		)}
 		<div
 			class="modal-overlay"
 			onclick={() => (showUWEList = false)}
@@ -2190,88 +2264,17 @@
 				>
 				<h2>Open as UWE Courses ({uweCourses.length})</h2>
 
+				<input
+					type="text"
+					class="input dept-filter"
+					placeholder="Search UWE courses by code, name or faculty…"
+					bind:value={listSearch}
+					autocomplete="off"
+				/>
+
 				<div class="course-list-container">
-					{#each uweCourses as course}
-						{@const conflicts = getConflicts(
-							course,
-							getEffectiveCoursesList($batchCourses),
-							$selectedCourses,
-						)}
-						{@const hasConflict = conflicts.length > 0}
-						{@const selected = isSelected(course)}
-						{@const batch = isBatchCourse(course)}
-						{@const compType = getComponentType(course.component)}
-						<div
-							class="course-list-item"
-							style="--accent: {courseAccent(course)}"
-							class:dimmed={hasConflict}
-						>
-							<div
-								class="course-list-info"
-								onclick={() => openCourseDetails(course)}
-								role="button"
-								tabindex="0"
-								onkeydown={(e) =>
-									e.key === "Enter" &&
-									openCourseDetails(course)}
-								title="Click for details"
-							>
-								<div class="course-list-header">
-									<span class="mono"
-										>{course.courseCode.split("-")[0]}</span
-									>
-									{#if compType}
-										<span class="comp-badge"
-											>{compType}</span
-										>
-									{/if}
-									<span class="info-hint">ⓘ</span>
-								</div>
-								<span class="course-list-name"
-									>{course.courseName}</span
-								>
-								{#if course.day}
-									<span class="muted small"
-										>{course.day}
-										{course.startTime}-{course.endTime}</span
-									>
-								{/if}
-								{#if hasConflict}
-									<span class="conflict-info"
-										>⚠️ Conflicts with: {conflicts
-											.map(
-												(c) =>
-													c.courseCode.split("-")[0],
-											)
-											.join(", ")}</span
-									>
-								{/if}
-							</div>
-							<div class="course-list-actions">
-								{#if batch}
-									<span class="badge">Batch</span>
-								{:else if selected}
-									<button
-										class="btn small danger"
-										onclick={() => removeCourse(course)}
-										>Remove</button
-									>
-								{:else if canAdd(course)}
-									<button
-										class="btn small"
-										onclick={() => openPlanner(course)}
-										>Add</button
-									>
-								{:else}
-									<button
-										class="btn small"
-										disabled
-										title="Not open as UWE, and not a major elective of your department"
-										>Closed</button
-									>
-								{/if}
-							</div>
-						</div>
+					{#each uweCourses as item}
+						{@render courseCard(item)}
 					{:else}
 						<p class="muted">No UWE courses found.</p>
 					{/each}
@@ -2287,8 +2290,12 @@
 
 	<!-- CCC Courses List Modal -->
 	{#if showCCCList}
-		{@const cccCourses = $allCourses.filter((c) =>
-			c.courseCode.toUpperCase().startsWith("CCC"),
+		{@const cccCourses = courseCards(
+			$allCourses.filter((c) =>
+				c.courseCode.toUpperCase().startsWith("CCC"),
+			),
+		).filter((c) =>
+			matchesQuery(c.base, c.sample, listSearch.toLowerCase().trim()),
 		)}
 		<div
 			class="modal-overlay"
@@ -2311,93 +2318,17 @@
 				>
 				<h2>CCC Courses ({cccCourses.length})</h2>
 
+				<input
+					type="text"
+					class="input dept-filter"
+					placeholder="Search CCC courses by code, name or faculty…"
+					bind:value={listSearch}
+					autocomplete="off"
+				/>
+
 				<div class="course-list-container">
-					{#each cccCourses as course}
-						{@const conflicts = getConflicts(
-							course,
-							getEffectiveCoursesList($batchCourses),
-							$selectedCourses,
-						)}
-						{@const hasConflict = conflicts.length > 0}
-						{@const selected = isSelected(course)}
-						{@const batch = isBatchCourse(course)}
-						{@const compType = getComponentType(course.component)}
-						<div
-							class="course-list-item"
-							style="--accent: {courseAccent(course)}"
-							class:dimmed={hasConflict}
-						>
-							<div
-								class="course-list-info"
-								onclick={() => openCourseDetails(course)}
-								role="button"
-								tabindex="0"
-								onkeydown={(e) =>
-									e.key === "Enter" &&
-									openCourseDetails(course)}
-								title="Click for details"
-							>
-								<div class="course-list-header">
-									<span class="mono"
-										>{course.courseCode.split("-")[0]}</span
-									>
-									{#if compType}
-										<span class="comp-badge"
-											>{compType}</span
-										>
-									{/if}
-									{#if course.credits}
-										<span class="cr-badge"
-											>{course.credits} Cr</span
-										>
-									{/if}
-									<span class="info-hint">ⓘ</span>
-								</div>
-								<span class="course-list-name"
-									>{course.courseName}</span
-								>
-								{#if course.day}
-									<span class="muted small"
-										>{course.day}
-										{course.startTime}-{course.endTime}</span
-									>
-								{/if}
-								{#if hasConflict}
-									<span class="conflict-info"
-										>⚠️ Conflicts with: {conflicts
-											.map(
-												(c) =>
-													c.courseCode.split("-")[0],
-											)
-											.join(", ")}</span
-									>
-								{/if}
-							</div>
-							<div class="course-list-actions">
-								{#if batch}
-									<span class="badge">Batch</span>
-								{:else if selected}
-									<button
-										class="btn small danger"
-										onclick={() => removeCourse(course)}
-										>Remove</button
-									>
-								{:else if canAdd(course)}
-									<button
-										class="btn small"
-										onclick={() => openPlanner(course)}
-										>Add</button
-									>
-								{:else}
-									<button
-										class="btn small"
-										disabled
-										title="Not open as UWE, and not a major elective of your department"
-										>Closed</button
-									>
-								{/if}
-							</div>
-						</div>
+					{#each cccCourses as item}
+						{@render courseCard(item)}
 					{:else}
 						<p class="muted">No CCC courses found.</p>
 					{/each}
@@ -2570,11 +2501,6 @@
 					>×</button
 				>
 
-				<label class="uwe-toggle browse-fits">
-					<input type="checkbox" bind:checked={onlyFits} />
-					<span class="toggle-label">Fits my week</span>
-				</label>
-
 				{#if !browseDept}
 					<h2>Add UWE / CCC</h2>
 
@@ -2586,6 +2512,8 @@
 						bind:this={browseSearchRef}
 						autocomplete="off"
 					/>
+
+					{@render filterChips()}
 
 					{#if browseSearch.trim().length >= 2}
 						<div class="course-list-container">
@@ -2633,6 +2561,8 @@
 						bind:this={browseFilterRef}
 						autocomplete="off"
 					/>
+
+					{@render filterChips()}
 
 					<div class="course-list-container">
 						{#each browseCourses as item}
@@ -2685,6 +2615,14 @@
 				>
 				<h2>{plannerBase}</h2>
 				<p class="planner-name">{sample?.courseName ?? ""}</p>
+
+				{#if sample && !canAdd(sample)}
+					<p class="planner-not-uwe">
+						⚠ Not a UWE — this course isn't open to you as a UWE and
+						isn't one of your major electives. You can plan it, but
+						you may not be allowed to register for it.
+					</p>
+				{/if}
 
 				<div
 					class="planner-status"
@@ -2833,6 +2771,24 @@
 		text-transform: uppercase;
 	}
 
+	/* Deliberately a quiet link, not a button — the batch flow is the norm */
+	.skip-batch {
+		display: block;
+		margin: 0.8rem auto 0;
+		padding: 0;
+		background: none;
+		border: none;
+		color: #777;
+		font-family: inherit;
+		font-size: 0.72rem;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		cursor: pointer;
+	}
+	.skip-batch:hover {
+		color: #fff;
+	}
+
 	.batch-form-footer {
 		margin-top: 1.5rem;
 		padding-top: 1.5rem;
@@ -2950,6 +2906,16 @@
 		font-size: 0.7rem;
 		color: #888;
 	}
+	.tag-button {
+		border: 1px dashed #333;
+		cursor: pointer;
+		font-family: inherit;
+	}
+	.tag-button:hover {
+		color: #fff;
+		border-color: #555;
+	}
+
 	.tag.small {
 		font-size: 0.65rem;
 		padding: 0.15rem 0.4rem;
@@ -4146,24 +4112,9 @@
 		text-overflow: ellipsis;
 	}
 
-	.conflict-info {
-		font-size: 0.75rem;
-		color: #f59e0b;
-		margin-top: 0.25rem;
-	}
-
 	.course-list-actions {
 		flex-shrink: 0;
 		align-self: center;
-	}
-
-	.course-list-actions .badge {
-		display: inline-block;
-		padding: 0.3rem 0.6rem;
-		font-size: 0.75rem;
-		border-radius: 4px;
-		background: #333;
-		color: #aaa;
 	}
 
 	/* Browse by department */
@@ -4286,6 +4237,99 @@
 		position: absolute;
 		top: 0.75rem;
 		right: 3rem;
+	}
+
+	.filter-chips {
+		display: flex;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+		margin: -0.35rem 0 0.75rem;
+	}
+
+	/* Pill toggles: the native box is hidden, the pill itself shows state */
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.28rem 0.7rem;
+		border: 1px solid #3d3d3d;
+		border-radius: 999px;
+		background: #1e1e1e;
+		color: #ddd;
+		font-size: 0.72rem;
+		/* Same weight checked or not, so the pill never resizes on click */
+		font-weight: 600;
+		cursor: pointer;
+		user-select: none;
+		transition:
+			background 0.15s,
+			border-color 0.15s,
+			color 0.15s,
+			transform 0.08s;
+	}
+
+	.chip:hover {
+		border-color: #5a5a5a;
+		background: #262626;
+		color: #fff;
+	}
+
+	.chip:active {
+		transform: scale(0.96);
+	}
+
+	.chip input {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	/* Fixed-width marker so + and ✓ occupy the same space */
+	.chip span::before {
+		content: "+";
+		display: inline-block;
+		width: 0.85em;
+		opacity: 0.7;
+	}
+
+	.chip:has(input:checked) {
+		background: #fff;
+		border-color: #fff;
+		color: #000;
+	}
+
+	.chip:has(input:checked) span::before {
+		content: "✓";
+		opacity: 1;
+	}
+
+	.chip:has(input:focus-visible) {
+		outline: 2px solid #4a9eff;
+		outline-offset: 2px;
+	}
+
+	.not-uwe-badge {
+		font-size: 0.6rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		padding: 0.1rem 0.35rem;
+		border: 1px solid #ef4444;
+		border-radius: 3px;
+		background: #ef444422;
+		color: #ef4444;
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
+	.planner-not-uwe {
+		margin: 0 0 0.75rem;
+		padding: 0.5rem 0.6rem;
+		border: 1px solid #ef4444;
+		border-radius: 4px;
+		background: #ef444418;
+		color: #ef4444;
+		font-size: 0.75rem;
+		font-weight: 600;
 	}
 
 	/* Whole-course planner */
