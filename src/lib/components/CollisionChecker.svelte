@@ -483,6 +483,9 @@
 
 		if (allValid) {
 			currentBatches.set(inputsToProcess);
+			// With a batch loaded, the UWE/CCC filter is the sane default again
+			skipBatch = false;
+			showNonUWE = false;
 			batchError = "";
 		} else {
 			batchError =
@@ -514,6 +517,7 @@
 	function reset() {
 		currentBatches.set([]);
 		skipBatch = false;
+		showNonUWE = false;
 		selectedCourses.set([]);
 		batchInputs = [""];
 		browseSearch = "";
