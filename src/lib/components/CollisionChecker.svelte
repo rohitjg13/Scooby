@@ -2068,32 +2068,52 @@
 				</p>
 
 				<div class="course-modal-grid">
-					{#if selectedCourseDetails.faculty}
-						<div class="course-modal-item">
-							<span class="modal-label">Faculty</span>
-							<span class="modal-value"
-								>{selectedCourseDetails.faculty}</span
-							>
+					<div class="course-modal-item wide">
+						<span class="modal-label">Sections</span>
+						<div class="section-rows">
+							{#each getCourseGroups(detailBase) as group}
+								{#each group.sections as section}
+									{@const row = section.rows[0]}
+									<div
+										class="section-row"
+										class:mine={inTimetable(section.code)}
+									>
+										<span class="section-row-head">
+											<span class="mono"
+												>{section.code.split("-")[1] ??
+													section.code}</span
+											>
+											<span class="muted small"
+												>{GROUP_LABEL[group.prefix]}</span
+											>
+											{#if inTimetable(section.code)}
+												<span class="badge ok">Yours</span>
+											{/if}
+											{#if !section.rows.some(canAdd)}
+												<span class="not-uwe-badge"
+													>⚠ Not a UWE</span
+												>
+											{/if}
+										</span>
+										<span class="modal-value"
+											>{meetingTimes(section.code).join(
+												" / ",
+											) || "No timing listed"}</span
+										>
+										<span class="muted small">
+											{[row.faculty, row.room]
+												.filter(Boolean)
+												.join(" • ")}
+										</span>
+									</div>
+								{/each}
+							{:else}
+								<span class="muted small"
+									>No sections open to you.</span
+								>
+							{/each}
 						</div>
-					{/if}
-					{#if selectedCourseDetails.room}
-						<div class="course-modal-item">
-							<span class="modal-label">Room</span>
-							<span class="modal-value"
-								>{selectedCourseDetails.room}</span
-							>
-						</div>
-					{/if}
-					{#if selectedCourseDetails.day}
-						<div class="course-modal-item">
-							<span class="modal-label">Schedule</span>
-							<span class="modal-value">
-								{meetingTimes(
-									selectedCourseDetails.courseCode,
-								).join(" / ")}
-							</span>
-						</div>
-					{/if}
+					</div>
 					{#if selectedCourseDetails.credits && selectedCourseDetails.courseCode
 							.toUpperCase()
 							.startsWith("CCC")}
@@ -2112,15 +2132,6 @@
 							>
 						</div>
 					{/if}
-					{#if selectedCourseDetails.component || selectedCourseDetails.slot}
-						<div class="course-modal-item">
-							<span class="modal-label">Section</span>
-							<span class="modal-value"
-								>{selectedCourseDetails.slot ||
-									selectedCourseDetails.component}</span
-							>
-						</div>
-					{/if}
 					{#if selectedCourseDetails.term}
 						<div class="course-modal-item">
 							<span class="modal-label">Term</span>
@@ -2129,16 +2140,14 @@
 							>
 						</div>
 					{/if}
-					{#if selectedCourseDetails.openAsUWE !== undefined}
-						<div class="course-modal-item">
-							<span class="modal-label">Open as UWE</span>
-							<span class="modal-value"
-								>{selectedCourseDetails.openAsUWE
-									? "Yes"
-									: "No"}</span
-							>
-						</div>
-					{/if}
+					<div class="course-modal-item">
+						<span class="modal-label">Open as UWE</span>
+						<span class="modal-value"
+							>{hasOpenSection(detailBase)
+								? "Yes"
+								: "No"}</span
+						>
+					</div>
 					{#if detailBatches.length}
 						<div class="course-modal-item wide">
 							<span class="modal-label">Runs for</span>
@@ -4325,6 +4334,35 @@
 		outline-offset: 2px;
 	}
 
+	.section-rows {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.section-row {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		padding: 0.4rem 0.5rem;
+		border: 1px solid #222;
+		border-left: 3px solid #333;
+		border-radius: 4px;
+	}
+
+	/* The section you actually have */
+	.section-row.mine {
+		border-left-color: #22c55e;
+		background: rgba(34, 197, 94, 0.07);
+	}
+
+	.section-row-head {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+
 	.not-uwe-badge {
 		font-size: 0.6rem;
 		letter-spacing: 0.06em;
@@ -4457,6 +4495,7 @@
 		justify-content: space-between;
 	}
 
+	.section-row .badge,
 	.planner-option .badge {
 		padding: 0.15rem 0.45rem;
 		font-size: 0.68rem;
@@ -4465,6 +4504,7 @@
 		color: #aaa;
 	}
 
+	.section-row .badge.ok,
 	.planner-option .badge.ok {
 		background: rgba(34, 197, 94, 0.18);
 		color: #22c55e;
