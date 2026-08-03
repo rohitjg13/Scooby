@@ -3741,6 +3741,14 @@
 	}
 
 	@media (max-width: 700px) {
+		.course-modal {
+			padding: 1.25rem;
+		}
+		/* Two columns of labels get unreadable on a phone */
+		.course-modal-grid {
+			grid-template-columns: 1fr;
+			gap: 0.75rem;
+		}
 		.header {
 			flex-direction: column;
 			align-items: stretch;
@@ -3876,6 +3884,10 @@
 		max-width: 450px;
 		text-align: left;
 		position: relative;
+		/* A course with many sections would otherwise run off a phone screen */
+		max-height: 85vh;
+		overflow-y: auto;
+		overscroll-behavior: contain;
 	}
 
 	.course-modal h2 {
@@ -4338,6 +4350,9 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.4rem;
+		max-height: 45vh;
+		overflow-y: auto;
+		overscroll-behavior: contain;
 	}
 
 	.section-row {
