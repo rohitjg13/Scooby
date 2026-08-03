@@ -682,10 +682,15 @@
 	   one PRAC). "Fits" means some combination of those has no clash. */
 
 	function getCourseGroups(baseCode: string): Group[] {
+		const rows = $allCourses.filter(
+			(c) => getBaseCourseCode(c.courseCode) === baseCode,
+		);
+		// A course can mix sections: OHM2001 has one lecture open as UWE and
+		// three that aren't. Offer only the ones you could actually take,
+		// plus whatever you already have.
+		if (showNonUWE) return groupSections(rows);
 		return groupSections(
-			$allCourses.filter(
-				(c) => getBaseCourseCode(c.courseCode) === baseCode,
-			),
+			rows.filter((c) => canAdd(c) || inTimetable(c.courseCode)),
 		);
 	}
 
@@ -719,7 +724,8 @@
 	);
 
 	function openPlanner(course: Course) {
-		if (!showNonUWE && !canAdd(course)) return;
+		if (!showNonUWE && !hasOpenSection(getBaseCourseCode(course.courseCode)))
+			return;
 		const base = getBaseCourseCode(course.courseCode);
 		const groups = getCourseGroups(base);
 		const existing = timetableExcluding(base);
@@ -862,7 +868,12 @@
 	// one course in the sheet mixes Open as UWE across its rows, but hiding a
 	// course that has an open section would be the worse mistake.
 	function courseOpen(base: string): boolean {
-		if (showNonUWE) return true;
+		return showNonUWE || hasOpenSection(base);
+	}
+
+	// Any section of this course you could take — a course is "not a UWE"
+	// only when none of its sections is open to you.
+	function hasOpenSection(base: string): boolean {
 		return $allCourses.some(
 			(c) => getBaseCourseCode(c.courseCode) === base && canAdd(c),
 		);
@@ -1288,7 +1299,7 @@
 				{:else if sample.openAsUWE}
 					<span class="comp-badge">UWE</span>
 				{/if}
-				{#if !canAdd(sample)}
+				{#if !hasOpenSection(base)}
 					<span class="not-uwe-badge">⚠ Not a UWE</span>
 				{/if}
 				{#if sample.credits}
@@ -1325,7 +1336,7 @@
 			</span>
 		</div>
 		<div class="course-list-actions">
-			{#if added || canAdd(sample) || showNonUWE}
+			{#if added || showNonUWE || hasOpenSection(base)}
 				<button class="btn small" onclick={() => openPlanner(sample)}
 					>{added ? "Sections" : "Add"}</button
 				>
@@ -2616,7 +2627,7 @@
 				<h2>{plannerBase}</h2>
 				<p class="planner-name">{sample?.courseName ?? ""}</p>
 
-				{#if sample && !canAdd(sample)}
+				{#if !hasOpenSection(plannerBase)}
 					<p class="planner-not-uwe">
 						⚠ Not a UWE — this course isn't open to you as a UWE and
 						isn't one of your major electives. You can plan it, but
@@ -2655,6 +2666,7 @@
 									],
 								)}
 								{@const already = inTimetable(section.code)}
+								{@const openToYou = section.rows.some(canAdd)}
 								<button
 									class="planner-option"
 									class:picked={plannerPicks[group.prefix] ===
@@ -2673,6 +2685,11 @@
 											>{section.code.split("-")[1] ??
 												section.code}</span
 										>
+										{#if !openToYou}
+											<span class="not-uwe-badge"
+												>⚠ Not a UWE</span
+											>
+										{/if}
 										{#if already}
 											<span class="badge ok"
 												>Already in your timetable</span
