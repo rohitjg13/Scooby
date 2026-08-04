@@ -28,24 +28,29 @@ export function parseTimetableJson(text: string): Course[] {
 	// the dump ships with a trailing ";"
 	const data = JSON.parse(text.trim().replace(/;\s*$/, '')) as Record<string, Record<string, Row[]>>;
 
-	const byRow = new Map<number, { row: Row; batches: Set<string> }>();
+	const byRow = new Map<number, { row: Row; batches: Set<string>; blocks: Set<string> }>();
 	for (const programmes of Object.values(data)) {
 		for (const [programme, rows] of Object.entries(programmes)) {
 			for (const row of rows) {
 				let entry = byRow.get(row.rowid);
 				if (!entry) {
-					entry = { row, batches: new Set() };
+					entry = { row, batches: new Set(), blocks: new Set() };
 					byRow.set(row.rowid, entry);
 				}
 				entry.batches.add(programme);
-				for (const b of expandBatchCodes(row.block ?? '')) entry.batches.add(b);
+				// Blocks stay listed separately as well: a row naming them is
+				// for those blocks only, not for the whole programme.
+				for (const b of expandBatchCodes(row.block ?? '')) {
+					entry.batches.add(b);
+					entry.blocks.add(b);
+				}
 			}
 		}
 	}
 
 	const courses = [...byRow.values()]
 		.filter(({ row }) => row.code && row.code !== '-')
-		.map(({ row, batches }, index) => ({
+		.map(({ row, batches, blocks }, index) => ({
 			sno: index + 1,
 			courseCode: row.sec ? `${row.code}-${row.sec}` : row.code,
 			courseName: row.title ?? '',
@@ -55,6 +60,7 @@ export function parseTimetableJson(text: string): Course[] {
 			slot: row.sec ?? '',
 			room: row.room ?? '',
 			major: [...batches].join(', '),
+			blocks: [...blocks].join(', '),
 			day: row.day ?? '',
 			startTime: row.start ?? '',
 			endTime: row.end ?? '',

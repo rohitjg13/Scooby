@@ -3,6 +3,12 @@
 import assert from "node:assert";
 import { readFileSync } from "node:fs";
 import { parseTimetableJson } from "../src/lib/parseTimetableJson.ts";
+import { offeredTo, programmeOf } from "../src/lib/types.ts";
+
+assert.equal(programmeOf("ENF21"), "ENF2YR");
+assert.equal(programmeOf("CSD310"), "CSD3YR");
+assert.equal(programmeOf("ENF2YR"), "", "programme codes are not block codes");
+assert.equal(programmeOf("OtherALLYR"), "");
 
 // shared rows merge on rowid, blocks join the batch list, trailing ";" survives
 const sample = JSON.stringify({
@@ -69,6 +75,24 @@ assert.deepEqual(
 	[1, 2],
 	"sno stays contiguous after merging",
 );
+
+// ECO2101: two lectures split by block, one tutorial for the whole course.
+// An ENF21 student gets LEC1 and the TUT, never ENF22's lecture.
+{
+	const eco = parseTimetableJson(readFileSync("src/lib/data/tt.json", "utf8")).filter((c) =>
+		c.courseCode.startsWith("ECO2101"),
+	);
+	const forBatch = (batches: string[]) =>
+		[...new Set(eco.filter((c) => offeredTo(c, batches)).map((c) => c.slot))].sort();
+
+	assert.deepEqual(forBatch(["ENF21"]), ["LEC1", "TUT1"]);
+	assert.deepEqual(forBatch(["ENF2YR", "ENF21"]), ["LEC1", "TUT1"]);
+	assert.deepEqual(forBatch(["ENF22"]), ["LEC2", "TUT1"]);
+	assert.deepEqual(forBatch(["ECO21"]), ["LEC1", "TUT1"]);
+	// programme only, no block given: can't be placed, so show both lectures
+	assert.deepEqual(forBatch(["ENF2YR"]), ["LEC1", "LEC2", "TUT1"]);
+	assert.deepEqual(forBatch(["CSD2YR"]), []);
+}
 
 // the real dump
 const real = parseTimetableJson(readFileSync("src/lib/data/tt.json", "utf8"));

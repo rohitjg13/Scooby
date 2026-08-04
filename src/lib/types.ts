@@ -9,6 +9,7 @@ export interface Course {
     slot: string;       // Section like LEC1, TUT1, PRAC1
     room: string;
     major: string;      // Batch codes
+    blocks?: string;    // Student blocks this row is split across, if any
     day?: string;
     startTime?: string;
     endTime?: string;
@@ -99,6 +100,41 @@ export function expandBatchCodes(raw: string): string[] {
             return range ? expandRange(range[1], range[2]) : [part.trim()];
         })
         .filter(Boolean);
+}
+
+// The programme a block code belongs to: "ENF21" -> "ENF2YR", "CSD310" ->
+// "CSD3YR". Programme codes ("ENF2YR") and anything unrecognised return "".
+export function programmeOf(code: string): string {
+    const m = code.trim().toUpperCase().match(/^([A-Z]+)(\d)\d*$/);
+    return m ? `${m[1]}${m[2]}YR` : '';
+}
+
+const codes = (raw: string) => raw.toUpperCase().split(/[\s,]+/).filter(Boolean);
+
+// Is this row offered to one of the user's batches?
+// Exact match throughout: ranges are expanded at parse time, and a substring
+// match would put ECE21 students into every ECE215 class.
+export function offeredTo(course: Course, validBatches: string[]): boolean {
+    if (!course.major) return false;
+    const majors = codes(course.major);
+    const blocks = codes(course.blocks ?? '');
+
+    // A row split across blocks (one lecture for ENF21, another for ENF22) is
+    // only for the blocks it names.
+    if (blocks.length > 0) {
+        if (validBatches.some(b => blocks.includes(b))) return true;
+        // ...unless the user never told us their block, in which case their
+        // programme is all we have to go on.
+        const gaveABlock = validBatches.some(b => {
+            const prog = programmeOf(b);
+            return prog !== '' && majors.includes(prog);
+        });
+        return !gaveABlock && validBatches.some(b => majors.includes(b));
+    }
+
+    // No blocks: the whole programme attends, so a block code counts as its
+    // programme — ENF21 is in ENF2YR, and that TUT is theirs too.
+    return validBatches.some(b => majors.includes(b) || majors.includes(programmeOf(b)));
 }
 
 // "ECE29".."ECE215" -> shared prefix "ECE2", numeric tail 9..15

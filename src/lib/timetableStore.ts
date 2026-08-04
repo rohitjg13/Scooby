@@ -1,20 +1,12 @@
 import { writable, derived } from 'svelte/store';
 import type { Course } from './types';
-import { hasTimeConflict, isMajorElective } from './types';
+import { hasTimeConflict, isMajorElective, offeredTo } from './types';
 import { getDepartment } from './coursePlanner';
 
 function normalizeBatches(batches: string[]): string[] {
     return batches.map(b => b.toUpperCase().trim()).filter(b => b.length > 0);
 }
 
-// Is this row offered to one of the user's batches?
-function offeredTo(course: Course, validBatches: string[]): boolean {
-    if (!course.major) return false;
-    // Exact match: ranges are expanded at parse time, and a substring
-    // match would put ECE21 students into every ECE215 class.
-    const majors = course.major.toUpperCase().split(/[\s,]+/);
-    return validBatches.some(userBatch => majors.includes(userBatch));
-}
 
 // Store for all courses loaded from the spreadsheet
 export const allCourses = writable<Course[]>([]);
