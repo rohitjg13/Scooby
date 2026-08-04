@@ -304,7 +304,7 @@
 
 	// Saved state is per-semester: bumping this sends everyone back to the
 	// batch screen instead of restoring codes that no longer exist.
-	const STORE_VERSION = "monsoon26r2";
+	const STORE_VERSION = "monsoon26r3";
 	const key = (name: string) => `scooby_${STORE_VERSION}_${name}`;
 
 	// Past the batch screen, either with a batch or on an empty slate
@@ -327,8 +327,10 @@
 				"scooby_excluded",
 				// monsoon26: the pre-JSON timetable. Rooms, times and
 				// faculty moved, so saved picks are wrong, not just stale.
-				...["batches", "nobatch", "selected", "swapped", "excluded", "colors"].map(
-					(n) => `scooby_monsoon26_${n}`,
+				...["monsoon26", "monsoon26r2"].flatMap((v) =>
+					["batches", "nobatch", "selected", "swapped", "excluded", "colors"].map(
+						(n) => `scooby_${v}_${n}`,
+					),
 				),
 			])
 				localStorage.removeItem(stale);
