@@ -3,12 +3,22 @@ import type { RequestHandler } from './$types';
 import * as XLSX from 'xlsx';
 import type { Course } from '$lib/types';
 import { expandBatchCodes } from '$lib/types';
+import { parseTimetableJson } from '$lib/parseTimetableJson';
 
 // Import data files dynamically using Vite
 const dataFiles = import.meta.glob('$lib/data/*.{xlsx,xls,csv}', { query: '?url', import: 'default', eager: true });
+// New JSON dump, if present — takes priority over the spreadsheet.
+const jsonFiles = import.meta.glob('$lib/data/tt.json', { query: '?raw', import: 'default', eager: true });
 
 export const GET: RequestHandler = async ({ fetch }) => {
     try {
+        const ttJson = Object.values(jsonFiles)[0] as string | undefined;
+        if (ttJson) {
+            return json({ courses: parseTimetableJson(ttJson) }, {
+                headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+            });
+        }
+
         const filePaths = Object.keys(dataFiles);
         if (filePaths.length === 0) {
             return json({ error: 'No timetable file found in src/lib/data/' }, { status: 404 });
