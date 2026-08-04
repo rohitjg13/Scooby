@@ -41,9 +41,40 @@ assert.equal(csd.openAsUWE, false);
 assert.equal(csd.component, "PRAC");
 assert.equal(csd.slot, "PRAC2");
 
+// a slot listed once per half is one class, with both halves' faculty
+const halved = parseTimetableJson(
+	JSON.stringify({
+		Other: {
+			OtherALLYR: [
+				{ code: "CCC634", title: "X", type: "CCC", uwe: "No", comp: "LEC", sec: "LEC1",
+				  block: "", term: "First half", day: "Mon", start: "11:15 AM", end: "12:45 PM",
+				  room: "B012", inst: "Nitin Kumar", cap: "30", note: "", rowid: 1 },
+				{ code: "CCC634", title: "X", type: "CCC", uwe: "No", comp: "LEC", sec: "LEC1",
+				  block: "", term: "Second half", day: "Mon", start: "11:15 AM", end: "12:45 PM",
+				  room: "B012", inst: "Suchi Kumari", cap: "30", note: "", rowid: 2 },
+				// only one half offered — stays a half-semester course
+				{ code: "CCC700", title: "Y", type: "CCC", uwe: "No", comp: "LEC", sec: "LEC1",
+				  block: "", term: "First half", day: "Tue", start: "09:00 AM", end: "10:30 AM",
+				  room: "B013", inst: "Someone", cap: "30", note: "", rowid: 3 },
+			],
+		},
+	}),
+);
+assert.equal(halved.length, 2, "both halves of one slot collapse into one class");
+assert.equal(halved[0].term, "Full semester");
+assert.equal(halved[0].faculty, "Nitin Kumar, Suchi Kumari");
+assert.equal(halved[1].term, "First half", "a lone half is left alone");
+assert.deepEqual(
+	halved.map((c) => c.sno),
+	[1, 2],
+	"sno stays contiguous after merging",
+);
+
 // the real dump
 const real = parseTimetableJson(readFileSync("src/lib/data/tt.json", "utf8"));
-assert.equal(real.length, 1191, "one course row per rowid");
+assert.equal(real.length, 1175, "one row per class meeting, 16 half-pairs merged");
+const slots = real.map((c) => [c.courseCode, c.day, c.startTime, c.room].join("|"));
+assert.equal(new Set(slots).size, slots.length, "no course meets itself twice in a slot");
 assert.ok(real.every((c) => c.courseCode && c.day && c.startTime && c.endTime));
 assert.ok(real.some((c) => c.major.includes(",")), "shared courses list several batches");
 

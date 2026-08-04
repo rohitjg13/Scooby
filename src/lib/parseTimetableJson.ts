@@ -43,7 +43,7 @@ export function parseTimetableJson(text: string): Course[] {
 		}
 	}
 
-	return [...byRow.values()]
+	const courses = [...byRow.values()]
 		.filter(({ row }) => row.code && row.code !== '-')
 		.map(({ row, batches }, index) => ({
 			sno: index + 1,
@@ -63,4 +63,40 @@ export function parseTimetableJson(text: string): Course[] {
 			openAsUWE: (row.uwe ?? '').trim().toLowerCase() === 'yes',
 			term: row.term ?? ''
 		}));
+
+	return mergeHalves(courses);
+}
+
+// Some courses (all CCCs so far) are listed twice for the same slot: one row
+// for the first half, one for the second. That is one class holding the slot
+// all semester, so show it once. Faculty can differ between the halves — team
+// teaching — so both names are kept.
+function mergeHalves(courses: Course[]): Course[] {
+	const slot = (c: Course) =>
+		[c.courseCode, c.day, c.startTime, c.endTime, c.room, c.major].join('|');
+
+	const halves = new Map<string, Course[]>();
+	for (const c of courses) {
+		if (!/half/i.test(c.term ?? '')) continue;
+		const group = halves.get(slot(c));
+		if (group) group.push(c);
+		else halves.set(slot(c), [c]);
+	}
+
+	const merged = new Set<string>();
+	return courses
+		.filter((c) => {
+			const group = halves.get(slot(c));
+			// only collapse when both halves are actually present
+			if (!group || group.length < 2) return true;
+			if (new Set(group.map((g) => g.term)).size < 2) return true;
+			if (merged.has(slot(c))) return false;
+			merged.add(slot(c));
+			c.term = 'Full semester';
+			c.faculty = [...new Set(group.flatMap((g) => g.faculty.split(',').map((f) => f.trim())))]
+				.filter(Boolean)
+				.join(', ');
+			return true;
+		})
+		.map((c, index) => ({ ...c, sno: index + 1 }));
 }
