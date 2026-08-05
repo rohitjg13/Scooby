@@ -451,9 +451,36 @@
 			.slice(0, 15);
 	}
 
+	// A finished code can still be the start of others — ECE21 keeps matching
+	// ECE210 — so the list stays open until it is dismissed. Only a code that
+	// is already a batch can be dismissed; a half-typed one still needs help.
+	let dismissedSuggestions = $state<number[]>([]);
+
+	function dismissSuggestions(index: number) {
+		const typed = (batchInputs[index] ?? "").trim().toUpperCase();
+		if (!getAllBatches().includes(typed)) return false;
+		if (!dismissedSuggestions.includes(index))
+			dismissedSuggestions = [...dismissedSuggestions, index];
+		return true;
+	}
+
+	// Typing again means they are still looking for something
+	function reopenSuggestions(index: number) {
+		dismissedSuggestions = dismissedSuggestions.filter((i) => i !== index);
+	}
+
+	// A tap anywhere off the inputs puts the list away
+	function handleBatchClick(e: MouseEvent) {
+		if (inApp) return;
+		const target = e.target as HTMLElement | null;
+		if (target?.id?.startsWith("batch-input-")) return;
+		batchInputs.forEach((_, i) => dismissSuggestions(i));
+	}
+
 	function selectBatch(batch: string, index: number) {
 		batchInputs[index] = batch;
 		batchError = "";
+		dismissSuggestions(index);
 
 		// Auto-focus next input or blur
 		setTimeout(() => {
@@ -476,6 +503,8 @@
 
 	function removeBatchInput(index: number) {
 		batchInputs = batchInputs.filter((_, i) => i !== index);
+		// indices shifted, so the dismissals no longer point anywhere useful
+		dismissedSuggestions = [];
 	}
 
 	function handleBatchSubmit() {
@@ -1272,6 +1301,8 @@
 </script>
 
 
+<svelte:window onclick={handleBatchClick} />
+
 {#snippet courseCard(item: {
 	base: string;
 	sample: Course;
@@ -1407,7 +1438,9 @@
 					}}
 				>
 					{#each batchInputs as input, i}
-						{@const suggestions = getSuggestionsFor(input)}
+						{@const suggestions = dismissedSuggestions.includes(i)
+							? []
+							: getSuggestionsFor(input)}
 						{@const isValid = getAllBatches().includes(
 							input.trim().toUpperCase(),
 						)}
@@ -1421,7 +1454,20 @@
 									class:valid={isValid}
 									placeholder="e.g. ECE2YR, ECE21"
 									bind:value={batchInputs[i]}
-									oninput={() => (batchError = "")}
+									oninput={() => {
+										batchError = "";
+										reopenSuggestions(i);
+									}}
+									onkeydown={(e) => {
+										// Enter puts the list away first, so a
+										// valid code isn't buried under it
+										if (
+											e.key === "Enter" &&
+											suggestions.length > 0 &&
+											dismissSuggestions(i)
+										)
+											e.preventDefault();
+									}}
 									autocomplete="off"
 								/>
 								{#if suggestions.length > 0}
