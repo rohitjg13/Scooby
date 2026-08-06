@@ -1,7 +1,14 @@
 <script lang="ts">
 	import Seo from "$lib/components/Seo.svelte";
 
-	type IconName = "calendar" | "exam" | "clubs" | "switch" | "map" | "plus";
+	type IconName =
+		| "calendar"
+		| "exam"
+		| "clubs"
+		| "switch"
+		| "map"
+		| "minor"
+		| "plus";
 
 	type Feature = {
 		title: string;
@@ -38,6 +45,16 @@
 			tag: "Campus",
 			external: true,
 		},
+		// Hidden from the home grid while the course codes are still being
+		// filled in. The /minors route stays live and reachable by direct link.
+		// {
+		// 	title: "Minors",
+		// 	description:
+		// 		"Every undergraduate minor on offer — core courses, elective baskets, credits and eligibility, for the new and old curriculum.",
+		// 	href: "/minors",
+		// 	icon: "minor",
+		// 	tag: "Academics",
+		// },
 		{
 			title: "Exam Timetable",
 			description:
@@ -88,6 +105,10 @@
 		{:else if name === "switch"}
 			<path d="M4 8h13M13 4l4 4-4 4" />
 			<path d="M20 16H7M11 20l-4-4 4-4" />
+		{:else if name === "minor"}
+			<path d="M12 4L3 8l9 4 9-4-9-4z" />
+			<path d="M6.5 10.2V15c0 1.4 2.5 2.5 5.5 2.5s5.5-1.1 5.5-2.5v-4.8" />
+			<path d="M21 8v5" />
 		{:else if name === "plus"}
 			<path d="M12 6v12M6 12h12" />
 		{/if}

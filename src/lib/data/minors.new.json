@@ -1,0 +1,1078 @@
+{
+	"id": "new",
+	"label": "New Curriculum",
+	"subtitle": "Batches 2029 and beyond · 2026",
+	"source": "2029_and_later(New Curriculam).pdf",
+	"minors": [
+		{
+			"id": "chemical-engineering",
+			"name": "Chemical Engineering",
+			"school": "School of Engineering",
+			"department": "Department of Chemical Engineering",
+			"philosophy": "The Minor in Chemical Engineering gives students from diverse engineering and science disciplines a strong foundation in the core principles that govern process industries — an exposure to basic chemical engineering, expanded into the knowledge base required for solving industrial problems. Its five courses form the intellectual backbone of the discipline, providing a cohesive understanding of transport phenomena, reaction systems, and process design fundamentals, and enabling students to think beyond individual components towards integrated systems, sustainability, and industrial scalability. Inherently interdisciplinary, these principles apply across energy systems, environmental technologies, materials processing, biotechnology, pharmaceuticals, and sustainable manufacturing — complementing the parent discipline and broadening problem-solving capability.",
+			"why": [
+				"A strong analytical and process-engineering foundation — rigorous quantitative skills in mass, energy, transport, and reaction systems, valuable across energy, environmental engineering, materials, biotech, and manufacturing.",
+				"An interdisciplinary advantage — bridge your parent discipline with chemical process knowledge, enabling work on integrated and large-scale systems.",
+				"Enhanced career and higher-studies opportunities — pathways into core process industries (petrochemicals, agrochemicals, bioenergy, bulk and speciality chemicals), sustainability sectors, and R&D, and stronger applications for higher studies in chemical engineering and allied fields."
+			],
+			"goals": [
+				"Foundation for understanding chemical engineering processes — Material & Energy Balance, Fluid Mechanics, Heat Transfer.",
+				"Expanding the knowledge required for solving industrial problems — Chemical Reaction Engineering, Mass Transfer."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"note": "Presently only a fixed set of core courses is offered for the Minor in Chemical Engineering; there is no elective course basket.",
+					"columns": ["", "Major Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits", "18", "--", "--", "18"],
+						["Number of Credits to Choose", "18", "--", "--", "18"]
+					]
+				},
+				{
+					"title": "Core Courses (for all majors)",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "CHD2001", "Material & Energy Balance", "", "3:0:1", "PLG 1"],
+						["2", "CHD2003", "Fluid Mechanics", "CHD2001", "3:0:0", "PLG 1"],
+						["3", "CHD2007", "Heat Transfer", "CHD2001", "3:0:0", "PLG 1"],
+						["4", "CHD3001", "Chemical Reaction Engineering", "CHD2001", "3:1:0", "PLG 2"],
+						["5", "CHD3002", "Mass Transfer", "CHD2001, CHD2003", "3:1:0", "PLG 2"]
+					]
+				}
+			]
+		},
+		{
+			"id": "civil-engineering",
+			"name": "Civil Engineering",
+			"school": "School of Engineering",
+			"department": "Department of Civil Engineering",
+			"philosophy": "Students from other disciplines can earn a Minor in Civil Engineering after completing the following courses successfully.",
+			"sections": [
+				{
+					"title": "Table 1: For Mechanical / Chemical Engineering Students",
+					"note": "Minimum credits required: 18",
+					"columns": ["S. No.", "Course Code", "Course Title", "L:T:P", "Credits"],
+					"rows": [
+						["", "", "Compulsory Courses (all to be taken)", "", ""],
+						["1", "CED2002", "Elements of Surveying", "2:0:1", "3"],
+						["2", "CED2001", "Building Information Modelling (BIM)", "1:0:1", "2"],
+						["3", "CED2006", "Concrete Technology", "2:0:1", "3"],
+						["", "", "Optional Courses (at least 10 credits to be earned)", "", ""],
+						["4", "CED2008", "Geotechnical Engineering", "3:0:1", "4"],
+						["5", "CED3004", "Transportation Engineering-I", "3:0:1", "4"],
+						["6", "CED2009", "Hydraulic Engineering", "2:0:1", "3"],
+						["7", "CED3005", "Environmental Engineering", "3:0:1", "4"],
+						["8", "CED2010", "Remote Sensing and GIS: An Introduction and Applications", "2:0:1", "3"]
+					]
+				},
+				{
+					"title": "Table 2: For CSE / ECE Students",
+					"note": "Minimum credits required: 18",
+					"columns": ["S. No.", "Course Code", "Course Title", "L:T:P", "Credits"],
+					"rows": [
+						["", "", "Compulsory Courses (all to be taken)", "", ""],
+						["1", "CED2002", "Elements of Surveying", "2:0:1", "3"],
+						["2", "CED2001", "Building Information Modelling (BIM)", "1:0:1", "2"],
+						["3", "CED2006", "Concrete Technology", "2:0:1", "3"],
+						["", "", "Optional Courses (at least 10 credits to be earned)", "", ""],
+						["4", "CED2008", "Geotechnical Engineering", "3:0:1", "4"],
+						["5", "CED3004", "Transportation Engineering-I", "3:0:1", "4"],
+						["6", "CED2009", "Hydraulic Engineering", "2:0:1", "3"],
+						["7", "CED3005", "Environmental Engineering", "3:0:1", "4"],
+						["8", "CED2004", "Mechanics of Fluid", "3:0:1", "4"],
+						["9", "CED2003", "Mechanics of Solids", "3:0:1", "4"]
+					]
+				},
+				{
+					"title": "Table 3: For Non-SoE Students with 10+2 in the science stream",
+					"note": "Minimum credits required: 19",
+					"columns": ["S. No.", "Course Code", "Course Title", "L:T:P", "Credits"],
+					"rows": [
+						["", "", "Compulsory Courses (all to be taken)", "", ""],
+						["1", "CED1001", "Forces in Action", "2:0:1", "3"],
+						["2", "CED2002", "Elements of Surveying", "2:0:1", "3"],
+						["3", "CED2006", "Concrete Technology", "2:0:1", "3"],
+						["", "", "Optional Courses (at least 10 credits to be earned)", "", ""],
+						["4", "CED2008", "Geotechnical Engineering", "3:0:1", "4"],
+						["5", "CED3004", "Transportation Engineering-I", "3:0:1", "4"],
+						["6", "CED2009", "Hydraulic Engineering", "2:0:1", "3"],
+						["7", "CED3005", "Environmental Engineering", "3:0:1", "4"],
+						["8", "CED2004", "Mechanics of Fluid", "3:0:1", "4"]
+					]
+				}
+			]
+		},
+		{
+			"id": "computer-science-and-engineering",
+			"name": "Computer Science and Engineering",
+			"school": "School of Engineering",
+			"department": "Department of Computer Science and Engineering",
+			"philosophy": "The Minor in Computer Science & Engineering is designed to give students from non-CSE and non-ECE disciplines a strong foundation in core computing concepts and practical problem-solving skills. The program builds essential knowledge in programming, data structures, algorithms, systems, and software development, enabling students to apply computational thinking within their primary domain, and prepares them for technology-driven careers, research, and innovation across diverse fields (applicable to batches from the 2025–29 academic year onwards). On completion, students are expected to apply computational thinking to real-world problems; design efficient algorithms and data structures; understand core principles such as computer organization, operating systems, databases, and networks; develop software using object-oriented design and sound engineering practice; analyse system-level concepts; and integrate computing knowledge with their major discipline.",
+			"why": [
+				"Empowerment through computational thinking — students from diverse academic backgrounds develop computational thinking and problem-solving skills.",
+				"Strong foundations combined with practical skills — programming, data structures, algorithms, systems, and software development with hands-on implementation: not just using technology, but building efficient solutions.",
+				"Integrate computing with your major — apply computing concepts within your primary field to understand domain-specific problems, support interdisciplinary research, and propose technology-driven solutions."
+			],
+			"goals": [
+				"Develop strong foundations in core computing concepts and programming to design, implement, and analyse computational solutions effectively.",
+				"Apply computational thinking and algorithmic approaches to solve real-world problems, supporting analytical reasoning and structured problem-solving across domains.",
+				"Integrate computer science knowledge with the primary discipline to enable interdisciplinary applications and technology-driven solutions."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"note": "Track A: Non-Engineering Majors who do not have CSD1001 among their core courses. Track B: Engineering (Mechanical/Civil/Chemical) and Non-Engineering Majors who have CSD1001 among their core courses.",
+					"columns": ["", "Major Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits — Track A", "8", "10", "–", "18"],
+						["Credits to Choose — Track A", "8", "28", "–", "36"],
+						["Min Credits — Track B", "4", "14", "–", "18"],
+						["Credits to Choose — Track B", "4", "28", "–", "32"]
+					]
+				},
+				{
+					"title": "Core Courses — Track A (majors without CSD1001)",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "CSD1001", "Problem Solving Using Programming", "-", "3:0:1", "2"],
+						["2", "CSD2001", "Data Structures and Algorithms", "CSD1001", "3:0:1", "2, 3"]
+					]
+				},
+				{
+					"title": "Core Course — Track B (majors with CSD1001)",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [["1", "CSD2001", "Data Structures and Algorithms", "CSD1001", "3:0:1", "2, 3"]]
+				},
+				{
+					"title": "Elective Basket 1",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "CSD3001", "Operating Systems", "CSD2001, CSD2003", "3:0:1", "3"],
+						["2", "CSD2002", "*Discrete Mathematics", "CSD2001", "3:1:0", "1, 2"],
+						["3", "CSD2003", "Computer Organization", "CSD2001", "3:1:1", "3"],
+						["4", "CSD2004", "Object Oriented Programming", "CSD2001", "3:0:1", "2"],
+						["5", "CSD4001", "Computer Networks", "CSD2001, CSD3001", "3:0:1", "3"],
+						["6", "CSD2008", "Introduction to Database Systems", "CSD2001", "3:0:1", "4, 5"],
+						["7", "CSD4901", "Software Engineering", "CSD2001", "2:0:1", "4, 5"]
+					]
+				}
+			],
+			"notes": ["* This course is not available for students doing a Mathematics Major."]
+		},
+		{
+			"id": "electrical-and-computer-engineering",
+			"name": "Electrical and Computer Engineering",
+			"school": "School of Engineering",
+			"department": "Department of Electrical Engineering",
+			"philosophy": "The Minor in Electrical and Computer Engineering is founded on the philosophy that modern engineering innovation lies at the intersection of electronics, computation, communication, and intelligence. It provides a systems-level understanding of intelligent electronic and computing systems, bridging the hardware and software domains so that sensing, signal processing, embedded systems, networking, and artificial intelligence can be integrated into cohesive solutions. Rather than offering isolated technical knowledge, the minor promotes an integrated approach in which signals, systems, hardware, networks, and AI converge to create intelligent, scalable, and connected engineering solutions — cultivating analytical thinking and design competence, and preparing students for emerging paradigms such as reconfigurable and quantum computing.",
+			"why": [
+				"Build strong foundations in intelligent systems — Digital Electronics, Signal Representation and Processing, Principles of Communication Engineering, and Embedded Systems Hardware provide the core building blocks of modern electronic and computing platforms.",
+				"Develop hardware–software co-design skills — microcontrollers, FPGAs, and reconfigurable systems, highly valued in semiconductor design, embedded systems, robotics, and IoT.",
+				"Gain exposure to AI and emerging technologies — electives in Artificial Intelligence & Machine Learning, Reconfigurable Computing, and Quantum Computing prepare students for future technology domains.",
+				"Adopt a systems-level perspective — integrating sensing, computation, communication, and intelligence, an essential capability for designing autonomous, connected, data-driven systems."
+			],
+			"goals": [
+				"Model and analyse signals, systems, and digital logic as building blocks of intelligent electronic systems.",
+				"Design and evaluate communication and networking solutions for connected and distributed systems.",
+				"Develop embedded and reconfigurable hardware–software systems using FPGAs, microcontrollers, and accelerators.",
+				"Build and deploy AI/ML-based solutions for data-driven and autonomous engineering applications.",
+				"Use modern design, simulation, and development tools across electronics, including semiconductor/VLSI, computing, and AI domains.",
+				"Integrate emerging technologies such as reconfigurable and quantum computing into end-to-end system designs."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Major Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits", "16", "3", "", "19"],
+						["Number of Credits to Choose", "20", "15", "", "35"]
+					]
+				},
+				{
+					"title": "Core Courses Basket (for all majors, SoE and non-SoE)",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "ECE2002", "Digital Electronics", "ECE1001/equivalent", "3:0:1", "1, 3, 5"],
+						["2", "ECE2003", "Signal Representation and Processing", "MAT1004/equivalent", "3:0:1", "1, 2, 4, 6"],
+						["3", "ECE2007", "Principles of Communication Engineering", "ECE2003", "3:0:1", "1, 2, 4"],
+						["4", "ECE3003", "Embedded Systems Hardware", "ECE2002", "3:0:1", "1, 2, 3, 4, 5, 6"],
+						["5", "ECE3328", "Digital Design with FPGAs", "ECE2002", "3:0:1", "1, 2, 3, 4, 5, 6"]
+					]
+				},
+				{
+					"title": "Elective Courses Basket (for all majors, SoE and non-SoE)",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "ECE3002", "Computer Communication Networks", "ECE2007", "3:0:1", "1, 2, 4, 6"],
+						["2", "ECE3004", "Artificial Intelligence and Machine Learning", "-", "3:0:0", "1, 4, 5, 6"],
+						["3", "ECE3309", "Introduction to Robotics", "ECE4801", "3:0:1", "1, 2, 3, 4, 5, 6"],
+						["4", "ECE3320", "Quantum Computing", "MAT1004/equivalent", "3:1:0", "1, 2, 4, 5, 6"]
+					]
+				}
+			]
+		},
+		{
+			"id": "mechanical-engineering",
+			"name": "Mechanical Engineering",
+			"school": "School of Engineering",
+			"department": "Department of Mechanical Engineering",
+			"philosophy": "The Minor in Mechanical Engineering gives students from diverse academic backgrounds a foundational understanding of core areas — mechanics, thermodynamics, manufacturing, industrial engineering, and system design — structured to broaden technical competence, foster interdisciplinary learning, and enhance problem-solving by integrating mechanical principles into students' primary fields of study. Combining theory with practice, it prepares students for real-world challenges, interdisciplinary research, and opportunities in engineering fields and graduate study.",
+			"why": [
+				"A hands-on, industry-relevant skill set — CAD/CAE tools, manufacturing processes, thermo-fluids, and mechanics, directly applicable in industry and bridging theory with practice.",
+				"Interdisciplinary advantage and career flexibility — complements majors across engineering, the sciences, business, and design, at the intersection of hardware, systems, automation, energy, and product development.",
+				"A strong foundation for innovation, research, and higher studies — analytical and design fundamentals preparing students for master's and PhD study, competitive exams, and roles in R&D, startups, robotics, sustainable energy, and advanced manufacturing."
+			],
+			"goals": [
+				"Foundational knowledge in mechanical engineering — mechanics, thermodynamics, manufacturing processes, industrial engineering, and system design, applied to real-world problems.",
+				"Application of engineering tools and problem-solving skills — apply mechanical concepts, analytical methods, and modern tools to solve practical, industry-relevant problems.",
+				"Interdisciplinary integration and systems thinking — integrate mechanical principles with the primary field of study, enabling system-level thinking and solutions across domains."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Minor Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits — SoE UG", "13", "7", "NA", "20"],
+						["Credits to Choose — SoE", "13", "21", "NA", "--"],
+						["Min Credits — Non-SoE UG", "14", "6", "NA", "20"],
+						["Credits to Choose — Non-SoE", "14", "22", "NA", "--"]
+					]
+				},
+				{
+					"title": "Core Courses (for SoE students)",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "L:T:P", "Credits", "PLGs"],
+					"rows": [
+						["1", "MED2002", "Manufacturing Technology I", "None", "2:0:1", "3", "PLG 1, 3"],
+						["2", "MED2003", "Mechanics of Solids", "CED1001", "3:0:1", "4", "PLG 1"],
+						["3", "MED2005", "Engineering Thermodynamics", "None", "2:1:0", "3", "PLG 1"],
+						["4", "MED2006", "Principles of Industrial Engineering", "None", "3:0:0", "3", "PLG 1, 2"]
+					]
+				},
+				{
+					"title": "Elective Basket 1 (for SoE students)",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "L:T:P", "Credits", "PLGs"],
+					"rows": [
+						["1", "MED2004", "Mechanics of Fluids", "None", "3:0:1", "4", "PLG 1"],
+						["2", "MED3001", "Kinematics & Dynamics of Machines", "None", "3:0:1", "4", "PLG 1, 2"],
+						["3", "MED3002", "Manufacturing Technology II", "None", "2:0:1", "3", "PLG 1, 3"],
+						["4", "MED3005", "Heat & Mass Transfer", "MED2004, MED2005", "3:0:1", "4", "PLG 1, 2"],
+						["5", "MED4001", "Operations Research", "None", "2:1:0", "3", "PLG 1, 2"],
+						["6", "MED4003", "Machine Design", "MED1002, MED2003", "2:0:1", "3", "PLG 2, 3"]
+					]
+				},
+				{
+					"title": "Core Courses (for Non-SoE students)",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "L:T:P", "Credits", "PLGs"],
+					"rows": [
+						["1", "MED1002", "Design to Reality: CAD & 3D Printing", "None", "1:0:1", "2", "PLG 1, 2"],
+						["2", "CED1001", "Forces in Action", "None", "2:0:1", "3", "PLG 1"],
+						["3", "MED2002", "Manufacturing Technology I", "None", "2:0:1", "3", "PLG 1, 3"],
+						["4", "MED2005", "Engineering Thermodynamics", "None", "2:1:0", "3", "PLG 1"],
+						["5", "MED2006", "Principles of Industrial Engineering", "None", "3:0:0", "3", "PLG 1, 2"]
+					]
+				},
+				{
+					"title": "Elective Basket 1 (for Non-SoE students)",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "L:T:P", "Credits", "PLGs"],
+					"rows": [
+						["1", "MED2003", "Mechanics of Solids", "CED1001", "3:0:1", "4", "PLG 1"],
+						["2", "MED2004", "Mechanics of Fluids", "None", "3:0:1", "4", "PLG 1"],
+						["3", "MED3001", "Kinematics & Dynamics of Machines", "None", "3:0:1", "4", "PLG 1, 2"],
+						["4", "MED3002", "Manufacturing Technology II", "None", "2:0:1", "3", "PLG 1, 3"],
+						["5", "MED3005", "Heat & Mass Transfer", "MED2004, MED2005", "3:0:1", "4", "PLG 1, 2"],
+						["6", "MED4001", "Operations Research", "None", "2:1:0", "3", "PLG 1, 2"]
+					]
+				}
+			]
+		},
+		{
+			"id": "arts",
+			"name": "Arts",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of Art, Media and Performance",
+			"philosophy": "The Art Minor introduces students to a broad spectrum of creative practices and critical perspectives in the visual arts, offering both conceptual foundations and hands-on skills. Rooted in an interdisciplinary approach, it encourages deep engagement with diverse art forms — from traditional drawing, painting, and sculpture to contemporary practices like comics and visual storytelling.",
+			"why": [
+				"No fine-arts training required — get into the studio and explore diverse ways of working with materials and techniques.",
+				"Develop your own artistic voice while building critical insight into images, objects, and visual culture.",
+				"Connect art-making with other fields — and with the debates and movements shaping the contemporary visual arts."
+			],
+			"goals": [
+				"Creative techniques and material sensitivity across painting, drawing, sculpture, and photography.",
+				"Critical visual insight — interpreting images and objects and engaging with visual culture.",
+				"An interdisciplinary perspective connecting visual arts with broader social, cultural, and environmental issues.",
+				"Personal artistic expression — an original artistic voice, articulated with confidence and clarity.",
+				"Awareness of contemporary art practices, debates, and movements."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Minor Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits", "4", "8", "4", "16"],
+						["Number of Credits to Choose", "4", "12", "8", "--"]
+					]
+				},
+				{
+					"title": "Core Course",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [["1", "AMP1007", "Critical Art History: An Introduction", "", "4:0:0", "2,3,5"]]
+				},
+				{
+					"title": "Elective Basket 1 (take any 2)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "AMP1001", "Explorations in 2D", "", "2:0:2", "1,4,5"],
+						["2", "AMP1002", "Enactments of Observation and Perception", "", "2:0:2", "1,4,5"],
+						["3", "AMP2001", "Comics: Text and Image Exploration", "", "2:0:2", "1,4,5"]
+					]
+				},
+				{
+					"title": "Elective Basket 2 (take any 1)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "AMP4001", "Film and the Moving Image", "", "2:1:1", "1,2,4,5"],
+						["2", "AMP2003", "The Photographic Image", "", "2:0:2", ""]
+					]
+				}
+			]
+		},
+		{
+			"id": "dance",
+			"name": "Dance",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of Art, Media and Performance",
+			"philosophy": "The Dance Minor addresses dance as an academic field, enabling students across diverse disciplines to engage with the art form at multiple levels. Its pedagogy integrates students' physical and intellectual capabilities, diffusing the binaries between the practice of dance and theorisations of the dancing body. Situated at the interdisciplinary cusp of the humanities and social sciences, the program treats the moving body as a locus of knowledge creation — pushing the boundaries of what constitutes dance, who can dance, and what dance makes possible.",
+			"why": [
+				"Not a dancer, but love the idea of dancing? The Minor gets you into the studio to explore diverse ways of moving.",
+				"Already a dancer? Expand your understanding beyond performance and locate your practice in the historical, social, and political aspects of dance.",
+				"Explore dance from multiple perspectives, with insight into the creative industries and what it takes to succeed in this sector."
+			],
+			"goals": [
+				"Engage critically and analytically with the historical, performative, and aesthetic elements of dance-making and choreographic analysis.",
+				"Read the dancing body as a cultural text, articulating its socio-political specificity and historical situatedness.",
+				"Analyse principles, works, and methodologies of dance and their intersections with other fields of study."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Minor Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits", "4", "4", "4", "16"],
+						["Number of Credits to Choose", "4", "8", "12", "--"]
+					]
+				},
+				{
+					"title": "Core Course",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [["1", "AMP1005", "Body, Gesture and Performance", "", "2:1:1", "1,2,3"]]
+				},
+				{
+					"title": "Elective Basket 1 (Any One)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "AMP1006", "Dance and Identity", "", "4:0:0", "1,2,3"],
+						["2", "AMP2007", "Dance Technique", "", "0:0:4", "1,2,3"]
+					]
+				},
+				{
+					"title": "Elective Basket 2 (Any two)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "AMP2008", "Writing Bodies", "", "4:0:0", "1,2,3"],
+						["2", "AMP3002", "Movement and Meaning", "", "2:1:1", "1,2,3"],
+						["3", "AMP6022", "Body, Performativity and Politics", "", "2:1:1", "1,2,3"]
+					]
+				}
+			]
+		},
+		{
+			"id": "design",
+			"name": "Design",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of Design",
+			"philosophy": "Design is inherent to human beings — a fundamental aspect of problem-solving and creativity — and has evolved into a professional discipline drawing on art, craft, architecture, engineering, and the social sciences. As an applied art and science, it involves critically examining existing situations, identifying and redefining problems, exploring solutions laterally, and conceiving innovative, sustainable solutions that satisfy user needs while contributing positively to society. Increasingly recognized as a transdisciplinary field, design tackles the complex, multifaceted problems of the 21st century, creating meaningful impact through thoughtful, user-centered solutions.",
+			"why": [
+				"Experiential learning in multidisciplinary groups — explore the principles of designing in practical contexts, with professional exposure that is currently uncommon in Indian universities.",
+				"Exposure to design as a field of study — a comprehensive overview that equips students to pursue further studies or competitive exams in design-related fields.",
+				"Transdisciplinary skills — collaborative, creative problem-solving that breaks down disciplinary boundaries and reveals the interconnectedness of fields.",
+				"A Design Thinking approach — human-centered problem-solving through empathy, ideation, prototyping, and iteration, applicable within any discipline and a competitive edge in adaptability and creative thinking."
+			],
+			"goals": [
+				"A foundational understanding of design as a field of study and its relevance in contemporary society and industry.",
+				"Knowledge and application skills of visual language, enabling effective communication across diverse design domains.",
+				"Understanding of the human-centered nature of design, with familiarity in key design methods, processes, and techniques.",
+				"Practical skills in creative problem-solving through collaborative, multidisciplinary teamwork."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Minor Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits", "10", "4", "4", "18"],
+						["Number of Credits to Choose", "10", "4", "4", "18"],
+						["Selection Rate", "100%", "50%", "50%", ""]
+					]
+				},
+				{
+					"title": "Core Courses (for all majors)",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "DES1101", "Elements and Principles of Design", "NA", "2-0-2", "PLG1, PLG2"],
+						["2", "DES2008", "Design Practice 1", "", "1-0-2", "PLG3, PLG4"],
+						["3", "DES3003", "Design Practice 2", "DES2008", "1-0-2", "PLG3, PLG4"]
+					]
+				},
+				{
+					"title": "Elective Basket 1 (Visual Communication Design)",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "DES1007", "Visual Communication 1", "DES1101", "1-0-3", "PLG2, PLG4"],
+						["2", "DES2002", "Visual Communication 2", "DES1007", "2-0-2", "PLG2, PLG4"]
+					]
+				},
+				{
+					"title": "Elective Basket 2 (Product Design)",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "DES1008", "Human Centered Design Methods", "DES1101", "2-0-2", "PLG3, PLG4"],
+						["2", "DES2003", "Human Factors Engineering", "DES1008", "2-0-2", "PLG3, PLG4"]
+					]
+				},
+				{
+					"title": "Course basket — Product Design Track",
+					"note": "The two pathways for the Design Minor are the Product Design Track and the Visual Communication Track. Either set totals 18 credits.",
+					"columns": ["Sr No", "Course Code", "Course Name", "Credits", "Semester"],
+					"rows": [
+						["1", "DES1001", "Elements and Principles of Visual Design", "2-0-2", "Semester 3"],
+						["2", "DES1008", "Human Centered Design Methods", "2-0-2", "Semester 4"],
+						["3", "DES2008", "Design Practice 1", "1-0-2", "Semester 5"],
+						["4", "DES2003", "Human Factors Engineering", "2-0-2", "Semester 6"],
+						["5", "DES3003", "Design Practice 2", "1-0-2", "Semester 7"]
+					]
+				},
+				{
+					"title": "Course basket — Visual Communication Track",
+					"columns": ["Sr No", "Course Code", "Course Name", "Credits", "Semester"],
+					"rows": [
+						["1", "DES1001", "Elements and Principles of Visual Design", "2-0-2", "Semester 3"],
+						["2", "DES1007", "Visual Communication 1", "2-0-2", "Semester 4"],
+						["3", "DES2008", "Design Practice 1", "1-0-2", "Semester 5"],
+						["4", "DES2002", "Visual Communication 2", "2-0-2", "Semester 6"],
+						["5", "DES3003", "Design Practice 2", "1-0-2", "Semester 7"]
+					]
+				}
+			],
+			"notes": [
+				"A student can choose one course from both of the elective baskets. A student cannot take more than 2 courses of 1000 level.",
+				"The students can be awarded the Design minor if they take one of the course sets, or a combination from both minor baskets, to complete 18 credits."
+			]
+		},
+		{
+			"id": "economics",
+			"name": "Economics",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of Economics",
+			"philosophy": "The Minor provides students in non-economics disciplines with a basic knowledge of the logic of modern economics, and the opportunity to explore its three major subdivisions — micro, macro, and econometrics. Economics connects naturally to business, mathematics, computer science, and the social sciences, making the Minor a pathway to interdisciplinary study.",
+			"why": [
+				"An interest in the social science of production and distribution, pursued rigorously.",
+				"Preparation for careers dealing directly with economic topics — or where economic knowledge improves communication.",
+				"A clear signal of interest and intent for higher degrees in economics, commonly pursued from non-economics backgrounds."
+			],
+			"goals": [
+				"A solid understanding of core economic vocabulary.",
+				"Understand and discuss mathematical presentations of the core of modern economic logic.",
+				"Focused knowledge in at least one major subfield — macroeconomic, microeconomic, or econometric courses."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"note": "¹ SHSS has 12 credits of minor core (see the SHSS track below).",
+					"columns": ["", "Minor Core", "Elective Basket", "Total Credits"],
+					"rows": [
+						["Min Credits", "8¹", "12", "20"],
+						["Number of Credits to Choose", "8¹", "48", "--"]
+					]
+				},
+				{
+					"title": "Core Courses — Science & Engineering Majors",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "ECO1001", "Principles of Micro", "None", "3:1:0", "1"],
+						["2", "ECO2001", "Intermediate Micro I", "ECO1001 + (any calculus)", "3:1:0", "2"]
+					]
+				},
+				{
+					"title": "Core Courses — SHSS Majors",
+					"note": "¹ Only ECO1004 counts as calculus toward the Minor for SHSS majors. Since they already take ECO1001 and ECO1004, 1000-series electives do not count toward their Minor (allowed as added UWE).",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "ECO1001", "Principles of Micro", "None", "3:1:0", "1"],
+						["2", "ECO1004", "Math for Economics¹", "None", "3:1:0", "1"],
+						["3", "ECO2001", "Intermediate Micro I", "ECO1001 + ECO1004", "3:1:0", "2"]
+					]
+				},
+				{
+					"title": "Core Courses — BMS Major",
+					"note": "BMS majors take equivalents of ECO1001/ECO1002 in their major; only ECO1004 counts toward the Minor.",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "ECO1004", "Math for Economics", "None", "3:1:0", "1"],
+						["2", "ECO2001", "Intermediate Micro I", "ECO1001 + ECO1004", "3:1:0", "2"]
+					]
+				},
+				{
+					"title": "Elective Basket — Science & Engineering Majors",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "ECO1002", "Principles of Macro¹", "None", "3:1:0", "1,3"],
+						["2", "ECO1013", "Probability and Statistics¹,²", "None", "3:1:0", "1,3"],
+						["3", "ECO2002", "Intermediate Macro", "ECO2001", "3:1:0", "2,3"],
+						["4", "ECO2003", "Introduction to Econometrics", "ECO1013", "3:1:0", "2,3"],
+						["5", "ECO2101", "Intermediate Micro II", "ECO2001", "3:1:0", "2,3"],
+						["6", "ECO3101", "Development Economics", "ECO2001", "3:1:0", "3"],
+						["7", "ECO3102", "International Economics", "ECO2002", "3:1:0", "3"],
+						["8", "ECO4202", "Money & Banking", "ECO2002", "3:1:0", "3"],
+						["9", "ECO4203", "Environmental Economics", "ECO2003", "3:1:0", "3"],
+						["10", "ECO4401", "Public Economics", "ECO2001", "3:1:0", "3"],
+						["11", "ECO4803", "Data Handling", "ECO2003", "3:1:0", "3"]
+					]
+				}
+			],
+			"notes": [
+				"¹ Only two 1000-series courses can count toward a Minor; with ECO1001 already taken, ECO1002 and ECO1013 cannot both count.",
+				"² These majors have no ECO1013 equivalent; ECO1013 is required to take ECO2003."
+			]
+		},
+		{
+			"id": "english",
+			"name": "English",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of English",
+			"philosophy": "The Minor in English — long a popular choice at SNU — gives students a sound foundation in literary studies. The core courses introduce the three main genres of literature: poetry, fiction, and drama. The electives on offer deepen engagement with areas such as linguistics, creative writing, and the study of the novel.",
+			"why": [
+				"Learn and apply the protocols of textual analysis and interpretation across the major genres of English literature — skills readily transferable to other literatures, audiovisual narratives, and even non-literary texts on public policy, international affairs, and corporate governance.",
+				"Gain exposure to a rich variety of interpretive frameworks — psychological, sociological, historical, philosophical — organically building a sophisticated sensibility valued across the social sector, the corporate sector, and public administration.",
+				"Acquire a sound footing and a solid credential for pursuing higher education in the humanities."
+			],
+			"goals": [
+				"Analyse a text using critical terms and methodologies that are standard in academia and other work-worlds.",
+				"Produce written work that is well organised and grammatically accurate.",
+				"Interpret a text with reference to its contexts of production and reception.",
+				"Demonstrate oral competence in responding to literary texts."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Major Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits", "8", "8", "", "16"],
+						["Number of Credits to Choose", "8", "12", "", ""]
+					]
+				},
+				{
+					"title": "Core Courses (for all majors)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "ENG1001", "The Language Game of Literature", "None", "3:1:0", "1,2,3"],
+						["2", "ENG2041", "Shakespeare and his Contemporaries", "None", "3:1:0", "1,2,3"]
+					]
+				},
+				{
+					"title": "Elective Basket 1 (Any two)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "ENG2042", "Linguistic Approaches to Literature", "None", "3:1:0", "1,2,3,4"],
+						["2", "ENG3040", "The Fundamentals of Creative Writing", "None", "3:1:0", "1,2,3"],
+						["3", "ENG3043", "Landmarks in the Novel Form", "None", "3:1:0", "1,2,3"]
+					]
+				}
+			]
+		},
+		{
+			"id": "film",
+			"name": "Film",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of Art, Media and Performance",
+			"philosophy": "The Minor in Film fosters a deep understanding of film as both an art form and a means of cultural communication, while equipping students with practical skills. Its courses build visual literacy, so students can interpret and critique both mainstream and experimental film in cultural, social, and historical contexts.",
+			"why": [
+				"Hands-on experience in film production and post-production — directing, cinematography, editing, and sound design — including resourceful filmmaking with simple cameras and cell phones, so you can work independently and creatively with basic technology.",
+				"An interdisciplinary lens on how moving images influence and reflect broader societal issues, opening career pathways in fiction and non-fiction filmmaking, journalism, media arts, and communications."
+			],
+			"goals": [
+				"Critical analysis and visual literacy: how narrative structure, cinematography, sound, and editing create meaning.",
+				"Global cinematic perspectives across Western and non-Western traditions, contextualising films from varied cultural and historical backgrounds.",
+				"Technical skills and resourceful filmmaking — executing independent film projects with limited resources and basic equipment.",
+				"Cross-disciplinary understanding of how film intersects with history, psychology, sociology, the arts, and beyond.",
+				"Personal expression through film, balancing creative freedom with socially responsible, ethically aware practice."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Minor Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits", "4", "12", "", "16"],
+						["Number of Credits to Choose", "4", "20", "", "--"]
+					]
+				},
+				{
+					"title": "Core Course",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [["1", "AMP1003", "Image and Sound Studio", "", "2:1:1", "3,4,5"]]
+				},
+				{
+					"title": "Elective Basket 1 (take any 3)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "AMP3001", "Production", "", "1:0:3", "1,3,5"],
+						["2", "AMP1004", "Interpreting Cinema", "", "2:2:0", "1,2,5"],
+						["3", "AMP2003", "The Photographic Image", "", "2:0:2", ""],
+						["4", "", "Film and the Moving Image", "", "2:1:1", ""],
+						["5", "", "Editing and Post Production", "AMP1003/ AMP2003", "2:0:2", ""]
+					]
+				}
+			]
+		},
+		{
+			"id": "international-relations",
+			"name": "International Relations",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of International Relations and Governance Studies",
+			"philosophy": "The Minor imparts knowledge of international affairs as a dynamic, historically grounded, and interconnected set of processes that shape — and are in turn shaped by — political power, ideas, institutions, and everyday life. It introduces the global realm as an evolving, contested space at the intersection of geopolitical, political, economic, technological, and social forces. Students from diverse disciplinary backgrounds gain the conceptual tools to make sense of a rapidly changing world — geopolitical rivalry, economic uncertainty, technological transformation, and grand challenges such as climate change, inequality, and conflict — on the way to informed citizenship and ethically-imbued professional engagement.",
+			"why": [
+				"Strong, well-rounded disciplinary training — the lay of the land and key theories, together with international law, international security, international political economy, and the role of science and technology in international affairs.",
+				"Diversity of perspectives on international and global issues — theoretical positions and policy choices, including those of the Global South, with which our location has historical and normative resonance.",
+				"Key skills — core analytical and social-science research skills, with an appreciation for practical interventions towards just and sustainable problem-solving."
+			],
+			"goals": [
+				"Global and contextual understanding — critically engage with major theories, concepts, and debates in international relations, including Global South perspectives.",
+				"Analytical and research skills — analyse international issues using appropriate frameworks, evidence, and research methods, communicating arguments effectively in written and oral forms.",
+				"Application to contemporary global challenges — apply IR and allied frameworks to security, development, climate change, and technological transformation."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Major Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits", "8", "12", "", "20"],
+						["Number of Credits to Choose", "8", "32", "", "--"]
+					]
+				},
+				{
+					"title": "Compulsory Courses (for all majors)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "INT 101/INT 1001", "Introduction to International Relations", "None", "04", "1-3"],
+						["2", "INT 105/INT 1003", "Theorising International Relations", "None", "04", "1-3"]
+					]
+				},
+				{
+					"title": "Other Courses Basket — choose any 3 (one each from 200, 300, and 400 level)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "INT 217/INT 2007", "Introduction to International Political Economy", "None", "04", "1-3"],
+						["2", "INT 204/INT 2004", "International Security", "None", "04", "1-3"],
+						["3", "INT 301/INT 3004", "International Law and World Politics", "None", "04", "1-3"],
+						["4", "INT 205/INT 2005", "Science, Technology and International Relations", "None", "04", "1-3"],
+						["5", "INT 250/INT 3021", "China in Global Politics", "None", "04", "1-3"],
+						["6", "INT 346/INT 3046", "Cognition, Psychology, and Politics", "None", "04", "1-3"],
+						["7", "INT 342/INT 3042", "Science Diplomacy", "None", "04", "1-3"],
+						["8", "INT 218/INT 2018", "Globalisation in Critical Perspectives", "None", "04", "1-3"]
+					]
+				}
+			]
+		},
+		{
+			"id": "media",
+			"name": "Media",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of Art, Media and Performance",
+			"philosophy": "The Media Minor introduces students to the wide spectrum of media practices in the 21st century, cultivating consumers and practitioners who can navigate today's media landscape and shape its future. Spanning journalistic rigour, creative media production, and artistic experimentation, it places strong emphasis on emerging technologies and the intersections of communication, culture, and digital media. Working across photography, digital video, interactive media, and audio storytelling, students build the analytical insight and creative expertise to develop compelling narratives and contribute to contemporary media practice.",
+			"why": [
+				"Digital media is the new frontier in every field — this Minor equips you with the understanding and skills to use emerging technologies across a wide range of subject areas.",
+				"From computational art to journalistic ethics, the curriculum spans the full breadth of contemporary media practice."
+			],
+			"goals": [
+				"Understand the processes that govern media.",
+				"Grasp the concepts behind juxtaposition and the manipulation of image and sound.",
+				"Develop sensitivity to the technical complexity and craftsmanship of interactive media.",
+				"Understand the broad role of technology in our lives.",
+				"Produce multimedia stories, artwork, and soundscapes through audio-visual and sonic design."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Minor Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits", "4", "8", "4", "16"],
+						["Number of Credits to Choose", "4", "12", "12", "--"]
+					]
+				},
+				{
+					"title": "Core Course",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [["1", "AMP1003", "Image and Sound Studio", "", "2:1:1", "2,3,5"]]
+				},
+				{
+					"title": "Elective Basket 1 (take any 2)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "AMP2002", "Interactive Media", "", "2:0:2", "2,3,5"],
+						["2", "AMP2003", "The Photographic Image", "", "2:0:2", "2,3,5"],
+						["3", "AMP4001", "Film and the Moving Image", "", "2:1:1", "2,3,5"]
+					]
+				},
+				{
+					"title": "Elective Basket 2 (take any 1)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "AMP2001", "Comics: Text and Image Exploration", "", "2:0:2", "2,3,5"],
+						["2", "AMP2004", "Communicating the Environment", "", "2:2:0", "1,2,3,4,5"],
+						["3", "AMP3001", "Production", "", "2:1:1", "2,3,5"]
+					]
+				}
+			]
+		},
+		{
+			"id": "management",
+			"name": "Management",
+			"school": "School of Management and Entrepreneurship",
+			"department": "School of Management and Entrepreneurship",
+			"philosophy": "The Minor in Management gives students from any discipline a structured introduction to the fundamental domains of management — Marketing, Finance, Operations, and Human Resource Management. Without replicating a full Management major, it builds a strong managerial foundation and an integrated view of business decision-making, with a large elective pool for depth or breadth, capped by an integrative capstone.",
+			"why": [
+				"Exposure to at least three of the four functional pillars — Marketing, Finance, Operations, and HRM — alongside any major.",
+				"Flexibility to specialise or broaden across management disciplines, via an elective basket far larger than the minimum requirement.",
+				"An integrative finish — Business Simulation (Capstone) or Strategic Management — making integrated decisions across functions."
+			],
+			"goals": [
+				"Grounding in the functional domains of management: Marketing, Finance, Operations, and HRM.",
+				"Depth in a chosen management area, or broader exposure across multiple management disciplines.",
+				"Managerial thinking and decision-making capabilities.",
+				"Integrated learning across functional areas through a capstone business simulation experience."
+			],
+			"sections": [
+				{
+					"title": "Core Courses (complete at least three)",
+					"note": "Program requirements (minimum 16 credits): at least three Core Courses, at least two Electives, and Business Simulation (Capstone) or Strategic Management (3 credits; requires three cores first; only one counts), plus approved electives to reach 16 credits and the minimum Minor CGPA. A fourth core may substitute for one elective.",
+					"columns": ["Area", "Course Code", "Core Course", "Credits"],
+					"rows": [
+						["Marketing", "MKT1001", "Principles of Marketing", "3"],
+						["Finance", "FAC1005", "Financial Reporting", "3"],
+						["DSOMIS", "DOM5003", "Operations Management", "2"],
+						["OBHRM", "", "Human Resource Management", "2"]
+					]
+				},
+				{
+					"title": "Approved Elective Pool (complete at least two)",
+					"columns": ["Area", "Course Code", "Elective Course", "Credits"],
+					"rows": [
+						["DSOMIS", "", "Project Management", "2"],
+						["DSOMIS", "", "Simulation Modelling and Optimization of Supply Chains", "2"],
+						["OBHRM", "", "Group Dynamics for Teams", "3"],
+						["OBHRM", "", "Developing Management Skills", "3"],
+						["Marketing", "", "Entrepreneurial Marketing", "3"],
+						["Marketing", "", "International Marketing", "3"],
+						["FAC", "FAC1002", "Financial Markets", "2"],
+						["FAC", "FAC2003 / FAC1004", "Financial Management / Corporate Finance", "3"],
+						["EPP", "", "Economics for Business – I", "3"],
+						["EPP", "", "Economics for Business – II", "3"],
+						["SME & GM", "", "Corporate Laws", "2"],
+						["SME & GM", "MGT4001", "Fundamentals of Intellectual Property", "3"]
+					]
+				},
+				{
+					"title": "Elective Basket II (Take any one)",
+					"columns": ["Area", "Course Code", "Course", "Credits"],
+					"rows": [
+						["Strategy", "", "Business Simulation", "3"],
+						["Strategy", "", "Strategic Management", "3"]
+					]
+				}
+			],
+			"notes": [
+				"ENF students: FAC and MEC courses do not count. Economics students: MEC courses do not count.",
+				"Applicable from the Batch of 2029."
+			]
+		},
+		{
+			"id": "biotechnology",
+			"name": "Biotechnology",
+			"school": "School of Natural Sciences",
+			"department": "School of Natural Sciences",
+			"philosophy": "The Minor in Biotechnology rests on the idea that tackling biological problems requires understanding life sciences, technology, and ethics together. It supports what students are already studying by teaching the fundamentals of biotechnology and giving hands-on experience of the principles that are changing healthcare, agriculture, environmental sustainability, and industry. With an equal commitment to ethical awareness and societal impact, it aims to cultivate scientifically literate graduates who can collaborate across disciplines, adapt to rapidly evolving technologies, and contribute meaningfully to research, industry, education, or further professional study.",
+			"why": [
+				"Turns biological theory into practice — equipping students to solve real problems in healthcare, agriculture, sustainability, and industry.",
+				"Designed to complement majors in chemistry, physics, mathematics, engineering, computer science, and even management — adding biotech literacy that makes graduates more versatile and employable.",
+				"An emphasis on hands-on labs immerses students in practical biotechnology workflows rather than just theoretical learning."
+			],
+			"goals": [
+				"Core biological concepts: cell biology, genetics, molecular biology, microbiology, and biochemistry.",
+				"Hands-on experience with essential laboratory techniques such as DNA extraction, PCR, and microbiological methods.",
+				"Applying the scientific method to real-life problems in healthcare, agriculture, sustainability, and industry.",
+				"Awareness of emerging trends, technologies, and innovations in biotechnology, and of their ethical considerations."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Major Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits", "15", "3", "", "18"],
+						["Number of Credits to Choose", "18", "12", "", "--"]
+					]
+				},
+				{
+					"title": "Core Courses",
+					"note": "BIO1001 is compulsory for all students pursuing the Minor. Of the remaining five core courses, students complete a minimum of four.",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "BIO1001", "Introduction to Cell Biology, Molecular Biology, and Genetics", "", "3:0:0", "1"],
+						["2", "BIO202", "Microbiology", "BIO1001", "2:0:1", "1, 2, 3"],
+						["3", "BIO210", "Cell Biology", "BIO1001", "2:0:1", "1, 2, 3, 4"],
+						["4", "BIO211", "Genetics", "BIO1001", "3:0:0", "1, 3, 4"],
+						["5", "BIO206", "Molecular Biology", "BIO1001", "2:0:1", "1, 2, 3, 4"],
+						["6", "BIO205", "Bio-Analytical Techniques", "BIO1001", "2:0:1", "1, 2, 3, 4"]
+					]
+				},
+				{
+					"title": "Elective Basket (Take Any One)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "BIO207", "Immunology", "BIO1001", "2:0:1", "1, 2, 4"],
+						["2", "BIO303", "Recombinant DNA Technology", "BIO1001", "2:0:1", "1, 2, 3, 4"],
+						["3", "BIO305", "Genomics and Proteomics", "BIO1001", "2:0:1", "1, 2, 3, 4"],
+						["4", "BIO307", "IPR, Bio-regulatory affairs, and Bioethics", "", "3:0:0", "4"]
+					]
+				}
+			]
+		},
+		{
+			"id": "chemistry",
+			"name": "Chemistry",
+			"school": "School of Natural Sciences",
+			"department": "Department of Chemistry",
+			"philosophy": "SNIoE's flexible undergraduate curriculum allows students to pursue a Minor in Chemistry alongside a major in another discipline — Biotechnology, Physics, Engineering, and beyond. Centred on \"learning by doing\", the program builds a solid foundation in chemical principles and laboratory skills: introductory courses for basic concepts, foundation courses for breadth across the five major areas of chemistry, and specialized electives by interest — all within the investigative B.Sc. (Research) framework, preparing students for diverse careers in industry and academia.",
+			"why": [
+				"Interdisciplinary flexibility — pair a Chemistry minor with majors across biotechnology, engineering, and environmental science.",
+				"A research-driven, \"learning by doing\" curriculum — extensive laboratory work and early exposure to modern analytical instrumentation.",
+				"A top-tier department, ranked among the top 25 in India by the Nature Index.",
+				"Specialized areas beyond general chemistry: Materials Chemistry, Computational Chemistry, and Chemical Biology.",
+				"Skill development in critical thinking, problem-solving, and data analysis."
+			],
+			"goals": [
+				"Core-A (Introductory): mandatory CHY1011 and CHY2014 cover basic chemical concepts — stoichiometry, states of matter, atomic and molecular structure and bonding, thermodynamics, equilibria, and kinetics.",
+				"Elective-B (Foundation): breadth across the five major areas of chemistry — analytical, biochemistry, inorganic, organic, and physical — with hands-on laboratory experience of modern analytical instrumentation.",
+				"Elective-C (In-Depth): advanced instruction developing critical thinking, problem-solving, data analysis, and modelling."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"note": "20 credits = 8-credit Introductory (Minor Core-A) + 8-credit Foundation (Minor Elective-B) + In-Depth (Minor Elective-C). Not more than 50% of the Minor credit requirements can be met from 1000-level courses.",
+					"columns": ["", "Minor Core-A", "Minor Elective-B", "Minor Elective-C", "Total Credits"],
+					"rows": [
+						["Min Credits", "8", "8", "4", "20"],
+						["Number of Credits to Choose", "8", "16", "12", ""]
+					]
+				},
+				{
+					"title": "Core Courses (Category A)",
+					"columns": ["Sr", "Course Name & Code", "Pre-requisite", "Credits (L:T:P)", "Level", "PLGs"],
+					"rows": [
+						["1", "Chemical Principles (CHY1011)", "None", "3:1:1", "1000s", "PLG 1"],
+						["2", "Physical Methods in Chemistry (CHY2014)", "CHY1011", "2:0:1", "2000s", "PLG 1"]
+					]
+				},
+				{
+					"title": "Elective Basket (Category B — any two)",
+					"columns": ["Sr", "Course Name & Code", "Pre-requisite", "Credits (L:T:P)", "Level", "PLGs"],
+					"rows": [
+						["1", "Basic Organic Chemistry-I (CHY1022)", "CHY1011", "2:1:1", "1000s", "PLG 2"],
+						["2", "Inorganic Chemistry-I (CHY1044)", "CHY1011", "3:0:1", "1000s", "PLG 2"],
+						["3", "Basic Organic Chemistry-II (CHY2012)", "CHY1011, CHY1022", "2:1:1", "2000s", "PLG 2"],
+						["4", "Inorganic Chemistry-II (CHY2045)", "CHY1011, CHY1044", "3:0:1", "2000s", "PLG 2"]
+					]
+				},
+				{
+					"title": "Elective Basket (Category C — any one)",
+					"columns": ["Sr", "Course Name & Code", "Pre-requisite", "Credits (L:T:P)", "Level", "PLGs"],
+					"rows": [
+						["1", "Chemistry of Carbonyl Compounds (CHY3022)", "CHY1022, CHY2021", "2:1:1", "3000s", "PLG 3"],
+						["2", "Coordination Chemistry (CHY3042)", "CHY1011, CHY1044, CHY2045", "3:0:1", "3000s", "PLG 3"],
+						["3", "Molecular Spectroscopy (CHY4033)", "CHY1011, CHY2014, CHY1003 / CHY1004 / MAT101", "3:1:0", "4000s", "PLG 3"]
+					]
+				}
+			],
+			"notes": [
+				"As no more than 50% of minor credits can come from 1000-level courses, a student can take only one of CHY1022 and CHY1044 to meet the minimum Minor requirements; if both are taken, one counts as additional credits rather than towards the Minor."
+			]
+		},
+		{
+			"id": "foundational-mathematics",
+			"name": "Foundational Mathematics",
+			"school": "School of Natural Sciences",
+			"department": "Department of Mathematics",
+			"philosophy": "The Minor in Foundational Mathematics is designed for students outside mathematics who seek a confident first engagement with the subject. It introduces mathematics as a language for patterns, change, data, and decision-making, with emphasis on conceptual clarity and disciplined problem solving.",
+			"why": [
+				"A strong, usable mathematical foundation for higher studies, research, and professional work across the sciences, social sciences, business, economics, and computing.",
+				"Particularly valuable for overcoming anxiety about mathematics — strengthening logical thinking and building tools for interpreting data, modelling situations, and making informed decisions.",
+				"An introduction to the intellectual beauty of mathematics beyond procedural calculation."
+			],
+			"goals": [
+				"Fluency in foundational concepts — functions, algebraic reasoning, and calculus — to interpret quantitative relationships and solve routine problems.",
+				"Use of linear algebra, probability, and statistics to analyse structure, data, and uncertainty in academic, professional, and everyday contexts.",
+				"Mathematical thinking applied to unfamiliar problems: identifying patterns, constructing logical arguments, and communicating solutions clearly."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Core", "Elective", "Total Credits"],
+					"rows": [
+						["Min Credits required", "12", "8", "20"],
+						["Number of Credits to Choose", "16", "32", "48"]
+					]
+				},
+				{
+					"title": "Core Course",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "MAT 1001", "Calculus 1", "None", "3:1:0", "PLG 1"],
+						["2", "MAT 1002", "Calculus 2", "MAT 1001/DOM 1001", "3:1:0", "PLG 1"],
+						["3", "MAT 1060", "Linear Algebra", "None", "3:1:0", "PLG 2"],
+						["4", "MAT 1007", "Statistical Thinking and Probability", "None", "3:1:0", "PLG 2"]
+					]
+				},
+				{
+					"title": "Elective Basket (Take Any Two)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "MAT 2046", "Combinatorics", "MAT1060 MAT1002 or MAT1100 or MAT2004, and MAT1060", "3:1:0", "PLG 3"],
+						["2", "MAT 4208", "Graph Theory", "MAT1060", "3:1:0", "PLG 3"],
+						["3", "MAT 2001", "Real Analysis I", "MAT1002", "3:1:0", "PLG 1, 3"],
+						["4", "MAT 4212", "Introduction to Mathematical Finance", "MAT2005 or MAT3001 or MAT1060 or MAT1007", "3:1:0", "PLG 2, 3"],
+						["5", "MAT 3001", "Statistical Inference", "MAT1002 or MAT1007 or DOM 1002", "3:1:0", "PLG 2"],
+						["6", "MAT 1005", "Number Theory", "None", "3:1:0", "PLG 3"],
+						["7", "MAT 4204", "Optimization I", "MAT2001 or MAT1060", "3:1:0", "PLG 3"],
+						["8", "MAT 2005", "Algebra 1", "MAT1060", "3:1:0", "PLG 2, 3"]
+					]
+				}
+			]
+		},
+		{
+			"id": "mathematics",
+			"name": "Mathematics",
+			"school": "School of Natural Sciences",
+			"department": "Department of Mathematics",
+			"philosophy": "The Minor in Mathematics offers non-mathematics majors a rigorous and useful mathematical toolkit, blending conceptual foundations with problem-solving methods that support applications across science, engineering, economics, data-centric fields, and industry. Through core courses in analysis, algebra, differential equations, and statistics, students learn to think precisely, work with abstract structures, and model real-world phenomena, while electives allow tailoring towards discrete mathematics, optimisation, geometry, computation, finance, or machine learning. Overall, the Minor promotes mathematical maturity — careful reasoning, clear communication, and the ability to transfer techniques to new contexts — while preparing interested students for further study in mathematics.",
+			"why": [
+				"A strong foundation for quantitative careers and higher study: core training in analysis, algebra, differential equations, and statistics.",
+				"Flexible electives to match interests — discrete mathematics, optimisation, geometry, computation, finance, and machine learning.",
+				"Emphasis on rigorous reasoning and communication: proof-based thinking and clear mathematical writing for interdisciplinary work."
+			],
+			"goals": [
+				"Apply foundational concepts in real analysis and algebra, constructing clear proofs and formal arguments.",
+				"Model and analyse quantitative phenomena using differential equations and statistical inference.",
+				"Use discrete, optimisation, and computational tools to formulate and solve problems, communicating solutions effectively."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Core", "Elective", "Total Credits"],
+					"rows": [
+						["Min Credits required", "12", "8", "20"],
+						["Number of Credits to Choose", "16", "32", "48"]
+					]
+				},
+				{
+					"title": "Core Courses (Take Any Three)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "MAT 2001", "Real Analysis I", "MAT1002 or MAT1100 or MAT2004 or CHY 1003 or CHY 1004", "3:1:0", "PLG 1"],
+						["2", "MAT 2005", "Algebra I", "MAT1002 or MAT1100 or MAT2004 CHY 1003 or CHY 1004", "3:1:0", "PLG 1"],
+						["3", "MAT 3003", "Differential Equations", "MAT1002 or MAT1100 or MAT2004 CHY 1003 or CHY 1004", "3:1:0", "PLG 2"],
+						["4", "MAT 3001", "Statistical Inference", "MAT1002 or MAT1100 or MAT1007 or MAT2007 CHY 1003 or CHY 1004", "3:1:0", "PLG 2"]
+					]
+				},
+				{
+					"title": "Elective Basket (Take Any Two)",
+					"columns": ["Sr No", "Course Code", "Course Name", "Pre-requisite", "Course Credits (L:T:P)", "PLGs Mapping"],
+					"rows": [
+						["1", "MAT 2046", "Combinatorics", "MAT1002 or MAT1100 or MAT2004, or MAT1060 CHY 1003 or CHY 1004", "3:1:0", "PLG 3"],
+						["2", "MAT 4208", "Graph Theory", "MAT2001 or MAT1060", "3:1:0", "PLG 3"],
+						["3", "MAT 4203", "Introduction to Differentiable Manifolds", "MAT2001 and MAT4219", "3:1:0", "PLG 1, 3"],
+						["4", "MAT 4212", "Introduction to Mathematical Finance", "MAT2005 or MAT3001 or MAT1060 or MAT1007", "3:1:0", "PLG 2, 3"],
+						["5", "MAT 4219", "Metric Spaces", "MAT2001", "3:1:0", "PLG 1"],
+						["6", "MAT 4204", "Optimization I", "MAT2001 or MAT1060", "3:1:0", "PLG 3"],
+						["7", "MAT 4100", "Statistical Simulation and Computation", "MAT3001 or MAT1060", "3:1:0", "PLG 2, 3"],
+						["8", "MAT 4241", "Introduction to Machine Learning", "MAT3001 or MAT1060", "3:1:0", "PLG 2, 3"]
+					]
+				}
+			]
+		},
+		{
+			"id": "physics",
+			"name": "Physics",
+			"school": "School of Natural Sciences",
+			"department": "Department of Physics",
+			"philosophy": "A minor in Physics has two aspects: it ensures that a student is well-versed in the core of physics, and it allows the student to learn more advanced aspects of the subject according to his or her interests.",
+			"why": [
+				"A curriculum with a strong blend of learning physics concepts and applying them to research problems.",
+				"Critical skills and scientific aptitude — mathematical formulation, reasoning, physical intuition, computation, experiment.",
+				"Early research participation helps students find their interests and inspires a challenging career path."
+			],
+			"goals": [
+				"Engage in challenging multi-disciplinary problems.",
+				"Learn physics skills for making quantitative models of complex situations.",
+				"Synthesize knowledge across areas of physics and communicate scientific ideas effectively."
+			],
+			"sections": [
+				{
+					"title": "Minor Curriculum Matrix",
+					"columns": ["", "Major Core", "Elective Baskets", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Min Credits", "14", "6", "", "20"],
+						["Number of Credits to Choose", "14", "20", "", "--"]
+					]
+				},
+				{
+					"title": "Core Courses [total 14 credits] — for all majors",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "PHY 2001", "Thermal Physics", "PHY 2007", "4 (3:1:0)", "1,2,3"],
+						["2", "PHY 2002", "Introduction to Quantum Mechanics", "PHY 2007", "4 (3:1:0)", "1,2,3"],
+						["3", "PHY 2007", "Abridged course for Minor students", "10+2 standard Physics and Mathematics", "3 (2:1:0)", "1,2,3"],
+						["4", "PHY 2008", "Advanced Experimental Physics - I", "PHY 2007", "3 (1:0:2)", "1,2,3"]
+					]
+				},
+				{
+					"title": "Elective Basket 1",
+					"note": "Two courses from any one of the two baskets [total 6 credits].",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "PHY 3001", "Classical Mechanics", "PHY 2007", "4 (3:1:0)", "1,2,3"],
+						["2", "PHY 3003", "Classical Electrodynamics", "PHY 2007", "4 (3:1:0)", "1,2,3"],
+						["3", "PHY 3005", "Quantum Mechanics-I", "PHY 2007 & PHY 2002", "4 (3:1:0)", "1,2,3"],
+						["4", "PHY 3007", "Electronics - II", "PHY 2007", "4 (2:1:1)", "1,2,3"],
+						["5", "PHY 4065", "Non-linear dynamics**", "PHY 2007 & PHY 2002", "3 (3:1:1)", "1,2,3"],
+						["6", "PHY 4063", "General theory of Relativity**", "PHY 2007 & PHY 2002", "3 (3:1:1)", "1,2,3"],
+						["7", "PHY 4052", "Classical Theory of Fields**", "PHY 2007 & PHY 2002", "3 (3:1:1)", "1,2,3"],
+						["8", "PHY 5058", "Semiconductor Physics and Devices**", "PHY 2001 & PHY 2002", "3 (3:0:0)", "1,2,3"]
+					]
+				},
+				{
+					"title": "Elective Basket 2",
+					"columns": ["Sr", "Code", "Course Name", "Pre-requisite", "Credits (L:T:P)", "PLGs"],
+					"rows": [
+						["1", "PHY 3002", "Statistical Physics", "PHY 2001", "4 (3:1:0)", "1,2,3"],
+						["2", "PHY 3004", "Condensed Matter Physics", "PHY 2001 & PHY 2002", "4 (3:1:0)", "1,2,3"],
+						["3", "PHY 3006", "Quantum Mechanics – II", "PHY 3005", "4 (3:1:0)", "1,2,3"],
+						["4", "PHY 3008", "Advanced Experimental Physics - II", "PHY 2008", "3 (1:0:2)", "1,2,3"],
+						["5", "PHY 4064", "Computational and Numerical Analysis**", "PHY 2001 & PHY 2002", "3 (3:0:0)", "1,2,3"],
+						["6", "PHY 4068", "Introduction to Cosmology**", "PHY 2001 & PHY 2002", "3 (3:0:0)", "1,2,3"],
+						["7", "PHY 4090", "Astrophysics**", "PHY 2001 & PHY 2002", "3 (3:0:0)", "1,2,3"],
+						["8", "PHY 5072", "Soft Matter Physics**", "PHY 2001 & PHY 2002", "3 (3:0:0)", "1,2,3"]
+					]
+				}
+			],
+			"notes": ["** Example electives; a course may be selected from the major elective offerings for a given semester."]
+		}
+	]
+}

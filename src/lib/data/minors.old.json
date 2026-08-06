@@ -1,0 +1,945 @@
+{
+	"id": "old",
+	"label": "Old Curriculum",
+	"subtitle": "Batches 2028 and earlier · last updated 6 August 2026",
+	"source": "2028_and_earlier(Old Curriculam).pdf",
+	"footer": "If any queries arise in relation to the minor program pathways documented, please get in touch with the relevant UG Advisor for such minor pathway/s.",
+	"minors": [
+		{
+			"id": "chemical-engineering",
+			"name": "Chemical Engineering",
+			"school": "School of Engineering",
+			"department": "Department of Chemical Engineering",
+			"philosophy": "The Minor in Chemical Engineering gives students from other engineering and science disciplines a working foundation in the principles that govern process industries. Its six courses cover transport phenomena, reaction systems and process design fundamentals — together, the intellectual backbone of the discipline. The aim is to complement a student's parent discipline with quantitative tools that transfer directly to energy systems, environmental technology, materials processing, biotechnology, pharmaceuticals and sustainable manufacturing.",
+			"why": [
+				"Strong analytical and process engineering foundation — rigorous quantitative skills in mass, energy, transport and reaction systems.",
+				"Interdisciplinary advantage — the ability to bridge a parent discipline with chemical process knowledge and work on integrated, large-scale systems.",
+				"Career and higher-study prospects — pathways into petrochemicals, agrochemicals, bioenergy, bulk and speciality chemicals, sustainability sectors and R&D, and a stronger application for postgraduate study."
+			],
+			"glance": [
+				["Total credits", "18 (six courses of 3 credits each)"],
+				["Open to", "Students from other engineering and science disciplines"],
+				["Structure", "Six core courses, all of which must be completed"]
+			],
+			"sections": [
+				{
+					"title": "Core Courses (for all majors)",
+					"columns": ["Sr. No.", "Course Code", "Course Name", "Pre-requisite", "L:T:P", "Credits"],
+					"rows": [
+						["1", "CHD 213", "Material & Energy Balance", "None", "3:0:0", "3"],
+						["2", "CHD 216", "Fluid Mechanics", "CHD 213", "3:0:0", "3"],
+						["3", "CHD 217", "Chemical Engineering Thermodynamics", "CHD 213", "3:0:0", "3"],
+						["4", "CHD 225", "Chemical Reaction Engineering – I", "CHD 213", "3:0:0", "3"],
+						["5", "CHD 226", "Heat Transfer", "CHD 213", "3:0:0", "3"],
+						["6", "CHD 318", "Mass Transfer – I", "CHD 213", "3:0:0", "3"],
+						["", "", "Total", "", "", "18"]
+					]
+				}
+			],
+			"notes": ["All six courses are required."]
+		},
+		{
+			"id": "civil-engineering",
+			"name": "Civil Engineering",
+			"school": "School of Engineering",
+			"department": "Department of Civil Engineering",
+			"philosophy": "The Minor in Civil Engineering opens the built-environment disciplines — surveying, materials, geotechnics, transportation, water and environment — to students from other programs. Three pathways are defined so that the course load suits the student's own major and prior preparation. Each pathway pairs a short compulsory core with a wider optional basket.",
+			"why": [
+				"Foundational skills in surveying, concrete technology and building information modelling that are used on every construction and infrastructure project.",
+				"Interdisciplinary advantage for mechanical, chemical, computing and non-engineering students who work at the interface of infrastructure, planning and environment.",
+				"Career and higher-study prospects in infrastructure, construction, water resources, transportation and environmental consultancy."
+			],
+			"glance": [
+				["Total credits", "18 minimum (Mechanical/Chemical and CSE/ECE pathways); 19 minimum (non-SoE pathway)"],
+				["Open to", "Students from disciplines other than Civil Engineering"],
+				["Structure", "Three pathways, each with compulsory courses plus an optional basket"]
+			],
+			"sections": [
+				{
+					"title": "Credit requirement by pathway",
+					"columns": ["Pathway", "Compulsory", "Optional (minimum)", "Total (minimum)"],
+					"rows": [
+						["Mechanical / Chemical Engineering students", "8", "10", "18"],
+						["CSE / ECE students", "8", "10", "18"],
+						["Non-SoE students (with 10+2 in science stream)", "9", "10", "19"]
+					]
+				},
+				{
+					"title": "Course basket by pathway",
+					"columns": ["Course Code", "Course Title", "L:T:P", "Credits", "Mech. / Chem.", "CSE / ECE", "Non-SoE"],
+					"rows": [
+						["CED1001", "Forces in Action", "2:0:1", "3", "—", "—", "C"],
+						["CED2002 / CED206", "Elements of Surveying", "2:0:1", "3", "C", "C", "C"],
+						["CED2001 / CED214", "Building Information Modelling (BIM)", "1:0:1", "2", "C", "C", "—"],
+						["CED2006 / CED219", "Concrete Technology", "2:0:1", "3", "C", "C", "C"],
+						["CED2008 / CED325", "Geotechnical Engineering", "3:0:1", "4", "O", "O", "O"],
+						["CED3004 / CED304", "Transportation Engineering-I", "3:0:1", "4", "O", "O", "O"],
+						["CED2009 / CED207", "Hydraulic Engineering", "2:0:1", "3", "O", "O", "O"],
+						["CED3005 / CED308", "Environmental Engineering", "3:0:1", "4", "O", "O", "O"],
+						["CED3006 / CED310", "Remote Sensing and GIS: An Introduction and Applications", "2:0:1", "3", "O", "—", "—"],
+						["CED2004 / CED216", "Mechanics of Fluid", "3:0:1", "4", "—", "O", "O"],
+						["CED2003 / CED215", "Mechanics of Solids", "3:0:1", "4", "—", "O", "—"]
+					]
+				}
+			],
+			"notes": ["C = compulsory (all to be taken); O = optional basket; — = not part of that pathway."]
+		},
+		{
+			"id": "computer-science-and-engineering",
+			"name": "Computer Science & Engineering",
+			"school": "School of Engineering",
+			"department": "Department of Computer Science & Engineering",
+			"philosophy": "Undergraduate students who are not majoring in Computer Science & Engineering may take a Minor in CSE. The program builds from data structures through systems, algorithms, databases and artificial intelligence, so that a student acquires the computational vocabulary now expected across every discipline. Two pathways are defined — one for engineering and non-engineering majors generally, and one for students majoring in Electrical and Computer Engineering.",
+			"why": [
+				"Foundational skills in programming, data structures and algorithmic thinking that underpin all computational work.",
+				"Interdisciplinary advantage in applying computing to problems in the student's own discipline, from simulation to data analysis.",
+				"Career and higher-study prospects across software, data and technology roles, and a credible base for postgraduate study in computing."
+			],
+			"glance": [
+				["Total credits", "18 minimum"],
+				["Open to", "Students not majoring in Computer Science & Engineering"],
+				["Registration", "No separate registration. In the 8th semester, students completing the requirements approach the CSE UG Advisor for verification."],
+				["Two pathways", "Pathway A — Mechanical, Civil and Chemical Engineering majors, and non-engineering majors. Pathway B — Electrical and Computer Engineering (ECE) majors."]
+			],
+			"sections": [
+				{
+					"title": "Pathway A — Engineering (Mechanical / Civil / Chemical) and Non-Engineering majors",
+					"columns": ["Course Code", "Course Title", "L:T:P", "Credits", "Additional pre-requisite"],
+					"rows": [
+						["", "Compulsory course", "", "", ""],
+						["CSD102", "Data Structures", "3:0:1", "4", "CSD101 Introduction to Computing and Programming"],
+						["", "Any four courses from the following", "", "", ""],
+						["CSD204", "Operating Systems", "3:0:1", "4", "—"],
+						["CSD205", "Discrete Mathematics", "3:1:0", "4", "—"],
+						["CSD211", "Computer Organization and Architecture", "3:1:1", "5", "—"],
+						["CSD213", "Object Oriented Programming", "3:0:1", "4", "—"],
+						["CSD304", "Computer Networks", "3:0:1", "4", "CSD204"],
+						["CSD311", "Artificial Intelligence", "3:0:1", "4", "—"],
+						["CSD317", "Introduction to Database Systems", "3:0:1", "4", "—"],
+						["CSD319", "Design and Analysis of Algorithms", "3:0:1", "4", "—"],
+						["CSD326", "Software Engineering", "3:0:1", "4", "CSD213"],
+						["CSD —", "Elective I", "—", "3", "As required"]
+					]
+				},
+				{
+					"title": "Pathway B — Electrical and Computer Engineering (ECE) majors",
+					"note": "Any five courses from the following, to earn a minimum of 18 credits.",
+					"columns": ["Course Code", "Course Title", "L:T:P", "Credits", "Additional pre-requisite"],
+					"rows": [
+						["CSD204", "Operating Systems", "3:0:1", "4", "—"],
+						["CSD205", "Discrete Mathematics", "3:1:0", "4", "—"],
+						["CSD213", "Object Oriented Programming", "3:0:1", "4", "—"],
+						["CSD317", "Introduction to Database Systems", "3:0:1", "4", "—"],
+						["CSD319", "Design and Analysis of Algorithms", "3:0:1", "4", "—"],
+						["CSD326", "Software Engineering", "3:0:1", "4", "—"],
+						["CSD —", "Elective I", "—", "3", "As required"],
+						["CSD —", "Elective II", "—", "3", "As required"]
+					]
+				}
+			],
+			"notes": [
+				"In Pathway A, CSD102 is a pre-requisite for every other course in that table.",
+				"Enroll for a course only once its pre-requisite is satisfied.",
+				"Enroll according to course coding: 2nd-year students may register for CSD1## and CSD2## courses; 3rd- and 4th-year students may register for CSD2## and CSD3## courses.",
+				"CSD205 Discrete Mathematics is not available to Mathematics majors."
+			]
+		},
+		{
+			"id": "electrical-and-computer-engineering",
+			"name": "Electrical and Computer Engineering",
+			"school": "School of Engineering",
+			"department": "Department of Electrical Engineering / Electrical and Computer Engineering",
+			"philosophy": "The Minor in Electrical and Computer Engineering covers signals, digital and analogue electronics, electromagnetics, control, machines and power systems, with electives reaching into sensors, nanoelectronics, communication and energy systems. Four separate baskets are defined so that entry requirements and course selection match the student's own major. A student earns the minor by completing a minimum of 20 credits from the basket applicable to them.",
+			"why": [
+				"Foundational skills in circuits, signals and systems that sit underneath most modern hardware and instrumentation.",
+				"Interdisciplinary advantage in embedded systems, robotics, instrumentation and energy — fields where electrical knowledge is the limiting factor for students from other disciplines.",
+				"Career and higher-study prospects in electronics, communications, power, semiconductors and control, and a base for postgraduate study in the area."
+			],
+			"glance": [
+				["Total credits", "20 minimum, earned from the basket applicable to the student's major"],
+				["Open to", "Mechanical, Civil, Chemical and Computer Science & Engineering majors, and non-engineering students"],
+				["Structure", "Four pathway-specific baskets, each with its own eligibility conditions"]
+			],
+			"sections": [
+				{
+					"title": "Eligibility by pathway",
+					"columns": ["Pathway", "Pre-requisite and eligibility"],
+					"rows": [
+						["Mechanical Engineering", "Minimum B− grade in ECE101 Basics of Electrical and Electronic Circuits; minimum CGPA 6.5"],
+						["Civil and Chemical Engineering", "Minimum CGPA 6.5"],
+						["Computer Science & Engineering", "Minimum B− grade in ECE101 Basics of Electrical and Electronic Circuits; minimum CGPA 6.5"],
+						["Non-Engineering", "Physics and Mathematics at +2 level, or equivalent Mathematics and Physics courses at SNIoE with minimum B grade in each; minimum CGPA 7.5 to be maintained; entry decided through interaction or interview with the UG Advisor or departmental committee"]
+					]
+				},
+				{
+					"title": "Course basket by pathway",
+					"columns": ["Course Code", "Course Title", "L:T:P", "Credits", "Mech.", "Civil / Chem.", "CSE", "Non-Eng."],
+					"rows": [
+						["ECE101", "Basics of Electrical and Electronic Circuits", "3-1-1", "5", "P", "M", "P", "M"],
+						["ECE103", "Digital Electronics", "3-1-1", "5", "●", "●", "—", "●"],
+						["ECE201", "Electric Machines & Power Systems", "3-0-1", "4", "●", "●", "●", "●"],
+						["ECE202", "Embedded Systems Hardware", "3-0-1", "4", "—", "—", "●", "—"],
+						["ECE203", "Signals and Systems", "3-1-0", "4", "●", "●", "—", "●"],
+						["ECE205", "Electromagnetic Engineering", "3-1-0", "4", "●", "●", "●", "●"],
+						["ECE207", "Principles of Communication Engineering", "3-0-1", "4", "●", "●", "●", "●"],
+						["ECE301", "Control Systems", "3-0-1", "4", "●", "●", "●", "●"],
+						["ECE304", "Artificial Intelligence and Machine Learning", "3-0-0", "3", "●", "●", "—", "●"],
+						["ECE—", "Elective 1 (CSE: Sensors and Nanoelectronics basket)", "3-0-0", "3", "●", "●", "●", "●"],
+						["ECE—", "Elective 2 (CSE: Analog/RF and Communication Engineering basket)", "3-0-0", "3", "●", "●", "●", "●"],
+						["ECE—", "Elective 3 (Modern Energy Systems)", "3-0-0", "3", "—", "—", "●", "—"],
+						["", "Credits available in basket", "", "", "34", "39", "29", "35"]
+					]
+				}
+			],
+			"notes": [
+				"M = mandatory within the basket; ● = available in the basket; P = pre-requisite, not counted towards the minor; — = not part of that basket.",
+				"The basket totals show what is on offer, not what must be completed: the requirement is 20 credits."
+			]
+		},
+		{
+			"id": "mechanical-engineering",
+			"name": "Mechanical Engineering",
+			"school": "School of Engineering",
+			"department": "Department of Mechanical Engineering",
+			"philosophy": "Students from other departments may take a minor in the Mechanical stream. Four mandatory courses establish manufacturing, drawing, mechanics and thermodynamics, and an optional basket then extends into solids, fluids, heat transfer, design and industrial engineering. The structure is deliberately broad so that students can steer the minor towards either the thermal-fluids or the design-and-manufacturing side of the discipline.",
+			"why": [
+				"Foundational skills in engineering mechanics, thermodynamics and manufacturing processes that apply to any physical product or system.",
+				"Interdisciplinary advantage for students in computing, electrical, chemical and science programs who work on hardware, robotics, energy or manufacturing.",
+				"Career and higher-study prospects in manufacturing, automotive, energy, aerospace and industrial engineering."
+			],
+			"glance": [
+				["Total credits", "21 minimum (12 mandatory + at least 9 optional)"],
+				["Open to", "Students from other departments in the University"],
+				["Structure", "Four mandatory courses plus a minimum of 9 credits from the optional basket"]
+			],
+			"sections": [
+				{
+					"title": "Course requirements",
+					"columns": ["S. No.", "Course Code", "Course Name", "Credits", "Pre-requisite"],
+					"rows": [
+						["", "", "Mandatory courses — 12 credits", "", ""],
+						["1", "MED101", "Manufacturing Processes", "2", "None"],
+						["2", "MED104", "Descriptive Engineering Drawing", "3", "None"],
+						["3", "MED105", "Engineering Mechanics: Statics and Dynamics", "4", "None"],
+						["4", "MED205", "Engineering Thermodynamics", "3", "None"],
+						["", "", "Optional courses — minimum 9 credits from the following", "", ""],
+						["1", "MED203", "Mechanics of Solids", "4", "MED105 or equivalent course in another department"],
+						["2", "MED204", "Kinematics and Dynamics of Machines", "4", "MED105 or equivalent course in another department"],
+						["3", "MED211", "Fluid Mechanics", "4", "None"],
+						["4", "MED303", "Heat and Mass Transfer", "4", "MED205 & MED211 or equivalent courses"],
+						["5", "MED209", "Mechanical Engineering Design & Graphics", "3", "MED104 & MED203 or equivalent courses"],
+						["6", "MED309", "Operations Research", "3", "None"],
+						["7", "MED306", "Fluid Machinery", "3", "MED211 or equivalent course"],
+						["8", "MED210", "Principles of Industrial Engineering", "3", "None"],
+						["9", "MED208", "Manufacturing Sciences", "4", "MED101"],
+						["10", "MED320", "Machine Design", "3", "MED209"]
+					]
+				}
+			],
+			"notes": [
+				"If a student has already completed some of the mandatory courses, or equivalent credits, as part of their major curriculum, an equal number of credits must be taken additionally from the optional basket.",
+				"Equivalent courses within the student's own major discipline are not counted towards the minor requirement."
+			]
+		},
+		{
+			"id": "archaeology",
+			"name": "Archaeology",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of History",
+			"philosophy": "The Department of History offers a separate Minor in Archaeology. Its purpose is to enable students to interpret and use material evidence, to learn field methods specific to archaeology, and to understand how archaeological material is treated after excavation through analysis, curation and display. Students are also introduced to the theoretical debates that shape the discipline.",
+			"why": [
+				"Foundational skills in reading material evidence and in the field methods, recording and analysis particular to archaeology.",
+				"Interdisciplinary advantage in combining material and textual evidence, which sharpens historical, anthropological and heritage work alike.",
+				"Career and higher-study prospects through specialised postgraduate programs in Archaeology and in Museum Studies."
+			],
+			"glance": [
+				["Total credits", "24 credits (6 courses) | All courses carry 4 credits"],
+				["Open to", "Students majoring in disciplines other than Archaeology"],
+				["Compulsory course", "HIS/ARC 101 Introduction to Archaeology"],
+				["Duration", "Minimum period of three years"]
+			],
+			"sections": [
+				{
+					"title": "Courses for the Minor in Archaeology",
+					"columns": ["Course Code", "Course Title"],
+					"rows": [
+						["", "Core courses"],
+						["HIS/ARC 101", "Introduction to Archaeology (compulsory)"],
+						["HIS/ARC 104", "Bronze Age Civilizations"],
+						["HIS/ARC 201", "Archaeology of South Asia"],
+						["HIS/ARC 210", "Histories of Archaeology in South Asia"],
+						["HIS/ARC 213", "Field Methods in Archaeology"],
+						["HIS/ARC 215", "Histories of the Art and Architecture of South Asia"],
+						["", "Elective courses"],
+						["HIS/ARC 301", "Archaeology of Cities"],
+						["HIS/ARC 302", "Archaeology and Death"],
+						["HIS/ARC 305", "Curating Cultures: Collections, Museums, Practices"],
+						["HIS/ARC 312", "Temples, Tombs and Warriors: Comparative Archaeology of India and China"],
+						["HIS/ARC 317", "Archaeology of Landscapes"],
+						["HIS/ARC 323", "Seeing the Past: Visual Histories and Archaeological Practices"],
+						["HIS/ARC 327", "Archaeologies of the Contemporary World"]
+					]
+				}
+			]
+		},
+		{
+			"id": "history",
+			"name": "History",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of History",
+			"philosophy": "The Department of History offers an Undergraduate Minor in History to students majoring in other disciplines, through courses offered as University-Wide Electives each semester. The minor is intended for students who want a deeper methodological understanding of the discipline and the chance to explore its core issues, thematic range and analytical approaches. Students choose across core courses and departmental electives.",
+			"why": [
+				"Foundational skills in handling evidence, reading critically and constructing an argument from contested sources.",
+				"Interdisciplinary advantage in situating any field: science, engineering, management or the arts, within the longer history that shaped it.",
+				"Career and higher-study prospects in research, law, policy, journalism, publishing, heritage and the civil services."
+			],
+			"glance": [
+				["Total credits", "24 credits (6 courses)"],
+				["Open to", "Students majoring in disciplines other than History"],
+				["Structure", "At least 3 core courses, of which HIS 102 Does History Matter? is mandatory; the balance from departmental electives"]
+			],
+			"sections": [
+				{
+					"title": "Courses for the Minor in History",
+					"columns": ["Course Code", "Course Title"],
+					"rows": [
+						["", "Core courses in History (at least 3; HIS 102 is mandatory)"],
+						["HIS 102", "Does History Matter? (mandatory)"],
+						["HIS 103", "Early Historic South Asia"],
+						["HIS 202", "Ancient Indian Social History"],
+						["HIS 203", "Early Medieval South Asia 300–1300"],
+						["HIS 204", "Introducing the 'Early Modern' 1300–1761 CE"],
+						["HIS 206", "Establishment of British Power in South Asia 1757–1857"],
+						["HIS 208", "Social Change in Colonial South Asia c. 1860–1940s"],
+						["HIS 209", "Contemporary India 1947–1991"],
+						["HIS 212", "State and Cult in Early Medieval South Asia"],
+						["HIS 215", "Histories of the Art and Architecture of South Asia"],
+						["HIS 216", "Engendering History"],
+						["", "Departmental electives"],
+						["HIS 303", "Resources, Conflict and the State"],
+						["HIS 304", "Pastoral Nomads and the State"],
+						["HIS 306", "Histories of Writing"],
+						["HIS 307", "Orientalism, Culture and Imperialism"],
+						["HIS 308", "Crime and Punishment in the Modern World"],
+						["HIS 310", "Diagnosing Difference: Imperial Histories of Medicine in South Asia and Africa"],
+						["HIS 311", "South Asia in Historiography"],
+						["HIS 314", "Economic History of India, 1757–1977"],
+						["HIS 315", "Experts and Expertise: A Historical and Anthropological Perspective"],
+						["HIS 316", "The Opium Question: Writings on the Opium Wars (1839–1860)"],
+						["HIS 318", "Histories of Education and Youth"],
+						["HIS 319", "Medicine and the British Raj – 1700s to 1900s"],
+						["HIS 321", "Globalization: An Intellectual History"],
+						["HIS 322", "Land, Labour and the State: Readings in Agrarian History"],
+						["HIS 324", "Historical Foundations of Modern Sovereignty: 1250–1800"],
+						["HIS 325", "Historicizing Caste"],
+						["HIS 326", "Uneasy Lies the Head: Kingship and Sovereignty in Early Modern South Asia"]
+					]
+				}
+			],
+			"notes": ["All courses carry 4 credits."]
+		},
+		{
+			"id": "history-and-archaeology",
+			"name": "History and Archaeology (Combined)",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of History",
+			"philosophy": "Archaeology and History represent two distinct but interrelated approaches to analysing the past, and this combined minor is built on that relationship. It is offered to students majoring in other disciplines through courses available as University-Wide Electives each semester. Students must draw equally from both streams, so that material and textual evidence are learned alongside one another.",
+			"why": [
+				"Foundational skills in both documentary and material evidence, and in the distinct methods each demands.",
+				"Interdisciplinary advantage from working across two allied disciplines rather than one, which broadens the range of questions a student can ask of the past.",
+				"Career and higher-study prospects in historical and archaeological research, heritage management, museums, policy and the civil services."
+			],
+			"glance": [
+				["Total credits", "24 credits (6 courses, each of 4 credits)"],
+				["Open to", "Students majoring in disciplines other than History"],
+				["Structure", "Either HIS 101 or HIS 102 is compulsory; 3 courses in History and 3 in Archaeology must be completed"]
+			],
+			"sections": [
+				{
+					"title": "Compulsory course (one of the two)",
+					"columns": ["Course Code", "Course Title"],
+					"rows": [
+						["HIS 101", "Introduction to Archaeology"],
+						["HIS 102", "Does History Matter?"]
+					]
+				},
+				{
+					"title": "Archaeology stream",
+					"columns": ["Course Code", "Course Title"],
+					"rows": [
+						["HIS/ARC 104", "Bronze Age Civilizations"],
+						["HIS/ARC 201", "Archaeology of South Asia"],
+						["HIS/ARC 210", "Histories of Archaeology in South Asia"],
+						["HIS/ARC 213", "Field Methods in Archaeology"],
+						["HIS/ARC 215", "Histories of the Art and Architecture of South Asia"],
+						["HIS/ARC 301", "Archaeology of Cities"],
+						["HIS/ARC 302", "Archaeology and Death"],
+						["HIS/ARC 305", "Curating Cultures: Collections, Museums, Practices"],
+						["HIS/ARC 312", "Temples, Tombs and Warriors: Comparative Archaeology of India and China"],
+						["HIS/ARC 317", "Archaeology of Landscapes"],
+						["HIS/ARC 323", "Seeing the Past: Visual Histories and Archaeological Practices"]
+					]
+				},
+				{
+					"title": "History stream",
+					"columns": ["Course Code", "Course Title"],
+					"rows": [
+						["HIS 103", "Early Historic South Asia"],
+						["HIS 202", "Ancient Indian Social History"],
+						["HIS 203", "Early Medieval South Asia 300–1300"],
+						["HIS 204", "Introducing the 'Early Modern' 1300–1761 CE"],
+						["HIS 206", "Establishment of British Power in South Asia 1757–1857"],
+						["HIS 208", "Social Change in Colonial South Asia c. 1860–1940s"],
+						["HIS 209", "Contemporary India 1947–1991"],
+						["HIS 304", "Pastoral Nomads and the State"],
+						["HIS 307", "Orientalism, Culture and Imperialism"],
+						["HIS 310", "Diagnosing Difference: Imperial Histories of Medicine in South Asia and Africa"],
+						["HIS 311", "South Asia in Historiography"],
+						["HIS 314", "Economic History of India, 1757–1977"],
+						["HIS 315", "Experts and Expertise: A Historical and Anthropological Perspective"],
+						["HIS 316", "The Opium Question: Writings on the Opium Wars (1839–1860)"],
+						["HIS 318", "Histories of Education and Youth"]
+					]
+				}
+			],
+			"notes": ["All courses carry 4 credits."]
+		},
+		{
+			"id": "visual-arts",
+			"name": "Visual Arts",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of Art, Media and Performance",
+			"philosophy": "The Minor in Visual Arts combines the history and theory of images with sustained studio practice. Students work across drawing, painting, collage, digital media, photography and the moving image, while building the critical vocabulary to read images and objects. Practice and interpretation are taught together rather than in sequence.",
+			"why": [
+				"Foundational skills in visual thinking, making and critical interpretation of images and objects.",
+				"Interdisciplinary advantage for students in design, communication, humanities and technology, where visual literacy increasingly determines how well work is understood.",
+				"Career and higher-study prospects in art practice, curation, publishing, media production and postgraduate study in art history or visual culture."
+			],
+			"glance": [
+				["Total credits", "20 credits"],
+				["Open to", "Undergraduate students from other disciplines"],
+				["Structure", "Six courses of 4 credits are on offer; any five complete the minor"]
+			],
+			"sections": [
+				{
+					"title": "Courses on offer",
+					"columns": ["S. No.", "Course Code", "Course Name", "Brief Description", "L:T:P"],
+					"rows": [
+						["1", "ART 202", "Critical Art History: An Introduction", "Provides a conceptual and methodological foundation along with a historical overview for the study of images and objects.", "1:0:3"],
+						["2", "ART 210", "Explorations in 2D", "Develops formal and conceptual skills for creative expression through drawing, painting, collage and digital media.", "2:0:2"],
+						["3", "ART 220", "Explorations in 3D", "Explores the moving image as an objet d'art within narrative and non-narrative contexts.", "2:0:2"],
+						["4", "ART 651", "Film and Moving Image", "Introduces the history, technology and aesthetics of the moving image from its origins to contemporary developments.", "1:0:3"],
+						["5", "ART 342", "The Photographic Image", "Focuses on photographic practice and visual thinking, encouraging critical ways of seeing and image-making.", "2:0:2"],
+						["6", "ART 662", "Body Performativity and Politics", "Examines artistic and theoretical approaches to dance, theatre, performance art, sound, installation art and related practices.", "2:0:2"]
+					]
+				}
+			],
+			"notes": ["Each course carries 4 credits."]
+		},
+		{
+			"id": "dance",
+			"name": "Dance",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of Art, Media and Performance",
+			"philosophy": "The Minor in Dance treats movement as both an embodied practice and an object of critical study. Studio training in technique, alignment and composition runs alongside courses on dance history, aesthetics, and the politics of the body. Students may also move into pedagogy and the use of digital media in performance.",
+			"why": [
+				"Foundational skills in movement technique, anatomy and choreographic composition, together with the vocabulary of performance analysis.",
+				"Interdisciplinary advantage in linking embodied practice to questions of identity, gender, power and nationalism drawn from the wider humanities.",
+				"Career and higher-study prospects in performance, choreography, dance education, arts management, and postgraduate study in performance studies."
+			],
+			"glance": [
+				["Total credits", "24 credits"],
+				["Open to", "Undergraduate students from other disciplines"],
+				["Structure", "Ten courses of 4 credits are on offer; any six complete the minor"]
+			],
+			"sections": [
+				{
+					"title": "Courses on offer",
+					"columns": ["S. No.", "Course Code", "Course Name", "Brief Description", "L:T:P"],
+					"rows": [
+						["1", "DNC100", "Dance and National Identity", "Explores the relationship between dance and nationalism in India, examining the role of laws, institutions and practitioners in shaping national identity.", "4:0:0"],
+						["2", "DNC101", "Writing the Body", "Examines the body as a cultural site through performance analysis, dance writing and critical engagement with socio-cultural identities.", "4:0:0"],
+						["3", "DNC110", "The Dancer's Body", "Introduces anatomy, kinesiology, body awareness, alignment and movement analysis as foundational movement training.", "0:0:4"],
+						["4", "DNC112", "Technique", "Introduces dance techniques through practical and theoretical study, with emphasis on musicality, alignment, history and choreography.", "0:0:4"],
+						["5", "DNC115", "Method Meets Art", "Explores practice-led and practice-based research, focusing on artistic practice as a mode of knowledge production.", "4:0:0"],
+						["6", "DNC212", "Introduction to Abhinaya", "Introduces Rasa Theory and abhinaya, emphasising storytelling techniques and aesthetic traditions in contemporary contexts.", "0:0:4"],
+						["7", "DNC214", "Body, Gesture and Performance", "Examines body politics through identity, gender, power and socio-political discourses using dance and performance.", "4:0:0"],
+						["8", "DNC310", "Movement and Meaning", "Explores improvisation, choreography, movement composition, body and space through practical and theoretical engagement.", "0:0:4"],
+						["9", "DNC311", "Dance Pedagogy", "Introduces curriculum design, teaching methodologies and critical reflection on dance education.", "2:0:2"],
+						["10", "DNC312", "Performance and New Media", "Integrates dance with digital media, film, virtual performance and digital portfolios.", "0:0:4"]
+					]
+				}
+			],
+			"notes": ["Each course carries 4 credits."]
+		},
+		{
+			"id": "communication",
+			"name": "Communication",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of Art, Media and Performance",
+			"philosophy": "The Minor in Communication is built around film and the moving image, taught as both craft and critical practice. Production courses in image, sound, editing and post-production sit alongside courses in film history and interpretation. Students may extend the minor towards interactive art, photography and environmental communication.",
+			"why": [
+				"Foundational skills in film and television production, editing, sound and image-making.",
+				"Interdisciplinary advantage in communicating complex material to real audiences — useful in any discipline, and essential in media, policy and the environmental sciences.",
+				"Career and higher-study prospects in film and television, digital media, journalism, advertising and postgraduate study in media and film studies."
+			],
+			"glance": [
+				["Total credits", "19 credits"],
+				["Open to", "Undergraduate students from other disciplines"],
+				["Structure", "Course-wise credits are not stated in the source document"]
+			],
+			"sections": [
+				{
+					"title": "Courses on offer",
+					"columns": ["S. No.", "Course Code", "Course Name", "Credits (L:T:P)"],
+					"rows": [
+						["1", "COM199", "Image and Sound Studio", "4 (1:1:2)"],
+						["2", "COM198", "Cinema between Two World Wars", "4 (2:2:0)"],
+						["3", "COM197", "Editing & Post Production", "4 (2:0:2)"],
+						["4", "COM196", "Film and Media Production", "4 (1:0:3)"],
+						["5", "COM192", "Interpreting Cinema", "4 (2:2:0)"],
+						["6", "COM191", "Communicating the Environment", "4 (3:1:0)"],
+						["7", "ART341", "Interactive Media", "4 (1:1:2)"],
+						["8", "ART342", "The Photographic Image", "4 (2:0:2)"],
+						["9", "ART651", "Film and the Moving Image", "4 (2:0:2)"]
+					]
+				}
+			]
+		},
+		{
+			"id": "design",
+			"name": "Design",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of Design",
+			"philosophy": "Design is an applied art and science that involves examining existing situations critically, identifying and redefining problems, exploring solutions laterally, and arriving at innovative and sustainable answers to real user needs. It draws on art, craft, architecture, engineering and the social sciences, and is now recognised as a transdisciplinary field capable of addressing complex twenty-first-century problems. The minor offers experiential learning in multidisciplinary groups, with two tracks — Product Design and Visual Communication.",
+			"why": [
+				"Exposure to design as a field of study, equipping students for further study or competitive examinations in design.",
+				"Transdisciplinary skills through collaboration in multidisciplinary groups, breaking down disciplinary boundaries.",
+				"A Design Thinking approach — a human-centred method emphasising empathy, ideation, prototyping and iteration, applicable within any discipline."
+			],
+			"goals": [
+				"Students will develop a foundational understanding of design as a field of study and its relevance in contemporary society and industry.",
+				"Students will acquire knowledge and application skills of visual language, enabling effective communication across diverse design domains.",
+				"Students will understand the human-centred nature of design and gain familiarity with key design methods, processes and techniques.",
+				"Students will develop practical skills in creative problem-solving through collaborative, multidisciplinary teamwork."
+			],
+			"glance": [
+				["Total credits", "18 credits"],
+				["Open to", "Undergraduate students from other disciplines"],
+				["Structure", "Minor Core (10 credits) + one course from Elective Basket 1 (4 credits) + one course from Elective Basket 2 (4 credits)"],
+				["Tracks", "Product Design track or Visual Communication track"]
+			],
+			"sections": [
+				{
+					"title": "Minor curriculum matrix",
+					"columns": ["", "Minor Core", "Elective Basket 1", "Elective Basket 2", "Total Credits"],
+					"rows": [
+						["Minimum credits", "10", "4", "4", "18"],
+						["Credits to choose", "10", "4", "4", "18"],
+						["Selection rate", "100%", "50%", "50%", ""]
+					]
+				},
+				{
+					"title": "Core courses (for all majors) — 10 credits, all required",
+					"columns": ["Sr. No.", "Course Code", "Course Name", "Pre-requisite", "L:T:P", "Credits", "PLGs"],
+					"rows": [
+						["1", "DES1101 / DES102", "Elements and Principles of Visual Design", "NA", "2-0-2", "4", "PLG1, PLG2"],
+						["2", "DES2008 / DES210", "Design Practice 1 / Design Project 1", "DES2002 or DES2003", "1-0-2", "3", "PLG3, PLG4"],
+						["3", "DES3003 / DES303", "Design Practice 2 / Design Project 2", "DES2008", "1-0-2", "3", "PLG3, PLG4"],
+						["", "", "Total", "", "", "10", ""]
+					]
+				},
+				{
+					"title": "Elective baskets — choose one course from each basket (4 credits each)",
+					"columns": ["Course Code", "Course Name", "Pre-requisite", "L:T:P", "Credits", "PLGs"],
+					"rows": [
+						["", "Elective Basket 1 — Visual Communication Design", "", "", "", ""],
+						["DES1007 / DES108", "Visual Communication 1", "DES1101", "1-0-3", "4", "PLG2, PLG4"],
+						["DES2002 / DES204", "Visual Communication 2", "DES1007", "2-0-2", "4", "PLG2, PLG4"],
+						["", "Elective Basket 2 — Product Design", "", "", "", ""],
+						["DES1008 / DES109", "Human Centered Design Methods", "DES1101", "2-0-2", "4", "PLG3, PLG4"],
+						["DES2003 / DES205", "Human Factors Engineering", "DES1008", "2-0-2", "4", "PLG3, PLG4"]
+					]
+				},
+				{
+					"title": "The two pathways for the Design Minor (18 credits either way)",
+					"columns": ["Semester", "Product Design track", "Visual Communication track"],
+					"rows": [
+						["Semester 3", "DES1001 / DES102 Elements and Principles of Visual Design", "DES1001 / DES102 Elements and Principles of Visual Design"],
+						["Semester 4", "DES1008 / DES109 Human Centered Design Methods", "DES1007 / DES108 Visual Communication 1"],
+						["Semester 5", "DES2008 / DES210 Design Practice 1 / Design Project 1", "DES2008 / DES210 Design Practice 1 / Design Project 1"],
+						["Semester 6", "DES2003 / DES205 Human Factors Engineering", "DES2002 / DES204 Visual Communication 2"],
+						["Semester 7", "DES3003 / DES303 Design Practice 2 / Design Project 2", "DES3003 / DES303 Design Practice 2 / Design Project 2"]
+					]
+				}
+			],
+			"notes": ["A student takes one course from each elective basket, and may not take more than two courses at the 1000 level."]
+		},
+		{
+			"id": "economics",
+			"name": "Economics",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of Economics",
+			"philosophy": "The Minor in Economics gives students a working command of microeconomic and macroeconomic reasoning and the quantitative methods that support it. The sequence moves from the principles courses into intermediate microeconomics, with econometrics available for students who want empirical training. Requirements are set so that the minor adds genuinely new coursework rather than duplicating a student's major.",
+			"why": [
+				"Foundational skills in economic reasoning, optimisation and the interpretation of empirical evidence.",
+				"Interdisciplinary advantage in any field where incentives, markets, policy or data play a role — engineering, management, public policy and the sciences alike.",
+				"Career and higher-study prospects in finance, consulting, analytics, research and public policy, and a base for postgraduate study in economics."
+			],
+			"glance": [
+				["Total credits", "20 credits (at least five ECO courses)"],
+				["Open to", "All students in good academic standing; there are no other entry requirements"],
+				["Registration", "From Monsoon 2025, students register for the minor through the Office of Academics"],
+				["Conditions", "At least three courses must have codes beginning with 2 or higher. The GPA calculated from courses counting towards the minor must be at least 5.0. Courses must be independent of major requirements."]
+			],
+			"sections": [
+				{
+					"title": "Course requirements",
+					"columns": ["Course Code", "Course Title", "Pre-requisite"],
+					"rows": [
+						["", "Minor core — all three courses required", ""],
+						["ECO101 / ECO1001", "Principles of Micro", "None"],
+						["ECO102 / ECO1002", "Principles of Macro", "None"],
+						["ECO301", "Intermediate Micro (to be recoded ECO2001 Inter. Micro I)", "ECO1001, and a calculus course (MAT101 or equivalent)"],
+						["", "Commonly taken elective", ""],
+						["ECO213", "Basic Econometrics", "A probability or statistics course (ECO113 / ECO1003 or equivalent)"]
+					]
+				},
+				{
+					"title": "Satisfying the mathematics and statistics pre-requisites — find your School",
+					"columns": ["Requirement", "If you are in SHSS", "If you are in SME", "If you are in Engineering or Natural Sciences"],
+					"rows": [
+						["Calculus, needed for ECO301 Intermediate Micro", "Take ECO1004. It counts towards the minor.", "Take ECO1004. It counts towards the minor.", "Use the calculus course taken in your own Program. ECO1004 does not count towards the minor."],
+						["Probability or statistics, needed for ECO213 Basic Econometrics", "Take ECO113 / ECO1003. It counts towards the minor.", "Take ECO113 / ECO1003. It counts towards the minor.", "Use the probability course taken in your own Program. ECO1003 does not count towards the minor."],
+						["Principles of Micro and Macro (part of the minor core)", "Take ECO101 / ECO1001 and ECO102 / ECO1002.", "Do not take these. MEC103 and MEC104 in your own major are the equivalents: they satisfy pre-requisites but do not count towards the minor.", "Take ECO101 / ECO1001 and ECO102 / ECO1002."]
+					]
+				}
+			],
+			"notes": [
+				"What does not count towards the minor: ECO108 / ECO1009 Logic and Scientific Methods.",
+				"Swayam courses.",
+				"Certain advanced economics electives that are not open as University-Wide Electives.",
+				"Any course that is already counted towards the student's major requirements."
+			]
+		},
+		{
+			"id": "english",
+			"name": "English",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of English",
+			"philosophy": "Students from disciplines other than English may earn a Minor in English. Requirements differ by batch: students admitted before 2025 complete a broader set of departmental courses, while those admitted from 2025 onwards follow a defined core-and-elective structure. The courses range across language, Renaissance drama, linguistics, creative writing and the novel.",
+			"why": [
+				"Foundational skills in close reading, argument and clear writing — the most portable skills a degree can offer.",
+				"Interdisciplinary advantage in interpreting texts, framing arguments and understanding how language constructs meaning, whatever the primary discipline.",
+				"Career and higher-study prospects in publishing, communications, law, education, the creative industries and postgraduate study in literature."
+			],
+			"glance": [
+				["Open to", "Students of the University from disciplines other than English"],
+				["Pre-requisites", "None. Courses may be completed in any order."],
+				["Recommendation", "Take 100- and 200-level courses early, and 300- and 400-level courses in later semesters."]
+			],
+			"sections": [
+				{
+					"title": "Requirement by batch",
+					"columns": ["UG Batch", "Minor Requirement", "Courses", "Credits"],
+					"rows": [
+						["Students admitted prior to 2025 (old curriculum)", "Complete courses offered by the Department of English, that is, courses carrying the \"ENG\" prefix. No specific courses are prescribed.", "At least 6", "24"]
+					]
+				}
+			]
+		},
+		{
+			"id": "international-relations",
+			"name": "International Relations",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of International Relations and Governance Studies",
+			"philosophy": "The Minor in International Relations introduces students to the study of states, institutions and the international system, and to the theoretical traditions through which that system is interpreted. Two mandatory core courses establish the field, and students then choose from the Department's major elective basket. The minor suits students who want to situate their own discipline within a global political frame.",
+			"why": [
+				"Foundational skills in the concepts and theoretical traditions used to analyse international politics.",
+				"Interdisciplinary advantage in reading global political and institutional context, which bears on technology policy, trade, energy, environment and business strategy.",
+				"Career and higher-study prospects in diplomacy, the civil services, international organisations, policy research, journalism and postgraduate study in international relations."
+			],
+			"glance": [
+				["Total credits", "24 credits"],
+				["Open to", "Undergraduate students from other disciplines"],
+				["Structure", "Two mandatory core courses plus any four courses from the Department's major elective basket"]
+			],
+			"sections": [
+				{
+					"title": "Mandatory core courses",
+					"columns": ["Course Code", "Course Title", "Credits"],
+					"rows": [
+						["INT 101", "Introduction to International Relations", "4"],
+						["INT 105", "Theorising International Relations", "4"]
+					]
+				},
+				{
+					"title": "Major electives",
+					"columns": ["Requirement", "Detail"],
+					"rows": [
+						["Any four courses", "From the major elective course basket offered by the Department of International Relations and Governance Studies."]
+					]
+				}
+			]
+		},
+		{
+			"id": "sociology",
+			"name": "Sociology",
+			"school": "School of Humanities and Social Sciences",
+			"department": "Department of Sociology",
+			"philosophy": "The Minor in Sociology introduces students to the systematic study of social life: institutions, inequality, culture and social change, and to the methods sociologists use to investigate them. Students complete a combination of core and elective courses offered by the Department.",
+			"why": [
+				"Foundational skills in social theory and in qualitative and quantitative methods of social research.",
+				"Interdisciplinary advantage in understanding the social context in which technologies, markets and policies actually operate.",
+				"Career and higher-study prospects in research, development and policy work, human resources, journalism and postgraduate study in the social sciences."
+			],
+			"glance": [
+				["Structure", "Any 3 core courses and 3 elective courses in Sociology"],
+				["Open to", "Undergraduate students from other disciplines"]
+			],
+			"sections": []
+		},
+		{
+			"id": "management",
+			"name": "Management",
+			"school": "School of Management and Entrepreneurship",
+			"department": "School of Management and Entrepreneurship",
+			"philosophy": "The Minor in Management is open to undergraduate students in their third and fourth years, and is built on the School's courses that are offered as University-Wide Electives. Rather than prescribing a fixed sequence, it allows students to accumulate 18 credits across operations, analytics, marketing, organisational behaviour, finance, strategy and sustainability. A minimum GPA must be maintained across all School of Management and Entrepreneurship courses taken.",
+			"why": [
+				"Foundational skills in management thinking across analytics, marketing, finance and organisational behaviour.",
+				"Interdisciplinary advantage for engineering, science and humanities students who will lead teams, launch ventures or work at the interface of technology and business.",
+				"Career and higher-study prospects in consulting, product management, analytics, finance and entrepreneurship, and a base for postgraduate management study."
+			],
+			"glance": [
+				["Total credits", "18 credits"],
+				["Open to", "Undergraduate students in their 3rd and 4th year"],
+				["Eligible courses", "All courses offered by the School of Management and Entrepreneurship that are open as University-Wide Electives"],
+				["GPA requirement", "A GPA above 6.5 must be maintained across all School of Management and Entrepreneurship courses for the minor to be granted"]
+			],
+			"sections": [
+				{
+					"title": "Courses open as University-Wide Electives, Monsoon 2026 (tentative)",
+					"columns": ["Course Code", "Course Title", "Pre-requisite", "Credits"],
+					"rows": [
+						["DOM307", "Supply Chain Modelling and Simulation", "ISM101 or an equivalent course in Operations Management, and DOM104 / MAT101", "2"],
+						["DOM207", "Introduction to Data Science", "Basic statistics and mathematics; no previous programming experience required", "4"],
+						["DOM304", "Contemporary Business Analytics", "None", "3"],
+						["MEC301", "Advanced Managerial Economics", "DOM104 or MAT101", "3"],
+						["MKT402", "Integrated Marketing Communication", "MKT202 / MKT1001", "3"],
+						["MKT409", "Social Media Marketing", "MKT202 / MKT1001", "3"],
+						["MKT304", "Entrepreneurial Marketing", "MKT202 / MKT1001", "3"],
+						["MKT404", "Retail Management", "MKT202 / MKT1001", "3"],
+						["MKT408", "Brand Management", "MKT202 / MKT1001", "3"],
+						["OHM303", "Recruitment and Selection", "OHM103", "3"],
+						["OHM307", "Work and the Life Span", "OHM1001 / OHM103", "3"],
+						["OHM401", "Group Dynamics for Teams", "None", "3"],
+						["MGT211", "Environmental Sustainability and Industries", "None", "3"],
+						["MGT306", "Navigating Marketing Laws", "None", "3"],
+						["MGT402", "Digital Media & Management", "None", "3"],
+						["STM205", "Strategy for Sustainability", "None", "3"],
+						["FAC211", "Strategic Business Finance", "FAC202 or FAC208", "3"],
+						["FAC410", "Options, Futures & Derivatives", "FAC202 or FAC208", "3"],
+						["MEC405 / MEC4005", "Mobility and Transport Systems: Economy, Sustainability, and Policy Perspectives", "MEC1001 / MEC103 / ECO101 / ECO1001", "3"]
+					]
+				},
+				{
+					"title": "Swayam courses that may be counted, Monsoon 2026",
+					"columns": ["Swayam Course", "Professor", "Institute", "Weeks", "Condition"],
+					"rows": [
+						["Principles of Management", "Prof. Vishal Kumar Laheri", "BHU", "12", "Students who have done OHM103 cannot take this course"],
+						["E-Business", "Prof. Mamata Jenamani", "IIT Kharagpur", "12", "Open to all students"],
+						["Marketing Management", "Prof. Ashis Mishra", "IIMB", "8", "Students who have done MKT202 or MKT1001 cannot take this course"]
+					]
+				}
+			],
+			"notes": [
+				"MKT202 / MKT1001 is a pre-requisite for all marketing courses.",
+				"No BMS core courses are open as University-Wide Electives in the Monsoon semester.",
+				"Swayam courses are not recognised as Major Electives, but can be taken towards minor credits by non-BMS students.",
+				"A maximum of 6 credits may be taken through Swayam and counted towards the minor.",
+				"No more than 2 Swayam courses may be taken per semester."
+			]
+		},
+		{
+			"id": "biotechnology",
+			"name": "Biotechnology",
+			"school": "School of Natural Sciences",
+			"department": "Department of Life Sciences",
+			"philosophy": "The Department of Life Sciences offers a Minor in Biotechnology to students pursuing majors across the University. Four compulsory courses establish cell biology, microbiology, biochemistry and molecular biology, and students then choose optional courses from the B.Sc. (Research) Biotechnology curriculum. Entry is limited and competitive.",
+			"why": [
+				"Foundational skills in the molecular and cellular basis of life, and in the laboratory reasoning that supports biological research.",
+				"Interdisciplinary advantage at the interfaces where much current work sits — bioinformatics, biomedical devices, bioprocess engineering and environmental biotechnology.",
+				"Career and higher-study prospects in biotechnology, pharmaceuticals, healthcare and research, and a base for postgraduate study in the life sciences."
+			],
+			"glance": [
+				["Total credits", "21 credits minimum (12 compulsory + at least 9 optional)"],
+				["Open to", "Students pursuing major degrees across the University"],
+				["Selection", "Based on overall CGPA, and/or an interview by the departmental committee"],
+				["Additional condition", "Students who did not take Biology at Grade 12 must complete BIO113 Essentials of Cell Biology with a minimum B grade to be eligible"]
+			],
+			"sections": [
+				{
+					"title": "Compulsory courses (all four to be completed)",
+					"columns": ["Course Code", "Course Name", "Credits"],
+					"rows": [
+						["BIO 210", "Cell Biology", "3"],
+						["BIO 202", "Microbiology", "3"],
+						["BIO 204", "Biochemistry", "3"],
+						["BIO 206", "Fundamentals of Molecular Biology", "3"],
+						["", "Total", "12"]
+					]
+				},
+				{
+					"title": "Optional courses",
+					"columns": ["Requirement", "Detail"],
+					"rows": [
+						["Minimum three optional courses (at least 9 credits)", "All courses offered to B.Sc. (Research) in Biotechnology major students in Semesters II, III, IV, V and VI may be taken as optional courses for the minor. See the B.Sc. (Research) Biotechnology curriculum for details."]
+					]
+				}
+			]
+		},
+		{
+			"id": "chemistry",
+			"name": "Chemistry",
+			"school": "School of Natural Sciences",
+			"department": "Department of Chemistry",
+			"philosophy": "Undergraduate students who are not majoring in Chemistry may take a Minor in Chemistry. The structure moves in three stages: an introductory category covering chemical principles, equilibrium and physical methods; a foundation category spanning organic, inorganic and physical chemistry; and a single in-depth elective chosen freely from the Department's catalogue. It is the most credit-intensive of the science minors.",
+			"why": [
+				"Foundational skills in chemical principles, structure, bonding, reactivity and the instrumental methods used to study them.",
+				"Interdisciplinary advantage in materials, energy, environment and the life sciences, where chemical understanding is often the limiting factor.",
+				"Career and higher-study prospects in chemical, pharmaceutical and materials industries, and a base for postgraduate study in chemistry and allied fields."
+			],
+			"glance": [
+				["Total credits", "27 credits = 24 compulsory (12 Introductory, Category A + 12 Foundation, Category B) + 3 in-depth elective (Category C)"],
+				["Open to", "Undergraduate students not majoring in Chemistry"],
+				["Condition", "A Category B course cannot count towards both Major and Minor requirements. For example, Biotechnology students cannot count CHY122 towards the minor, as it is compulsory in their major."]
+			],
+			"sections": [
+				{
+					"title": "Course requirements",
+					"columns": ["Category", "Course", "Course Title", "L:T:P", "Credits"],
+					"rows": [
+						["", "", "Category A — Introductory (12 credits, all to be taken)", "", ""],
+						["A", "CHY111", "Chemical Principles", "3:1:1", "5"],
+						["A", "CHY211", "Chemical Equilibrium", "3:0:1", "4"],
+						["A", "CHY214", "Physical Methods in Chemistry", "2:0:1", "3"],
+						["", "", "Category B — Foundation (12 credits to be chosen from the following)", "", ""],
+						["B", "CHY122", "Basic Organic Chemistry-I", "2:1:1", "4"],
+						["B", "CHY144", "Inorganic Chemistry-I", "3:0:1", "4"],
+						["B", "CHY221", "Basic Organic Chemistry-II", "2:1:1", "4"],
+						["B", "CHY222", "Chemistry of Carbonyl Compounds", "3:0:1", "4"],
+						["B", "CHY242", "Coordination Chemistry", "3:0:1", "4"],
+						["B", "CHY245", "Inorganic Chemistry-II", "2:1:1", "4"],
+						["B", "CHY311", "Chemical Binding", "3:1:0", "4"],
+						["B", "CHY313", "Molecular Spectroscopy", "3:1:0", "4"],
+						["", "", "Category C — In-depth / elective (3 credits)", "", ""],
+						["C", "CHY —", "Any course from the Chemistry course catalogue", "3:0:0", "3"],
+						["", "", "Total", "", "27"]
+					]
+				}
+			]
+		},
+		{
+			"id": "mathematics",
+			"name": "Mathematics",
+			"school": "School of Natural Sciences",
+			"department": "Department of Mathematics",
+			"philosophy": "Undergraduate students who are not majoring in Mathematics may take a Minor in Mathematics. Beyond the pleasure of the subject itself, the minor serves two distinct purposes: acquiring the academic background for higher studies in mathematics, and acquiring the modelling and computational skills needed to apply mathematics in other disciplines or in industry. Credits are earned as University-Wide Electives from courses offered by the Department.",
+			"why": [
+				"Foundational skills in analysis, algebra, probability and numerical methods, and in rigorous proof.",
+				"Interdisciplinary advantage in modelling and computation — the shared language of the sciences, engineering, economics and data-driven work.",
+				"Career and higher-study prospects in analytics, quantitative finance, computing and research, and a base for postgraduate study in mathematics."
+			],
+			"glance": [
+				["Total credits", "20 credits minimum, taken as University-Wide Electives from courses offered by the Department of Mathematics"],
+				["Open to", "Undergraduate students not majoring in Mathematics"],
+				["Guidance", "The Undergraduate Advisor for Mathematics helps students work out an appropriate choice of courses given their interests and background"]
+			],
+			"sections": [
+				{
+					"title": "Credit distribution",
+					"columns": ["Requirement", "Detail"],
+					"rows": [
+						["At least 8 credits", "From the Group 1 courses listed below."],
+						["At least 8 credits", "From all other MAT courses numbered 200 or above that are available as University-Wide Electives and not listed in Group 1."],
+						["Balance to 20 credits", "From any courses satisfying the two requirements above."]
+					]
+				},
+				{
+					"title": "Group 1 courses",
+					"columns": ["Course Code", "Course Title", "Credits"],
+					"rows": [
+						["MAT 101", "Calculus I", "4"],
+						["MAT 102", "Calculus II", "4"],
+						["MAT 132", "Vector Calculus and Geometry", "4"],
+						["MAT 160", "Linear Algebra I", "4"],
+						["MAT 184", "Probability", "4"],
+						["MAT 220", "Real Analysis I", "4"],
+						["MAT 230", "Ordinary Differential Equations", "4"],
+						["MAT 240", "Algebra I", "4"],
+						["MAT 280", "Numerical Analysis", "4"],
+						["MAT 284", "Probability & Statistics", "4"]
+					]
+				}
+			],
+			"notes": [
+				"A course cannot count towards both Major and Minor requirements. For example, Economics students cannot count MAT 101 towards the minor because it is compulsory in their major.",
+				"Certain course combinations are not allowed. If a student has already credited a course with significant overlap with a MAT course, or a more advanced course than that MAT course, the MAT course will not earn minor credit. A list of banned combinations is published before each semester's course registration."
+			]
+		},
+		{
+			"id": "physics",
+			"name": "Physics",
+			"school": "School of Natural Sciences",
+			"department": "Department of Physics",
+			"philosophy": "A Minor in Physics has two aspects: it ensures a student is well versed in the central core of physics, and it allows the student to pursue more advanced aspects of the subject according to their own interests. The minor equips students to engage with challenging multi-disciplinary problems. It is equally valuable for students seeking employment in industry or in finance, where the physicist's skill in building quantitative models of complex situations is welcomed.",
+			"why": [
+				"Foundational skills in mechanics, thermal physics, quantum mechanics and experimental method.",
+				"Interdisciplinary advantage in quantitative modelling of complex systems, which transfers to engineering, computation, the life sciences and finance.",
+				"Career and higher-study prospects in research, technology and quantitative finance, and a base for postgraduate study in physics."
+			],
+			"glance": [
+				["Total credits", "22 credits minimum for an Engineering major; 28 credits minimum for a Non-Engineering major"],
+				["Open to", "Undergraduate students not majoring in Physics"],
+				["Structure", "A required sequence by semester, plus two courses drawn from three groups, with no more than one course from any group"],
+				["PHY 101 / PHY 102", "Entry condition for the Engineering-major route only. Not counted towards the minor credit total."]
+			],
+			"sections": [
+				{
+					"title": "Required courses — Engineering major (minimum 22 credits)",
+					"columns": ["Semester", "Minor Courses", "Credits"],
+					"rows": [
+						["Before entry", "PHY 101 Introduction to Physics – I (4 credits); PHY 102 Introduction to Physics – II (5 credits)", "Not counted"],
+						["Monsoon", "PHY 207 Abridged course for Minor students, 4 (3:1:0); PHY 201 Fundamentals of Thermal Physics, 4 (3:1:0)", "8"],
+						["Spring", "PHY 202 Introduction to Quantum Mechanics, 4 (3:1:0); PHY 208 Advanced Experimental Physics – I, 3 (1:0:2)", "7"],
+						["Monsoon / Spring", "Two courses from the three groups below, with no more than one course from a group", "Minimum 7"]
+					]
+				},
+				{
+					"title": "Required courses — Non-Engineering major (minimum 28 credits)",
+					"columns": ["Semester", "Minor Courses", "Credits"],
+					"rows": [
+						["Monsoon", "PHY 103 Fundamentals of Physics – I, 5 (3:1:1); PHY 201 Fundamentals of Thermal Physics, 4 (3:1:0)", "9"],
+						["Spring", "PHY 104 Fundamentals of Physics – II, 5 (3:1:1); PHY 202 Introduction to Quantum Mechanics, 4 (3:1:0); PHY 208 Advanced Experimental Physics – I, 3 (1:0:2)", "12"],
+						["Monsoon / Spring", "Two courses from the three groups below, with no more than one course from a group", "Minimum 7"]
+					]
+				},
+				{
+					"title": "Elective groups (choose two courses, no more than one from any group)",
+					"columns": ["Group", "Course Code", "Course Title", "L:T:P", "Credits"],
+					"rows": [
+						["A", "PHY 301", "Classical Mechanics", "3:1:0", "4"],
+						["A", "PHY 303", "Classical Electrodynamics", "3:1:0", "4"],
+						["A", "PHY 305", "Quantum Mechanics – I", "3:1:0", "4"],
+						["A", "PHY 307", "Electronics – II", "2:1:1", "4"],
+						["B", "PHY 302", "Statistical Physics", "3:1:0", "4"],
+						["B", "PHY 304", "Condensed Matter Physics", "3:1:0", "4"],
+						["B", "PHY 306", "Quantum Mechanics – II", "3:1:0", "4"],
+						["B", "PHY 308", "Advanced Experimental Physics – II", "1:0:2", "3"],
+						["C", "PHY 4XX / 5XX", "Physics Elective (subject to the approval of the Physics UG Advisor and the course instructor)", "3:0:0", "3"]
+					]
+				}
+			]
+		}
+	]
+}
