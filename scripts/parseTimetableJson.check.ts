@@ -85,21 +85,39 @@ assert.deepEqual(
 	const forBatch = (batches: string[]) =>
 		[...new Set(eco.filter((c) => offeredTo(c, batches)).map((c) => c.slot))].sort();
 
-	assert.deepEqual(forBatch(["ENF21"]), ["LEC1", "TUT1"]);
-	assert.deepEqual(forBatch(["ENF2YR", "ENF21"]), ["LEC1", "TUT1"]);
-	assert.deepEqual(forBatch(["ENF22"]), ["LEC2", "TUT1"]);
+	assert.deepEqual(forBatch(["ENF21"]), ["LEC1", "TUT3"]);
+	assert.deepEqual(forBatch(["ENF2YR", "ENF21"]), ["LEC1", "TUT3"]);
+	assert.deepEqual(forBatch(["ENF22"]), ["LEC2", "TUT4"]);
 	assert.deepEqual(forBatch(["ECO21"]), ["LEC1", "TUT1"]);
-	// programme only, no block given: can't be placed, so show both lectures
-	assert.deepEqual(forBatch(["ENF2YR"]), ["LEC1", "LEC2", "TUT1"]);
+	// programme only, no block given: can't be placed, so show every option
+	assert.deepEqual(forBatch(["ENF2YR"]), [
+		"LEC1", "LEC2", "TUT1", "TUT2", "TUT3", "TUT4", "TUT5", "TUT6",
+	]);
 	assert.deepEqual(forBatch(["CSD2YR"]), []);
 }
 
 // the real dump
 const real = parseTimetableJson(readFileSync("src/lib/data/tt.json", "utf8"));
-assert.equal(real.length, 1175, "one row per class meeting, 16 half-pairs merged");
+assert.equal(real.length, 1176, "one row per class meeting, half-pairs merged");
 const slots = real.map((c) => [c.courseCode, c.day, c.startTime, c.room].join("|"));
 assert.equal(new Set(slots).size, slots.length, "no course meets itself twice in a slot");
 assert.ok(real.every((c) => c.courseCode && c.day && c.startTime && c.endTime));
 assert.ok(real.some((c) => c.major.includes(",")), "shared courses list several batches");
+
+// UWEs and CCCs are repeated under every programme in the dump; they must not
+// land in anyone's batch timetable, only in search.
+{
+	const mine = real.filter((c) => offeredTo(c, ["ECE35"]));
+	assert.ok(mine.length > 0, "ECE35 still has a timetable");
+	assert.deepEqual(
+		mine.filter((c) => c.courseType === "UWE" || c.courseType === "CCC").map((c) => c.courseCode),
+		[],
+		"no UWE/CCC in a batch timetable",
+	);
+	assert.ok(
+		real.some((c) => c.courseType === "UWE") && real.some((c) => c.courseType === "CCC"),
+		"they are still in the list, addable by search",
+	);
+}
 
 console.log(`ok — ${real.length} rows from tt.json`);

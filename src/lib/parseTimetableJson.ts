@@ -28,24 +28,43 @@ export function parseTimetableJson(text: string): Course[] {
 	// the dump ships with a trailing ";"
 	const data = JSON.parse(text.trim().replace(/;\s*$/, '')) as Record<string, Record<string, Row[]>>;
 
-	const byRow = new Map<number, { row: Row; batches: Set<string>; blocks: Set<string> }>();
+	const allProgrammes = new Set<string>();
+	const byRow = new Map<
+		number,
+		{ row: Row; programmes: Set<string>; batches: Set<string>; blocks: Set<string> }
+	>();
 	for (const programmes of Object.values(data)) {
 		for (const [programme, rows] of Object.entries(programmes)) {
+			allProgrammes.add(programme);
 			for (const row of rows) {
 				let entry = byRow.get(row.rowid);
 				if (!entry) {
-					entry = { row, batches: new Set(), blocks: new Set() };
+					entry = { row, programmes: new Set(), batches: new Set(), blocks: new Set() };
 					byRow.set(row.rowid, entry);
 				}
-				entry.batches.add(programme);
+				entry.programmes.add(programme);
 				// Blocks stay listed separately as well: a row naming them is
 				// for those blocks only, not for the whole programme.
+				// The block column also carries the odd "Second half" note; a
+				// batch code always has a digit, so those drop out.
 				for (const b of expandBatchCodes(row.block ?? '')) {
+					if (!/\d/.test(b)) continue;
 					entry.batches.add(b);
 					entry.blocks.add(b);
 				}
 			}
 		}
+	}
+
+	// UWEs and CCCs are now repeated under every programme in the dump. That is
+	// "open to all", not "assigned to all" — they stay opt-in, found by search,
+	// so a row listed under most of the programmes drops its programme list.
+	// A CCC genuinely assigned to a handful of programmes still counts as theirs.
+	for (const entry of byRow.values()) {
+		const type = (entry.row.type ?? '').trim().toUpperCase();
+		const everyone =
+			(type === 'UWE' || type === 'CCC') && entry.programmes.size > allProgrammes.size / 2;
+		if (!everyone) entry.batches = new Set([...entry.programmes, ...entry.batches]);
 	}
 
 	const courses = [...byRow.values()]
