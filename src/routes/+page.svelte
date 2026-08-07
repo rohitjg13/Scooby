@@ -8,7 +8,9 @@
 		| "switch"
 		| "map"
 		| "minor"
+		| "gpa"
 		| "plus";
+
 
 	type Feature = {
 		title: string;
@@ -64,6 +66,14 @@
 			tag: "Exams",
 		},
 		{
+			title: "GPA Calculator",
+			description:
+				"Calculate your CGPA and SGPA using the grading scheme applicable to your admission year. Add courses, credits, and grades across semesters to track your academic performance.",
+			href: "/gpa",
+			icon: "gpa",
+			tag: "Academics",
+		},
+		{
 			title: "Room Switch",
 			description:
 				"Want to swap hostel rooms? Post your room, browse others in your hostel, and connect over WhatsApp to sort out a mutual switch.",
@@ -109,6 +119,12 @@
 			<path d="M12 4L3 8l9 4 9-4-9-4z" />
 			<path d="M6.5 10.2V15c0 1.4 2.5 2.5 5.5 2.5s5.5-1.1 5.5-2.5v-4.8" />
 			<path d="M21 8v5" />
+		{:else if name === "gpa"}
+			<rect x="5" y="3" width="14" height="18" rx="2" />
+			<path d="M8 7h8" />
+			<path d="M8 11h2M12 11h2M16 11h0" />
+			<path d="M8 15h2M12 15h2M16 15h0" />
+			<path d="M8 18h2M12 18h2M16 18h0" />
 		{:else if name === "plus"}
 			<path d="M12 6v12M6 12h12" />
 		{/if}
