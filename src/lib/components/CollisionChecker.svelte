@@ -543,10 +543,13 @@
 		selectedCourses.update((courses) =>
 			courses.filter((c) => c.courseCode !== course.courseCode),
 		);
+		// Otherwise a re-added course would silently come back swapped
+		resetSwap(course.courseCode);
 	}
 
+	// Swapped-to sections are still "added" — compare against the effective list
 	function isSelected(course: Course): boolean {
-		return $selectedCourses.some(
+		return getEffectiveCoursesList($selectedCourses).some(
 			(c) => c.courseCode === course.courseCode,
 		);
 	}
@@ -748,8 +751,10 @@
 	}
 
 	function inTimetable(sectionCode: string): boolean {
-		return [...getEffectiveCoursesList($batchCourses), ...$selectedCourses]
-			.some((c) => c.courseCode === sectionCode);
+		return [
+			...getEffectiveCoursesList($batchCourses),
+			...getEffectiveCoursesList($selectedCourses),
+		].some((c) => c.courseCode === sectionCode);
 	}
 
 	// Sections of this course the user already has — those are fixed
@@ -1171,14 +1176,9 @@
 		});
 	});
 
-	// One entry per added section (a section can span several rows)
-	let uniqueSelected = $derived(
-		[
-			...new Map(
-				$selectedCourses.map((c) => [c.courseCode, c] as const),
-			).values(),
-		],
-	);
+	// One entry per added section (a section can span several rows), with any
+	// swap applied — same shape the batch list uses
+	let uniqueSelected = $derived(getUniqueDisplayCourses($selectedCourses));
 
 	// Track which course is showing swap dropdown
 	let showingSwapFor = $state<string | null>(null);
@@ -2039,19 +2039,62 @@
 								>({uniqueSelected.length})</span
 							>
 						</h3>
-						{#each uniqueSelected as course}
-							<div class="list-item added">
-								<div>
-									<span class="mono"
-										>{course.courseCode.split(
-											"-",
-										)[0]}{#if getComponentType(course.component)}
-											<span class="comp-label"
-												>({getComponentType(
-													course.component,
-												)})</span
-											>{/if}</span
-									>
+					<div class="courses-grid">
+						{#each uniqueSelected as { original: originalCourse, effective: course, isSwapped }}
+							{@const alternatives =
+								getAlternativeComponents(originalCourse)}
+							<div
+								class="list-item added clickable"
+								class:swapped={isSwapped}
+								onclick={() => openCourseDetails(course)}
+								role="button"
+								tabindex="0"
+								onkeydown={(e) =>
+									e.key === "Enter" && openCourseDetails(course)}
+								title="Click for details"
+							>
+								<div class="course-main-info">
+									<div class="course-header-row">
+										<span class="mono"
+											>{course.courseCode.split(
+												"-",
+											)[0]}{#if getComponentType(course.component)}
+												<span class="comp-label"
+													>({getComponentType(
+														course.component,
+													)})</span
+												>{/if}
+											<span class="info-hint">ⓘ</span></span
+										>
+										<div class="header-right-group">
+											{#if alternatives.length > 0}
+												<button
+													class="swap-btn"
+													onclick={(e) => {
+														e.stopPropagation();
+														toggleSwapDropdown(
+															originalCourse.courseCode,
+														);
+													}}
+													title="Change section ({alternatives.length} alternatives)"
+												>
+													⇄ {getSection(course)}
+												</button>
+											{:else}
+												<span class="slot-label"
+													>{getSection(course)}</span
+												>
+											{/if}
+											<button
+												class="remove-btn"
+												title="Remove this course"
+												onclick={(e) => {
+													e.stopPropagation();
+													removeCourse(originalCourse);
+												}}>×</button
+											>
+										</div>
+									</div>
 									<span class="item-name"
 										>{course.courseName}</span
 									>
@@ -2067,13 +2110,81 @@
 										<span class="muted small">{meeting}</span>
 									{/each}
 								</div>
-								<button
-									class="btn small"
-									onclick={() => removeCourse(course)}
-									>×</button
-								>
+
+								{#if showingSwapFor === originalCourse.courseCode && alternatives.length > 0}
+									<div class="swap-dropdown">
+										<div class="swap-header">
+											Change {getComponentType(
+												course.component,
+											) || "Section"}:
+										</div>
+										{#each alternatives as alt}
+											{@const conflicts = getConflicts(
+												alt,
+												getEffectiveCoursesList(
+													$batchCourses,
+												),
+												getEffectiveCoursesList(
+													$selectedCourses.filter(
+														(c) =>
+															c.courseCode !==
+															originalCourse.courseCode,
+													),
+												),
+											)}
+											<button
+												class="swap-option"
+												class:has-conflict={conflicts.length >
+													0}
+												class:is-current={alt.courseCode ===
+													course.courseCode}
+												onclick={(e) => {
+													e.stopPropagation();
+													if (
+														alt.courseCode ===
+														course.courseCode
+													)
+														return;
+													swapComponent(
+														originalCourse.courseCode,
+														alt.courseCode,
+													);
+													showingSwapFor = null;
+												}}
+												disabled={conflicts.length > 0}
+											>
+												<span class="swap-slot">
+													{getSection(alt)}
+													{#if alt.courseCode === course.courseCode}
+														<span class="current-badge"
+															>(Current)</span
+														>
+													{/if}
+												</span>
+												<span class="swap-time"
+													>{alt.day}
+													{alt.startTime}-{alt.endTime}</span
+												>
+												<span class="swap-room"
+													>{alt.room}</span
+												>
+												{#if conflicts.length > 0}
+													<span class="swap-conflict">
+														⚠ Conflicts with: {conflicts
+															.map(
+																(c) =>
+																	`${c.courseCode.split("-")[0]}${getComponentType(c.component) ? ` (${getComponentType(c.component)})` : ""}`,
+															)
+															.join(", ")}
+													</span>
+												{/if}
+											</button>
+										{/each}
+									</div>
+								{/if}
 							</div>
 						{/each}
+						</div>
 					</div>
 				{/if}
 			</section>
@@ -3346,9 +3457,6 @@
 	}
 
 	.list-item.added {
-		flex-direction: row;
-		justify-content: space-between;
-		align-items: flex-start;
 		border-left: 2px solid #333;
 	}
 
