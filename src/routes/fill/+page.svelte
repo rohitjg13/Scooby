@@ -3,12 +3,14 @@
 
 	const FORM = "https://forms.gle/t6xgujuZysUrYYWRA";
 
-	// ponytail: client-side redirect, not a server 302 — WhatsApp/X scrapers
-	// don't run JS, so they stay here and read our OG card instead of Google's.
-	$effect(() => {
-		location.replace(FORM);
-	});
+	// ponytail: meta refresh, not a server 302 — WhatsApp/X scrapers don't run
+	// JS or follow refreshes, so they stay and read our OG card, while browsers
+	// leave during HTML parse (before CSS, fonts or hydration land).
 </script>
+
+<svelte:head>
+	<meta http-equiv="refresh" content="0; url={FORM}" />
+</svelte:head>
 
 <Seo
 	title="Please fill this form"
@@ -16,24 +18,4 @@
 	image="fill"
 />
 
-<main>
-	<p>Redirecting to the form…</p>
-	<p><a href={FORM}>Tap here if nothing happens</a></p>
-</main>
-
-<style>
-	main {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 0.75rem;
-		min-height: 60vh;
-		text-align: center;
-		color: var(--text-secondary);
-	}
-
-	a {
-		color: var(--text);
-	}
-</style>
+<a href={FORM}>Continue to the form</a>
