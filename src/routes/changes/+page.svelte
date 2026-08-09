@@ -63,7 +63,7 @@
 <Seo
 	title="Timetable Changes"
 	description="Every change the university has made to the Monsoon 2026 timetable, version by version — what moved, when, and from what to what."
-	image="default"
+	image="changes"
 />
 
 <main>
