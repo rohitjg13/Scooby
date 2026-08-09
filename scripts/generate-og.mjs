@@ -29,6 +29,8 @@ const ICONS = {
 	// revision history: a clock with a rewind arrow
 	changes: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 3.5V9h5.5"/><path d="M12 7.5V12l3 2"/>',
 	minors: '<path d="M12 3.5 22 8.5l-10 5-10-5 10-5z"/><path d="M6 11v5.5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V11"/>',
+	// form: a sheet with lines and a pencil
+	form: '<path d="M5 3.5h9l5 5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M14 3.5v5h5"/><path d="M7.5 12.5h6M7.5 16.5h4"/>',
 };
 
 const PAGES = [
@@ -39,6 +41,7 @@ const PAGES = [
 	{ slug: "room-switch", title: "Room Switch", subtitle: "Find someone in your hostel to swap rooms with", icon: "switch" },
 	{ slug: "maps", title: "Campus Map", subtitle: "Every hostel, block & mess — with directions", icon: "map" },
 	{ slug: "changes", title: "Timetable Changes", subtitle: "Every timetable revision, version by version", icon: "changes" },
+	{ slug: "fill", title: "Please fill this form", subtitle: "It only takes a minute", icon: "form" },
 	{ slug: "minors", title: "Minors", subtitle: "Every minor on offer — courses, credits & prerequisites", icon: "minors" },
 ];
 
@@ -46,6 +49,8 @@ const esc = (s) =>
 	s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 function buildSvg({ title, subtitle, icon }) {
+	// ponytail: rough width fit — shrink long titles so they clear the icon box.
+	const titleSize = Math.min(98, Math.round(830 / (title.length * 0.55)) * 1);
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
     <radialGradient id="glow" cx="50%" cy="10%" r="65%">
@@ -64,7 +69,7 @@ function buildSvg({ title, subtitle, icon }) {
     ${ICONS[icon]}
   </g>
 
-  <text x="92" y="362" font-family="${FONT}" font-size="98" font-weight="700" letter-spacing="-3" fill="#ffffff">${esc(title)}</text>
+  <text x="92" y="362" font-family="${FONT}" font-size="${titleSize}" font-weight="700" letter-spacing="-3" fill="#ffffff">${esc(title)}</text>
   <text x="96" y="432" font-family="${FONT}" font-size="40" fill="#a6a6a6">${esc(subtitle)}</text>
   <text x="96" y="550" font-family="${FONT}" font-size="26" fill="#5f5f5f">scooby &#183; one-stop university app</text>
 </svg>`;
