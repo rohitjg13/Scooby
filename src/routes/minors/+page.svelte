@@ -228,7 +228,7 @@
 <Seo
 	title="Minors"
 	description="Every undergraduate minor on offer — the courses, the credits and the prerequisites, for both the new and old curriculum."
-	image="default"
+	image="minors"
 />
 
 {#if selected}

@@ -28,6 +28,7 @@ const ICONS = {
 	map: '<path d="M12 21s-6.5-5.2-6.5-10a6.5 6.5 0 0 1 13 0c0 4.8-6.5 10-6.5 10z"/><circle cx="12" cy="11" r="2.5"/>',
 	// revision history: a clock with a rewind arrow
 	changes: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 3.5V9h5.5"/><path d="M12 7.5V12l3 2"/>',
+	minors: '<path d="M12 3.5 22 8.5l-10 5-10-5 10-5z"/><path d="M6 11v5.5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V11"/>',
 };
 
 const PAGES = [
@@ -38,6 +39,7 @@ const PAGES = [
 	{ slug: "room-switch", title: "Room Switch", subtitle: "Find someone in your hostel to swap rooms with", icon: "switch" },
 	{ slug: "maps", title: "Campus Map", subtitle: "Every hostel, block & mess — with directions", icon: "map" },
 	{ slug: "changes", title: "Timetable Changes", subtitle: "Every timetable revision, version by version", icon: "changes" },
+	{ slug: "minors", title: "Minors", subtitle: "Every minor on offer — courses, credits & prerequisites", icon: "minors" },
 ];
 
 const esc = (s) =>
