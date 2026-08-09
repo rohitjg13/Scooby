@@ -8,6 +8,7 @@
 		| "switch"
 		| "map"
 		| "minor"
+		| "history"
 		| "plus";
 
 	type Feature = {
@@ -26,6 +27,14 @@
 				"Load your batch timetable, add UWE, CCC or major electives, and instantly spot clashes. Export as an image or to your calendar.",
 			href: "/collision-checker",
 			icon: "calendar",
+			tag: "Timetable",
+		},
+		{
+			title: "Timetable Changes",
+			description:
+				"Every revision the university has sent out — which classes moved, when, and from what to what.",
+			href: "/changes",
+			icon: "history",
 			tag: "Timetable",
 		},
 		// {
@@ -109,6 +118,10 @@
 			<path d="M12 4L3 8l9 4 9-4-9-4z" />
 			<path d="M6.5 10.2V15c0 1.4 2.5 2.5 5.5 2.5s5.5-1.1 5.5-2.5v-4.8" />
 			<path d="M21 8v5" />
+		{:else if name === "history"}
+			<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1" />
+			<path d="M3 3.5V9h5.5" />
+			<path d="M12 7.5V12l3 2" />
 		{:else if name === "plus"}
 			<path d="M12 6v12M6 12h12" />
 		{/if}
