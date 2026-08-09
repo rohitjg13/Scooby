@@ -1636,6 +1636,12 @@
 						onclick={() => ((listSearch = ""), (showCCCList = true))}
 						title="View all CCC courses">CCC List</button
 					>
+					<a
+						href="/changes"
+						class="btn secondary"
+						title="What the university has changed since the first timetable"
+						>Revisions</a
+					>
 					<button class="btn" onclick={reset}>Reset</button>
 					<button
 						class="btn keyboard-help-btn"
