@@ -132,7 +132,7 @@
 				class="input search"
 				type="search"
 				bind:value={query}
-				placeholder="Filter by course code, room, faculty…"
+				placeholder="Search by course code, course name, faculty..."
 			/>
 		</div>
 
@@ -432,6 +432,12 @@
 		gap: 0.5rem 0.9rem;
 		padding-top: 0.6rem;
 		border-top: 1px solid var(--border);
+	}
+
+	/* A course with several changed classes reads as a list, so the rows need
+	   air between them, not just the rule. */
+	.row + .row {
+		margin-top: 0.7rem;
 	}
 
 	.kind {
