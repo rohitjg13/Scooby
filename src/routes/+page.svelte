@@ -9,6 +9,7 @@
 		| "map"
 		| "minor"
 		| "history"
+		| "gpa"
 		| "plus";
 
 	type Feature = {
@@ -73,6 +74,14 @@
 			tag: "Exams",
 		},
 		{
+			title: "GPA Calculator",
+			description:
+				"Calculate your CGPA and SGPA using the grading scheme applicable to your admission year. Add courses, credits, and grades across semesters to track your academic performance.",
+			href: "/gpa",
+			icon: "gpa",
+			tag: "Academics",
+		},
+		{
 			title: "Room Switch",
 			description:
 				"Want to swap hostel rooms? Post your room, browse others in your hostel, and connect over WhatsApp to sort out a mutual switch.",
@@ -122,6 +131,12 @@
 			<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1" />
 			<path d="M3 3.5V9h5.5" />
 			<path d="M12 7.5V12l3 2" />
+		{:else if name === "gpa"}
+			<rect x="5" y="3" width="14" height="18" rx="2" />
+			<path d="M8 7h8" />
+			<path d="M8 11h2M12 11h2M16 11h0" />
+			<path d="M8 15h2M12 15h2M16 15h0" />
+			<path d="M8 18h2M12 18h2M16 18h0" />
 		{:else if name === "plus"}
 			<path d="M12 6v12M6 12h12" />
 		{/if}
