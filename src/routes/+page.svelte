@@ -55,16 +55,14 @@
 			tag: "Campus",
 			external: true,
 		},
-		// Hidden from the home grid while the course codes are still being
-		// filled in. The /minors route stays live and reachable by direct link.
-		// {
-		// 	title: "Minors",
-		// 	description:
-		// 		"Every undergraduate minor on offer — core courses, elective baskets, credits and eligibility, for the new and old curriculum.",
-		// 	href: "/minors",
-		// 	icon: "minor",
-		// 	tag: "Academics",
-		// },
+		{
+			title: "Minors",
+			description:
+				"Every undergraduate minor on offer — core courses, elective baskets, credits and eligibility, for the new and old curriculum.",
+			href: "/minors",
+			icon: "minor",
+			tag: "Academics",
+		},
 		{
 			title: "Exam Timetable",
 			description:

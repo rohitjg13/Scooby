@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Seo from '$lib/components/Seo.svelte';
 	import type { SemesterEntry, CourseEntry, Cohort } from '$lib/gpa/types';
 	import {
 		GRADE_POINTS,
@@ -106,12 +107,11 @@
 	}
 </script>
 
-<svelte:head>
-	<title>GPA Calculator · Scooby</title>
-	<meta
-		name="description"
-	/>
-</svelte:head>
+<Seo
+	title="GPA Calculator"
+	description="Calculate your SGPA and CGPA on the grading scale for your admission year — add courses, credits and grades semester by semester."
+	image="gpa"
+/>
 
 <div class="gpa-page">
     <a href="/" class="back">← Home</a>

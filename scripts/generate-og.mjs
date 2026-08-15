@@ -29,6 +29,8 @@ const ICONS = {
 	// revision history: a clock with a rewind arrow
 	changes: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 3.5V9h5.5"/><path d="M12 7.5V12l3 2"/>',
 	minors: '<path d="M12 3.5 22 8.5l-10 5-10-5 10-5z"/><path d="M6 11v5.5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V11"/>',
+	// gpa: a gradesheet with rows of marks
+	gpa: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 11h2M12 11h2"/><path d="M8 15h2M12 15h2"/><path d="M8 18h2M12 18h2"/>',
 	// form: a sheet with lines and a pencil
 	form: '<path d="M5 3.5h9l5 5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M14 3.5v5h5"/><path d="M7.5 12.5h6M7.5 16.5h4"/>',
 };
@@ -42,6 +44,7 @@ const PAGES = [
 	{ slug: "maps", title: "Campus Map", subtitle: "Every hostel, block & mess — with directions", icon: "map" },
 	{ slug: "changes", title: "Timetable Changes", subtitle: "Every timetable revision, version by version", icon: "changes" },
 	{ slug: "fill", title: "Please fill this form", subtitle: "It only takes a minute", icon: "form" },
+	{ slug: "gpa", title: "GPA Calculator", subtitle: "Work out your SGPA & CGPA, semester by semester", icon: "gpa" },
 	{ slug: "minors", title: "Minors", subtitle: "Every minor on offer — courses, credits & prerequisites", icon: "minors" },
 ];
 
