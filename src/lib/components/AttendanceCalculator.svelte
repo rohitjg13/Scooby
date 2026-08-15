@@ -100,13 +100,16 @@
 
 <div class="calc-wrap">
 	<!-- Header -->
-	<header class="header">
-		<div class="header-left">
-			<a href="/" class="btn btn-sm">← Home</a>
-			<h1>Attendance Calculator</h1>
-		</div>
+	<header class="calc-head">
+		<a href="/" class="back">← Home</a>
+		<h1>Attendance Calculator</h1>
+		<p class="sub">
+			Track your LEC, TUT and PRAC hours per course — see where you stand, how many
+			classes you can still skip, and how many you need to claw back to target.
+		</p>
+	</header>
 
-		<div class="header-right">
+	<div class="toolbar">
 			<!-- Target % Picker -->
 			<div class="target-picker-wrap" use:closeOnOutsideClick>
 				<button
@@ -162,8 +165,7 @@
 				</svg>
 				Add Course
 			</button>
-		</div>
-	</header>
+	</div>
 
 	<!-- Cards Grid -->
 	<div class="cards-grid">
@@ -288,40 +290,52 @@
 <style>
 	/* ── Layout ──────────────────────────────────── */
 	.calc-wrap {
+		flex: 1;
 		width: 100%;
 		max-width: 1080px;
 		margin: 0 auto;
-		min-height: 100vh;
+		padding: 4rem 1.5rem 3rem;
 	}
 
 	/* ── Header ──────────────────────────────────── */
-	.header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-		padding: 1rem 1.5rem;
-		border-bottom: 1px solid var(--border);
-		flex-wrap: wrap;
+	.calc-head {
+		margin-bottom: 2rem;
 	}
 
-	.header-left {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
+	.back {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+		text-decoration: none;
 	}
 
-	.header-left h1 {
-		font-size: 1.1rem;
-		font-weight: 500;
-		letter-spacing: -0.02em;
+	.back:hover {
+		color: var(--text);
 	}
 
-	.header-right {
+	.calc-head h1 {
+		margin-top: 1rem;
+		font-size: clamp(2rem, 7vw, 2.6rem);
+		font-weight: 700;
+		letter-spacing: -0.03em;
+	}
+
+	.sub {
+		margin-top: 0.75rem;
+		max-width: 52ch;
+		color: var(--text-secondary);
+		line-height: 1.5;
+		font-size: 0.95rem;
+	}
+
+	/* Controls sit under the header, right-aligned above the card grid */
+	.toolbar {
 		display: flex;
 		align-items: center;
+		justify-content: flex-end;
 		gap: 0.5rem;
 		flex-wrap: wrap;
+		margin-bottom: 1.25rem;
 	}
 
 	.icon-sm {
@@ -426,12 +440,11 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
 		gap: 1.25rem;
-		padding: 1.5rem;
 	}
 
 	@media (max-width: 480px) {
 		.cards-grid { grid-template-columns: 1fr; }
-		.header { padding: 0.75rem 1rem; }
+		.calc-wrap { padding: 3rem 1rem 2rem; }
 	}
 
 	/* ── Course Card ─────────────────────────────── */
