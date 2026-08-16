@@ -1,120 +1,64 @@
 import * as XLSX from 'xlsx';
 import type { Course } from './types';
+import { expandBatchCodes, minutesToTime, timeToMinutes } from './types';
 
+// Most time cells format as "10:10 AM", a few as 24h "13:00:00". One shape out.
+const clock = (raw: string) => (raw ? minutesToTime(timeToMinutes(raw)) : '');
+
+// The Monsoon 2026 sheet: one row per class meeting, columns
+//   Course Code | Course Title | School | Department | Major for Programme |
+//   Course Type | Open as UWE | Component | Section | Major Elective for
+//   Programmes | Student Block | Term | Day | Start Time | End Time | Room |
+//   Instructor(s)
 export function parseExcelFile(buffer: ArrayBuffer): Course[] {
     const workbook = XLSX.read(buffer, { type: 'array' });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    // raw:false so the time columns come back as "10:10 AM", not 0.4236…
+    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(worksheet, { raw: false });
 
-    // Convert to JSON with headers
-    const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet);
+    return rows
+        .map((row) => {
+            const get = (key: string) => (row[key] ?? '').toString().trim();
 
-    const courses: Course[] = jsonData.map((row, index) => {
-        // Try to match various possible header names
-        const getValue = (keys: string[]): string => {
-            for (const key of keys) {
-                const found = Object.keys(row).find(k =>
-                    k.toLowerCase().replace(/[\s._-]/g, '').includes(key.toLowerCase().replace(/[\s._-]/g, ''))
-                );
-                if (found && row[found] !== undefined && row[found] !== null) {
-                    return String(row[found]).trim();
-                }
-            }
-            return '';
-        };
+            // Who the row is for: the programme it is a major requirement of,
+            // the programmes it is a major elective for, and any student blocks
+            // it is split across. UWEs and CCCs name none of these — open to
+            // all, found by search, so they stay opt-in.
+            const blocks = expandBatchCodes(get('Student Block')).filter((b) => /\d/.test(b));
+            const major = [
+                ...new Set([
+                    ...expandBatchCodes(get('Major for Programme')),
+                    ...expandBatchCodes(get('Major Elective for Programmes')),
+                    ...blocks
+                ])
+            ];
 
-        const getNumericValue = (keys: string[]): number => {
-            const val = getValue(keys);
-            const parsed = parseFloat(val);
-            return isNaN(parsed) ? 0 : parsed;
-        };
+            const section = get('Section');
+            const code = get('Course Code');
+            const term = get('Term');
 
-        return {
-            sno: index + 1,
-            courseCode: getValue(['coursecode', 'code', 'course_code', 'coursenumber']),
-            courseName: getValue(['coursename', 'name', 'course_name', 'title', 'coursetitle']),
-            credits: getNumericValue(['credits', 'credit', 'cr']),
-            faculty: getValue(['faculty', 'instructor', 'teacher', 'professor', 'facultyname']),
-            slot: getValue(['slot', 'slots', 'timeslot', 'time_slot']),
-            room: getValue(['room', 'venue', 'classroom', 'location', 'roomno']),
-            major: getValue(['major', 'batch', 'batches', 'program', 'department', 'dept'])
-        };
-    }).filter(course => course.courseCode || course.courseName); // Filter out empty rows
-
-    return courses;
-}
-
-export function parseCSVFile(text: string): Course[] {
-    const lines = text.split('\n').filter(line => line.trim());
-    if (lines.length === 0) return [];
-
-    // Parse headers
-    const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().replace(/[\s._-]/g, ''));
-
-    const findHeaderIndex = (keys: string[]): number => {
-        for (const key of keys) {
-            const index = headers.findIndex(h => h.includes(key.toLowerCase().replace(/[\s._-]/g, '')));
-            if (index !== -1) return index;
-        }
-        return -1;
-    };
-
-    const courseCodeIdx = findHeaderIndex(['coursecode', 'code']);
-    const courseNameIdx = findHeaderIndex(['coursename', 'name', 'title']);
-    const creditsIdx = findHeaderIndex(['credits', 'credit']);
-    const facultyIdx = findHeaderIndex(['faculty', 'instructor', 'teacher']);
-    const slotIdx = findHeaderIndex(['slot', 'slots', 'timeslot']);
-    const roomIdx = findHeaderIndex(['room', 'venue', 'classroom']);
-    const majorIdx = findHeaderIndex(['major', 'batch', 'batches']);
-
-    const courses: Course[] = [];
-
-    for (let i = 1; i < lines.length; i++) {
-        const values = parseCSVLine(lines[i]);
-        if (values.length === 0) continue;
-
-        const course: Course = {
-            sno: i,
-            courseCode: courseCodeIdx >= 0 ? (values[courseCodeIdx] || '').trim() : '',
-            courseName: courseNameIdx >= 0 ? (values[courseNameIdx] || '').trim() : '',
-            credits: creditsIdx >= 0 ? parseFloat(values[creditsIdx]) || 0 : 0,
-            faculty: facultyIdx >= 0 ? (values[facultyIdx] || '').trim() : '',
-            slot: slotIdx >= 0 ? (values[slotIdx] || '').trim() : '',
-            room: roomIdx >= 0 ? (values[roomIdx] || '').trim() : '',
-            major: majorIdx >= 0 ? (values[majorIdx] || '').trim() : ''
-        };
-
-        if (course.courseCode || course.courseName) {
-            courses.push(course);
-        }
-    }
-
-    return courses;
-}
-
-function parseCSVLine(line: string): string[] {
-    const result: string[] = [];
-    let current = '';
-    let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-
-        if (char === '"') {
-            if (inQuotes && line[i + 1] === '"') {
-                current += '"';
-                i++;
-            } else {
-                inQuotes = !inQuotes;
-            }
-        } else if (char === ',' && !inQuotes) {
-            result.push(current);
-            current = '';
-        } else {
-            current += char;
-        }
-    }
-    result.push(current);
-
-    return result;
+            return {
+                sno: 0,
+                courseCode: section ? `${code}-${section}` : code,
+                courseName: get('Course Title'),
+                // ponytail: the sheet has no credit hours column
+                credits: 0,
+                faculty: get('Instructor(s)'),
+                slot: section,
+                room: get('Room'),
+                major: major.join(', '),
+                blocks: blocks.join(', '),
+                day: get('Day'),
+                startTime: clock(get('Start Time')),
+                endTime: clock(get('End Time')),
+                courseType: get('Course Type'),
+                component: get('Component'),
+                openAsUWE: get('Open as UWE').toLowerCase() === 'yes',
+                // "Both half" already covers the whole semester — one class in
+                // the slot all term, not two halves to reconcile.
+                term: term === 'Both half' ? 'Full semester' : term
+            };
+        })
+        .filter((course) => course.courseCode && course.courseCode !== '-')
+        .map((course, index) => ({ ...course, sno: index + 1 }));
 }
