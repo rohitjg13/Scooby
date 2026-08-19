@@ -10,7 +10,6 @@
 		| "minor"
 		| "history"
 		| "gpa"
-		| "attendance"
 		| "plus";
 
 	type Feature = {
@@ -81,14 +80,6 @@
 			tag: "Academics",
 		},
 		{
-			title: "Attendance Calculator",
-			description:
-				"Track your LEC, TUT and PRAC attendance — see how many classes you can still skip, or how many you need to claw back to 75%.",
-			href: "/attendance-calculator",
-			icon: "attendance",
-			tag: "Academics",
-		},
-		{
 			title: "Room Switch",
 			description:
 				"Want to swap hostel rooms? Post your room, browse others in your hostel, and connect over WhatsApp to sort out a mutual switch.",
@@ -115,9 +106,6 @@
 			<path d="M3 9.5h18" />
 			<path d="M8 2.5v4M16 2.5v4" />
 			<path d="M7.5 13h2M11 13h2M14.5 13h2M7.5 16.5h2M11 16.5h2" />
-		{:else if name === "attendance"}
-			<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-			<polyline points="22 4 12 14.01 9 11.01" />
 		{:else if name === "exam"}
 			<path d="M6 4a1 1 0 0 1 1-1h6l5 5v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4z" />
 			<path d="M13 3v5h5" />
