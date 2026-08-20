@@ -9,7 +9,8 @@
 		| "map"
 		| "minor"
 		| "history"
-		| "plus";
+		| "attendance"
+		| "gpa";
 
 	type Feature = {
 		title: string;
@@ -24,7 +25,7 @@
 		{
 			title: "Timetable Planner",
 			description:
-				"Load your batch timetable, add UWE, CCC or major electives, and instantly spot clashes. Export as an image or to your calendar.",
+				"Pick your batch, throw in your UWE, CCC and elective choices, and see what clashes. Exports to an image or your calendar.",
 			href: "/collision-checker",
 			icon: "calendar",
 			tag: "Timetable",
@@ -32,7 +33,7 @@
 		{
 			title: "Timetable Changes",
 			description:
-				"Every revision the university has sent out — which classes moved, when, and from what to what.",
+				"Every timetable revision the university has pushed out, and what actually moved.",
 			href: "/changes",
 			icon: "history",
 			tag: "Timetable",
@@ -45,39 +46,50 @@
 		// 	icon: "clubs",
 		// 	tag: "Campus",  
 		// },
-		{
-			title: "Campus Map",
-			description:
-				"Find any hostel, block, mess, court or facility on campus — tap a pin for Google Maps directions.",
-			href: "https://maps.rohitjg.com",
-			icon: "map",
-			tag: "Campus",
-			external: true,
-		},
+		// Campus Map lives on its own site, so it gets the banner above the grid
+		// rather than a card in it.
 		{
 			title: "Minors",
 			description:
-				"Every undergraduate minor on offer — core courses, elective baskets, credits and eligibility, for the new and old curriculum.",
+				"All the undergrad minors, with their core courses, elective baskets and credit requirements. Old curriculum too.",
 			href: "/minors",
 			icon: "minor",
 			tag: "Academics",
 		},
+		// No exam schedule is live — /exam shows the empty state.
+		// {
+		// 	title: "Exam Timetable",
+		// 	description:
+		// 		"Search your courses and build your personal mid-sem or end-sem exam schedule. Export it as an image or to your calendar.",
+		// 	href: "/exam",
+		// 	icon: "exam",
+		// 	tag: "Exams",
+		// },
 		{
-			title: "Exam Timetable",
+			title: "GPA Calculator",
 			description:
-				"Search your courses and build your personal mid-sem or end-sem exam schedule. Export it as an image or to your calendar.",
-			href: "/exam",
-			icon: "exam",
-			tag: "Exams",
+				"SGPA and CGPA on whichever grading scale your admission year falls under. Add courses semester by semester.",
+			href: "/gpa",
+			icon: "gpa",
+			tag: "Academics",
 		},
 		{
-			title: "Room Switch",
+			title: "Attendance Calculator",
 			description:
-				"Want to swap hostel rooms? Post your room, browse others in your hostel, and connect over WhatsApp to sort out a mutual switch.",
-			href: "/room-switch",
-			icon: "switch",
-			tag: "Hostel",
+				"How far behind you are, and how many classes you can still afford to skip.",
+			href: "/attendance-calculator",
+			icon: "attendance",
+			tag: "Academics",
 		},
+		// Closed until room allocation happens again — /room-switch shows the empty state.
+		// {
+		// 	title: "Room Switch",
+		// 	description:
+		// 		"Want to swap hostel rooms? Post your room, browse others in your hostel, and connect over WhatsApp to sort out a mutual switch.",
+		// 	href: "/room-switch",
+		// 	icon: "switch",
+		// 	tag: "Hostel",
+		// },
 	];
 </script>
 
@@ -97,6 +109,15 @@
 			<path d="M3 9.5h18" />
 			<path d="M8 2.5v4M16 2.5v4" />
 			<path d="M7.5 13h2M11 13h2M14.5 13h2M7.5 16.5h2M11 16.5h2" />
+		{:else if name === "gpa"}
+			<rect x="5" y="3" width="14" height="18" rx="2" />
+			<path d="M8 7h8" />
+			<path d="M8 11h2M12 11h2M16 11h0" />
+			<path d="M8 15h2M12 15h2M16 15h0" />
+			<path d="M8 18h2M12 18h2M16 18h0" />
+		{:else if name === "attendance"}
+			<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+			<path d="M22 4 12 14.01l-3-3" />
 		{:else if name === "exam"}
 			<path d="M6 4a1 1 0 0 1 1-1h6l5 5v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4z" />
 			<path d="M13 3v5h5" />
@@ -120,15 +141,13 @@
 			<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1" />
 			<path d="M3 3.5V9h5.5" />
 			<path d="M12 7.5V12l3 2" />
-		{:else if name === "plus"}
-			<path d="M12 6v12M6 12h12" />
 		{/if}
 	</svg>
 {/snippet}
 
 <Seo
 	title="Scooby"
-	description="Scooby is a one-stop university app — plan your timetable and spot clashes, view your exam schedule, browse campus clubs, and more."
+	description="Scooby is a one-stop university app for planning your timetable, checking your exam schedule, working out your GPA and more."
 	image="default"
 />
 
@@ -137,9 +156,32 @@
 		<p class="eyebrow">University Toolkit</p>
 		<h1>Scooby</h1>
 		<p class="tagline">
-			Everything you need to plan your semester — in one place.
+			Everything you need to plan your semester, in one place.
 		</p>
 	</header>
+
+	<a class="promo" href="https://maps.rohitjg.com" target="_blank" rel="noopener noreferrer">
+		<span class="promo-badge">{@render icon("map")}</span>
+		<span class="promo-body">
+			<span class="promo-title">Snoopy</span>
+			<span class="promo-desc">the campus map, with every block, mess and court pinned</span>
+		</span>
+		<span class="promo-cta">
+			<span class="promo-cta-label">Open</span>
+			<svg
+				class="cta-arrow"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<path d="M7 17 17 7M9 7h8v8" />
+			</svg>
+		</span>
+	</a>
 
 	<section class="grid" aria-label="Features">
 		{#each features as feature, i}
@@ -170,19 +212,6 @@
 				</span>
 			</a>
 		{/each}
-
-		<div class="card card-soon">
-			<div class="card-top">
-				<span class="card-badge">{@render icon("plus")}</span>
-			</div>
-			<div class="card-body">
-				<span class="card-tag">Soon</span>
-				<h2 class="card-title">More on the way</h2>
-				<p class="card-desc">
-					New tools for university life are in the works.
-				</p>
-			</div>
-		</div>
 	</section>
 </main>
 
@@ -196,23 +225,117 @@
 		padding: 5rem 1.5rem 3rem;
 	}
 
-	/* Soft depth glow behind the hero */
-	.home::before {
-		content: "";
-		position: absolute;
-		top: -6rem;
-		left: 50%;
-		transform: translateX(-50%);
-		width: min(560px, 90%);
-		height: 320px;
-		background: radial-gradient(
-			ellipse at center,
-			rgba(255, 255, 255, 0.06),
-			transparent 70%
-		);
-		pointer-events: none;
-		z-index: 0;
+	/* Campus map banner — a different product, so it doesn't sit in the grid */
+	.promo {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+		padding: 0.6rem 0.85rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		background: var(--bg-card);
+		color: var(--text);
+		text-decoration: none;
+		transition:
+			border-color 0.15s,
+			transform 0.15s;
 	}
+
+	.promo:hover {
+		border-color: var(--text-secondary);
+		transform: translateY(-2px);
+	}
+
+	.promo-badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: none;
+		width: 28px;
+		height: 28px;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: var(--bg-input);
+	}
+
+	.promo-badge :global(.icon) {
+		width: 15px;
+		height: 15px;
+	}
+
+	.promo-body {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+		min-width: 0;
+	}
+
+	.promo-title {
+		font-size: 0.85rem;
+		font-weight: 500;
+	}
+
+	.promo-desc {
+		font-size: 0.78rem;
+		color: var(--text-secondary);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.promo-cta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		margin-left: auto;
+		flex: none;
+		padding: 0.25rem 0.55rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		font-size: 0.72rem;
+		color: var(--text-secondary);
+	}
+
+	.promo:hover .promo-cta {
+		background: var(--text);
+		border-color: var(--text);
+		color: var(--bg);
+	}
+
+	/* On mobile the one-line title + desc ellipses away to nothing, so stack
+	   them and shrink the CTA to just the arrow. */
+	@media (max-width: 560px) {
+		.promo {
+			gap: 0.65rem;
+			padding: 0.65rem 0.75rem;
+		}
+
+		.promo-body {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.1rem;
+		}
+
+		.promo-desc {
+			white-space: normal;
+			font-size: 0.72rem;
+			line-height: 1.35;
+		}
+
+		.promo-cta {
+			padding: 0.3rem;
+			border: none;
+			color: var(--text-muted);
+		}
+
+		.promo-cta-label {
+			display: none;
+		}
+	}
+
+	/* ponytail: hero glow lives on body in app.css, every page gets it */
 
 	.hero {
 		position: relative;
@@ -259,11 +382,7 @@
 		gap: 1.25rem;
 		padding: 1.5rem;
 		min-height: 230px;
-		background: linear-gradient(
-			180deg,
-			var(--bg-card),
-			rgba(10, 10, 10, 0.4)
-		);
+		background: var(--bg-card);
 		border: 1px solid var(--border);
 		border-radius: 14px;
 		color: var(--text);
@@ -277,7 +396,7 @@
 	a.card:hover {
 		border-color: var(--border-hover);
 		transform: translateY(-3px);
-		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+		box-shadow: var(--shadow);
 	}
 
 	.card-top {
@@ -290,10 +409,10 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 44px;
-		height: 44px;
+		width: 28px;
+		height: 28px;
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: var(--radius-sm);
 		background: var(--bg-input);
 		transition:
 			border-color 0.2s ease,
@@ -365,16 +484,6 @@
 
 	a.card:hover .cta-arrow {
 		transform: translateX(4px);
-	}
-
-	.card-soon {
-		border-style: dashed;
-		background: transparent;
-		opacity: 0.6;
-	}
-
-	.card-soon .card-badge {
-		background: transparent;
 	}
 
 	@media (max-width: 600px) {

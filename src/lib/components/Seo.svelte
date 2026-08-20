@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from "$app/state";
+	import { OG_VERSION } from "$lib/ogVersion";
 
 	interface Props {
 		title: string; // page title (without the "· Scooby" suffix)
@@ -18,7 +19,7 @@
 	// request/host origin so they work on any domain the app is deployed to.
 	const url = $derived(page.url.href);
 	const imageUrl = $derived(
-		new URL(`/og/${image}.png`, page.url.origin).href,
+		new URL(`/og/${image}.png?v=${OG_VERSION}`, page.url.origin).href,
 	);
 </script>
 

@@ -135,7 +135,7 @@
 		if (!node) return;
 
 		try {
-			const dataUrl = await toPng(node, { backgroundColor: "#000000" });
+			const dataUrl = await toPng(node, { backgroundColor: "#08080a" });
 			const link = document.createElement("a");
 			link.href = dataUrl;
 			link.download = "midsem-exams.png";
@@ -523,7 +523,7 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		background: #000;
+		background: var(--bg);
 		color: #fff;
 		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 		min-height: 100vh;
@@ -656,7 +656,7 @@
 
 	.calendar-scroll-wrapper {
 		overflow-x: auto;
-		background: #000;
+		background: var(--bg);
 		border: 1px solid #222;
 		border-radius: 8px;
 		padding: 1rem;
@@ -676,7 +676,7 @@
 	}
 
 	.time-gutter {
-		background: #000;
+		background: var(--bg);
 	}
 
 	.day-header {
@@ -712,12 +712,12 @@
 
 	.exam-slot.gap-slot {
 		min-height: 24px;
-		background: #080808;
+		background: var(--bg-input);
 		border-top: 1px dashed #1a1a1a;
 	}
 
 	.slot-label {
-		background: #000;
+		background: var(--bg);
 		padding: 1rem 0.5rem;
 		text-align: right;
 		font-size: 0.75rem;
@@ -739,7 +739,7 @@
 	}
 
 	.exam-slot {
-		background: #0a0a0a;
+		background: var(--bg-card);
 		border-left: 1px solid #222;
 		padding: 0.25rem;
 		min-height: 100px;

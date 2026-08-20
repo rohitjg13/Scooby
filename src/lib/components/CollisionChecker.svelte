@@ -126,7 +126,7 @@
 		if (!node) return;
 
 		try {
-			const dataUrl = await toPng(node, { backgroundColor: "#000000" });
+			const dataUrl = await toPng(node, { backgroundColor: "#08080a" });
 			const cleanBatch = ($currentBatches.join("_") || "custom").replace(
 				/[^a-z0-9]/gi,
 				"_",
@@ -2950,7 +2950,7 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		background: #000;
+		background: var(--bg);
 		color: #fff;
 		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 	}
@@ -3020,7 +3020,7 @@
 		top: 100%;
 		left: 0;
 		right: 0;
-		background: #0a0a0a;
+		background: var(--bg-card);
 		border: 1px solid #222;
 		border-radius: 6px;
 		margin-top: 4px;
@@ -3454,7 +3454,7 @@
 		flex-direction: column;
 		gap: 2px;
 		padding: 0.6rem 0.75rem;
-		background: #0a0a0a;
+		background: var(--bg-card);
 		border: 1px solid #151515;
 		border-radius: 6px;
 		margin-bottom: 0.5rem;
@@ -3613,7 +3613,7 @@
 	.input {
 		width: 100%;
 		padding: 0.55rem 0.7rem;
-		background: #0a0a0a;
+		background: var(--bg-card);
 		border: 1px solid #222;
 		border-radius: 6px;
 		color: #fff;

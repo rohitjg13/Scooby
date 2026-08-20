@@ -531,7 +531,7 @@
 
 	/* Your listing */
 	.mine-panel {
-		background: linear-gradient(180deg, var(--bg-hover), var(--bg-card));
+		background: var(--bg-hover);
 	}
 	.mine-head {
 		display: flex;
@@ -839,8 +839,7 @@
 	/* Loading skeleton */
 	.skel {
 		border-radius: 6px;
-		background: linear-gradient(90deg, var(--bg-input) 25%, var(--bg-hover) 37%, var(--bg-input) 63%);
-		background-size: 400% 100%;
+		background: var(--bg-hover);
 		animation: skel-pulse 1.4s ease infinite;
 	}
 	.skel-label {
@@ -866,11 +865,12 @@
 		width: 60%;
 	}
 	@keyframes skel-pulse {
-		0% {
-			background-position: 100% 50%;
-		}
+		0%,
 		100% {
-			background-position: 0 50%;
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.45;
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
