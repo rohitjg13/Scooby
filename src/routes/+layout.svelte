@@ -4,7 +4,7 @@
 </script>
 
 <svelte:head>
-	<meta name="theme-color" content="#000000" />
+	<meta name="theme-color" content="#08080a" />
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link
 		rel="preconnect"
@@ -26,6 +26,7 @@
 				target="_blank"
 				rel="noopener noreferrer">Rohit J G</a
 			>
+			with the Academic Committee · <a href="/credits">Credits</a>
 		</p>
 	</footer>
 </div>
