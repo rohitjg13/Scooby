@@ -22,3 +22,8 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 src/lib/data/mid-sem-2026-spring/~$Draft Timetable Mid-Semester UG Examinations Spring 2026.xlsx
+
+# Local agent + scratch files
+.claude/
+.commandcode/
+tt.json
