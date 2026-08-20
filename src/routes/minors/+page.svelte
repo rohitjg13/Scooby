@@ -44,6 +44,11 @@
 	let query = $state("");
 	let descriptionModal = $state<HTMLDialogElement | undefined>();
 
+	// School groups start closed: the shelf is long enough that an all-open
+	// page buries the schools further down. Only schools the reader opens
+	// are tracked; everything absent from here is shut.
+	let opened = $state<Record<string, boolean>>({});
+
 	// Query params rather than a hash, so the server renders detail pages too
 	// — they work without JS and can be crawled. Back button comes from
 	// SvelteKit's own routing.
@@ -166,6 +171,16 @@
 			return acc;
 		}, []),
 	);
+
+	// A search that turned up hits behind closed doors would read as no hits
+	// at all, so searching forces every surviving group open.
+	const isOpen = (school: string) => q !== "" || opened[school] === true;
+	const allOpen = $derived(
+		shelf.length > 0 && shelf.every((g) => isOpen(g.school)),
+	);
+	const setAll = (open: boolean) => {
+		for (const g of shelf) opened[g.school] = open;
+	};
 
 	// --- tile summary ------------------------------------------------------
 
@@ -460,6 +475,9 @@
 				bind:value={query}
 				placeholder="Try a minor, a department, or a code like CHD2001"
 			/>
+			<button class="btn btn-sm" onclick={() => setAll(!allOpen)}>
+				{allOpen ? "Collapse all" : "Expand all"}
+			</button>
 		</div>
 
 		{#if matches.length === 0}
@@ -469,9 +487,26 @@
 			</p>
 		{/if}
 
-		{#each shelf as group}
-			<section class="group" style="--h: {hue(group.school)}">
-				<h2 class="eyebrow accent">{shortSchool(group.school)}</h2>
+		{#each shelf as group (group.school)}
+			<details
+				class="group"
+				style="--h: {hue(group.school)}"
+				open={isOpen(group.school)}
+				ontoggle={(e) => {
+					// While searching the group is held open by the query, not
+					// by a choice — recording that would leave it open once the
+					// search is cleared.
+					if (q === "") opened[group.school] = e.currentTarget.open;
+				}}
+			>
+				<summary>
+					<span class="chevron" aria-hidden="true"></span>
+					<h2 class="eyebrow accent">{shortSchool(group.school)}</h2>
+					<span class="count">
+						{group.minors.length}
+						{group.minors.length === 1 ? "minor" : "minors"}
+					</span>
+				</summary>
 				<div class="tiles">
 					{#each group.minors as m (m.id)}
 						{@const p = preview(m)}
@@ -494,7 +529,7 @@
 						</a>
 					{/each}
 				</div>
-			</section>
+			</details>
 		{/each}
 	</main>
 {/if}
@@ -609,15 +644,70 @@
 		line-height: 1.6;
 	}
 
+	/* Closed groups sit as a stack of rules, so the whole shelf of schools is
+	   visible at once; an open one gets the room its tiles need. */
 	.group {
-		margin-bottom: 3.25rem;
+		border-top: 1px solid var(--border);
+		margin-bottom: 0;
 	}
 
-	.group h2 {
-		margin-bottom: 1rem;
+	.group[open] {
+		margin-bottom: 2.5rem;
+	}
+
+	.group:last-of-type {
+		border-bottom: 1px solid var(--border);
+	}
+
+	.group summary {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		padding: 1rem 0.15rem;
+		cursor: pointer;
+		list-style: none;
+		user-select: none;
+	}
+
+	/* Safari draws its own triangle otherwise, next to ours. */
+	.group summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.group summary:focus-visible {
+		outline: 2px solid hsl(var(--h) 65% 66%);
+		outline-offset: 2px;
+		border-radius: 6px;
+	}
+
+	.chevron {
+		flex-shrink: 0;
+		width: 0.45rem;
+		height: 0.45rem;
+		border-right: 1.5px solid hsl(var(--h) 65% 66%);
+		border-bottom: 1.5px solid hsl(var(--h) 65% 66%);
+		transform: rotate(-45deg);
+		transition: transform 0.18s ease;
+	}
+
+	.group[open] .chevron {
+		transform: rotate(45deg);
+	}
+
+	.count {
+		margin-left: auto;
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		color: var(--text-muted);
+		transition: color 0.15s;
+	}
+
+	.group summary:hover .count {
+		color: var(--text-secondary);
 	}
 
 	.tiles {
+		padding-bottom: 0.35rem;
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(262px, 1fr));
 		gap: 0.7rem;
