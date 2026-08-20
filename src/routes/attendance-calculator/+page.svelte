@@ -220,7 +220,7 @@
 							<input class="input n" type="number" min="0" bind:value={comp.remaining} />
 						</label>
 						<label>
-							<span class="m-label">Excused (leave)</span>
+							<span class="m-label">Excused</span>
 							<input
 								class="input n"
 								type="number"
@@ -306,6 +306,8 @@
 		max-width: 1140px;
 		margin: 0 auto;
 		padding: 4rem 1.5rem 3rem;
+		/* nothing in here is meant to be scrolled sideways to reach */
+		overflow-x: clip;
 	}
 
 	.att-head {
@@ -539,7 +541,7 @@
 	/* two courses side by side once there's room, instead of one long column */
 	.cards {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(28rem, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(min(28rem, 100%), 1fr));
 		gap: 1rem;
 		align-items: start;
 	}
@@ -568,7 +570,7 @@
 	.grid {
 		display: grid;
 		min-width: 0;
-		grid-template-columns: 2.8rem 1.7fr repeat(4, 1fr) 3.2rem;
+		grid-template-columns: 2.8rem minmax(0, 1.7fr) repeat(4, minmax(0, 1fr)) 3.2rem;
 		gap: 0.4rem;
 		align-items: center;
 		margin-bottom: 0.4rem;
@@ -758,14 +760,38 @@
 	}
 
 	@media (max-width: 560px) {
+		.att {
+			padding: 2.5rem 1rem 2.5rem;
+		}
+
+		.card {
+			padding: 1rem;
+		}
+
+		/* target row wraps rather than running the presets off the edge */
+		.bar {
+			flex-wrap: wrap;
+			row-gap: 0.6rem;
+		}
+
+		.presets {
+			margin-left: 0;
+			flex: 1 0 100%;
+		}
+
+		.presets .btn {
+			flex: 1;
+		}
+
 		.grid-head {
 			display: none;
 		}
 
-		/* six units so the five fields split 3 + 2 evenly instead of trailing a
-		   ragged half-row */
+		/* six units so the fields split evenly instead of trailing a ragged
+		   half-row; minmax(0) keeps the 16px mobile inputs from widening the
+		   tracks past the card */
 		.grid {
-			grid-template-columns: repeat(6, 1fr);
+			grid-template-columns: repeat(6, minmax(0, 1fr));
 			gap: 0.5rem;
 			padding-bottom: 0.75rem;
 			margin-bottom: 0.75rem;
@@ -781,28 +807,70 @@
 			grid-row: 1;
 		}
 
+		/* each field becomes a tile cut like the day buttons in the semester
+		   box, so both halves of the page read as one thing */
 		.grid label {
 			display: flex;
 			flex-direction: column;
-			gap: 0.25rem;
-			grid-column: span 2;
-			min-width: 0;
-		}
-
-		.step {
-			width: 1.9rem;
-		}
-
-		.grid label:nth-of-type(4),
-		.grid label:nth-of-type(5) {
+			align-items: center;
+			gap: 0.1rem;
 			grid-column: span 3;
+			min-width: 0;
+			padding: 0.4rem 0.3rem 0.45rem;
+			background: var(--bg-input);
+			border: 1px dashed var(--border-hover);
+			border-radius: var(--radius);
+		}
+
+		/* the stepper wants the whole row next to its two buttons */
+		.grid label:nth-of-type(1) {
+			grid-column: span 6;
 		}
 
 		.m-label {
 			display: block;
 			font-size: 0.68rem;
+			letter-spacing: 0.04em;
 			color: var(--text-muted);
 			white-space: nowrap;
+		}
+
+		/* the tile draws the box now, so the input is just the number */
+		.grid label .n {
+			width: 100%;
+			padding: 0;
+			border: none;
+			background: transparent;
+			line-height: 1.3;
+			appearance: textfield;
+			-moz-appearance: textfield;
+		}
+
+		.grid label .n:focus {
+			box-shadow: none;
+		}
+
+		/* spinners eat width the number needs */
+		.grid label .n::-webkit-outer-spin-button,
+		.grid label .n::-webkit-inner-spin-button {
+			appearance: none;
+			margin: 0;
+		}
+
+		/* keep − and + beside the number rather than flung to the tile edges */
+		.stepper {
+			width: 100%;
+			justify-content: center;
+			gap: 0.5rem;
+		}
+
+		.stepper .n {
+			flex: 0 1 4.5rem;
+		}
+
+		.step {
+			width: 2.1rem;
+			background: var(--bg);
 		}
 	}
 </style>
