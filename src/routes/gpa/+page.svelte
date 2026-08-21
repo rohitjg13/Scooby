@@ -304,6 +304,8 @@
 		max-width: 900px;
 		margin: 0 auto;
 		padding: 2.5rem 1.25rem 3rem;
+		/* nothing here is meant to be scrolled sideways to reach */
+		overflow-x: clip;
 	}
 
 	.back {
@@ -663,8 +665,10 @@
 
 	.grade {
 		width: 8.5rem;
+		min-width: 0;
 		flex: none;
 		font-family: var(--font-mono);
+		text-overflow: ellipsis;
 	}
 
 	.x {
@@ -773,7 +777,8 @@
 
 		.grade {
 			width: auto;
-			flex: 1 0 7rem;
+			min-width: 0;
+			flex: 1 1 7rem;
 		}
 
 		.actions {
