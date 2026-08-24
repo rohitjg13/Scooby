@@ -2,3 +2,4 @@
 export * from './types';
 export * from './timetableStore';
 export * from './parseExcel';
+export * from './parseTimetableJson';
