@@ -3,7 +3,7 @@
 import assert from "node:assert";
 import { existsSync, readFileSync } from "node:fs";
 import { parseTimetableJson } from "../src/lib/parseTimetableJson.ts";
-import { offeredTo, programmeOf } from "../src/lib/types.ts";
+import { hasTimeConflict, offeredTo, programmeOf } from "../src/lib/types.ts";
 
 assert.equal(programmeOf("ENF21"), "ENF2YR");
 assert.equal(programmeOf("CSD310"), "CSD3YR");
@@ -46,6 +46,29 @@ assert.equal(csd.major, "CSD2YR, CSD21, CSD22", "student blocks join the batch l
 assert.equal(csd.openAsUWE, false);
 assert.equal(csd.component, "PRAC");
 assert.equal(csd.slot, "PRAC2");
+
+// "Both half" is a whole-semester class, not a half. Left as-is it reads as a
+// half to mergeHalves, and hasTimeConflict treats two unequal non-"full" terms
+// as opposite halves that never clash — so it would silently miss real clashes.
+{
+	const row = (over: Record<string, unknown>) => ({
+		code: "CCC122", title: "X", type: "CCC", uwe: "No", comp: "LEC", sec: "LEC1",
+		block: "", day: "Mon", start: "11:15 AM", end: "12:45 PM", room: "A312",
+		inst: "Someone", cap: "30", note: "", ...over,
+	});
+	const [full, half] = parseTimetableJson(
+		JSON.stringify({
+			Other: {
+				OtherALLYR: [
+					row({ term: "Both half", rowid: 1 }),
+					row({ code: "CCC228", term: "First half", rowid: 2 }),
+				],
+			},
+		}),
+	);
+	assert.equal(full.term, "Full semester", '"Both half" runs the whole semester');
+	assert.ok(hasTimeConflict(full, half), '"Both half" must clash with a half in the same slot');
+}
 
 // a slot listed once per half is one class, with both halves' faculty
 const halved = parseTimetableJson(
@@ -91,6 +114,7 @@ const slots = real.map((c) => [c.courseCode, c.day, c.startTime, c.room].join("|
 assert.equal(new Set(slots).size, slots.length, "no course meets itself twice in a slot");
 assert.ok(real.every((c) => c.courseCode && c.day && c.startTime && c.endTime));
 assert.ok(real.some((c) => c.major.includes(",")), "shared courses list several batches");
+assert.ok(!real.some((c) => c.term === "Both half"), '"Both half" not normalised');
 
 // times come out as clock strings in the same shape the sheet parser emits
 assert.ok(

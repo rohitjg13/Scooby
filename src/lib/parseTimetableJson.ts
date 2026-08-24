@@ -90,7 +90,12 @@ export function parseTimetableJson(text: string): Course[] {
 			courseType: row.type ?? '',
 			component: row.comp ?? '',
 			openAsUWE: (row.uwe ?? '').trim().toLowerCase() === 'yes',
-			term: row.term ?? ''
+			// "Both half" already covers the whole semester — one class in the
+			// slot all term, not two halves to reconcile. It has to normalise
+			// before mergeHalves, whose /half/ test would otherwise treat it as
+			// one, and before hasTimeConflict, which reads any two unequal
+			// non-"full" terms as opposite halves that can never clash.
+			term: (row.term ?? '') === 'Both half' ? 'Full semester' : (row.term ?? '')
 		}));
 
 	return mergeHalves(courses);
