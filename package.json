@@ -25,6 +25,7 @@
 	"dependencies": {
 		"@ai-sdk/groq": "^4.0.31",
 		"@ai-sdk/svelte": "^5.0.79",
+		"@google/genai": "^2.19.0",
 		"@qdrant/js-client-rest": "^1.19.0",
 		"@types/file-saver": "^2.0.7",
 		"ai": "^7.0.79",
