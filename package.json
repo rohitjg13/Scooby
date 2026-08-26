@@ -10,6 +10,7 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"gen:clubs": "node scripts/generate-clubs.mjs",
 		"gen:og": "node scripts/generate-og.mjs",
+		"upload:test-data": "node --env-file=.env scripts/upload-test-data.ts",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},

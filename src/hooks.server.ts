@@ -6,11 +6,11 @@ import type { Handle } from "@sveltejs/kit";
 // ---------------------------------------------------------------------------
 const COLLECTION_NAME = "chatbot_knowledge";
 /**
- * Vector size MUST match the output dimension of your embedding model.
- * 1536 → OpenAI text-embedding-ada-002 / text-embedding-3-small
- * 768  → most open-source models (e.g. nomic-embed-text, mxbai-embed-large)
+ * Vector size matches gemini-embedding-001's default output dimensionality (3072).
+ * Supported range: 128–3072. Change outputDimensionality in the chat route if you
+ * want a smaller index, and keep this value in sync.
  */
-const VECTOR_SIZE = 1536;
+const VECTOR_SIZE = 3072;
 
 // ---------------------------------------------------------------------------
 // One-time startup: ensure the Qdrant collection exists before any request

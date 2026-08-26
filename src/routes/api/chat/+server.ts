@@ -1,6 +1,7 @@
 import { createGroq } from "@ai-sdk/groq";
 import { generateObject, streamText } from "ai";
 import { z } from "zod";
+import { GoogleGenAI } from "@google/genai";
 import { env } from "$env/dynamic/private";
 import { searchCollection } from "$lib/server/qdrant";
 import type { RequestHandler } from "./$types";
@@ -10,7 +11,7 @@ import type { RequestHandler } from "./$types";
 // ---------------------------------------------------------------------------
 
 const COLLECTION_NAME = "chatbot_knowledge";
-const VECTOR_SIZE = 1536; // Must match hooks.server.ts and your real embedding model
+const VECTOR_SIZE = 3072; // gemini-embedding-001 default output dimensionality
 const SEARCH_LIMIT = 5;
 const SCORE_THRESHOLD = 0.5; // Results below this similarity score are discarded
 
@@ -24,6 +25,12 @@ const NOT_IN_DB_REPLY =
 
 const groq = createGroq({ apiKey: env.GROQ_API_KEY });
 const model = groq("openai/gpt-oss-120b");
+
+// ---------------------------------------------------------------------------
+// Google GenAI client — used exclusively for embeddings.
+// ---------------------------------------------------------------------------
+
+const genai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
 
 // ---------------------------------------------------------------------------
 // Zod schema — groundedness gate
@@ -52,16 +59,21 @@ const GroundednessSchema = z.object({
 type Groundedness = z.infer<typeof GroundednessSchema>;
 
 // ---------------------------------------------------------------------------
-// Embedding helper
-// TODO: replace this stub with a real embedding API call (e.g. OpenAI,
-//       Hugging Face, or a Groq-compatible endpoint) before going to
-//       production. The vector size must stay consistent with VECTOR_SIZE.
+// Embedding — gemini-embedding-001 via @google/genai
 // ---------------------------------------------------------------------------
 
-async function getEmbedding(_text: string): Promise<number[]> {
-  // Dummy embedding — returns a zero-filled vector of the correct dimension.
-  // In production: call your embedding model and return the real float array.
-  return Array<number>(VECTOR_SIZE).fill(0);
+async function getEmbedding(text: string): Promise<number[]> {
+	const response = await genai.models.embedContent({
+		model: "gemini-embedding-001",
+		contents: [text],
+	});
+
+	const values = response.embeddings?.[0]?.values;
+	if (!values || values.length === 0) {
+		throw new Error("[chat] gemini-embedding-001 returned an empty embedding.");
+	}
+
+	return values;
 }
 
 // ---------------------------------------------------------------------------
