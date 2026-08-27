@@ -304,7 +304,7 @@
 
 	// Saved state is per-semester: bumping this sends everyone back to the
 	// batch screen instead of restoring codes that no longer exist.
-	const STORE_VERSION = "monsoon26r20";
+	const STORE_VERSION = "monsoon26r21";
 	const key = (name: string) => `scooby_${STORE_VERSION}_${name}`;
 
 	// Past the batch screen, either with a batch or on an empty slate
@@ -346,6 +346,8 @@
 					"monsoon26r16",
 					"monsoon26r17",
 					"monsoon26r18",
+					"monsoon26r19",
+					"monsoon26r20",
 				].flatMap((v) =>
 					["batches", "nobatch", "selected", "swapped", "excluded", "colors"].map(
 						(n) => `scooby_${v}_${n}`,
