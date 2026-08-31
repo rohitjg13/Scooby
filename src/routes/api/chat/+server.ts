@@ -1,4 +1,4 @@
-import { streamText } from "ai";
+import { streamText, convertToModelMessages } from "ai";
 import { searchCollection } from "$lib/server/qdrant";
 import type { RequestHandler } from "./$types";
 import { COLLECTION_NAME, SEARCH_LIMIT, SCORE_THRESHOLD, NOT_IN_DB_REPLY, SYSTEM_PROMPT } from "$lib/server/chat/constants";
@@ -15,8 +15,18 @@ export const POST: RequestHandler = async ({ request }) => {
   const { messages } = await request.json();
 
   // 2. Extract the latest user message to embed and search the database.
+  //    The new AI SDK Chat class sends UIMessages whose text lives in a
+  //    `parts` array ({ type: 'text', text: string }[]) rather than a flat
+  //    `content` string. We join all text parts; fall back to `.content` for
+  //    any messages that still use the legacy format.
+  const latestUserMsg = [...messages].reverse().find((m: { role: string }) => m.role === "user");
   const latestUserMessage: string =
-    [...messages].reverse().find((m: { role: string }) => m.role === "user")?.content ?? "";
+    latestUserMsg?.parts
+      ?.filter((p: { type: string }) => p.type === "text")
+      ?.map((p: { text: string }) => p.text)
+      ?.join(" ")
+    ?? latestUserMsg?.content
+    ?? "";
 
   // 3. Embed the query and retrieve relevant context from Qdrant.
   let contextBlock = "";
@@ -60,18 +70,21 @@ export const POST: RequestHandler = async ({ request }) => {
         "Output the user's message EXACTLY, word for word, with no additions or changes.",
       prompt: NOT_IN_DB_REPLY,
     });
-    return (await decline).toTextStreamResponse();
+    return (await decline).toUIMessageStreamResponse();
   }
 
   // 5. Context is grounded — stream the full answer.
+  //    convertToModelMessages converts the UIMessage[] sent by the new Chat
+  //    class (parts-based, no `content` field) into the ModelMessage[] format
+  //    that streamText expects.
   const systemWithContext =
     `${SYSTEM_PROMPT}\n\n## Retrieved context from the database\n${contextBlock}`;
 
   const result = await streamText({
     model,
     system: systemWithContext,
-    messages,
+    messages: await convertToModelMessages(messages),
   });
 
-  return result.toTextStreamResponse();
+  return result.toUIMessageStreamResponse();
 };
