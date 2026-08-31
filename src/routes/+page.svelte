@@ -10,7 +10,8 @@
 		| "minor"
 		| "history"
 		| "attendance"
-		| "gpa";
+		| "gpa"
+		| "semester";
 
 	type Feature = {
 		title: string;
@@ -31,12 +32,12 @@
 			tag: "Timetable",
 		},
 		{
-			title: "Timetable Changes",
+			title: "Academic Calendar",
 			description:
-				"Every timetable revision the university has pushed out, and what actually moved.",
-			href: "/changes",
-			icon: "history",
-			tag: "Timetable",
+				"Holidays, exam weeks and every add/drop deadline — with what's on today and what's coming up next.",
+			href: "/academic-calendar",
+			icon: "semester",
+			tag: "Academics",
 		},
 		// {
 		// 	title: "Club Info",
@@ -73,14 +74,6 @@
 			icon: "gpa",
 			tag: "Academics",
 		},
-		{
-			title: "Attendance Calculator",
-			description:
-				"How far behind you are, and how many classes you can still afford to skip.",
-			href: "/attendance-calculator",
-			icon: "attendance",
-			tag: "Academics",
-		},
 		// Closed until room allocation happens again — /room-switch shows the empty state.
 		// {
 		// 	title: "Room Switch",
@@ -90,6 +83,22 @@
 		// 	icon: "switch",
 		// 	tag: "Hostel",
 		// },
+		{
+			title: "Attendance Calculator",
+			description:
+				"How far behind you are, and how many classes you can still afford to skip.",
+			href: "/attendance-calculator",
+			icon: "attendance",
+			tag: "Academics",
+		},
+		{
+			title: "Timetable Changes",
+			description:
+				"Every timetable revision the university has pushed out, and what actually moved.",
+			href: "/changes",
+			icon: "history",
+			tag: "Timetable",
+		},
 	];
 </script>
 
@@ -104,7 +113,13 @@
 		stroke-linejoin="round"
 		aria-hidden="true"
 	>
-		{#if name === "calendar"}
+		{#if name === "semester"}
+			<rect x="3" y="4.5" width="18" height="16" rx="2" />
+			<path d="M3 9.5h18" />
+			<path d="M8 2.5v4M16 2.5v4" />
+			<rect x="14" y="12.5" width="4" height="4" rx="1" fill="currentColor" />
+			<path d="M6.5 13h4M6.5 16.5h4" />
+		{:else if name === "calendar"}
 			<rect x="3" y="4.5" width="18" height="16" rx="2" />
 			<path d="M3 9.5h18" />
 			<path d="M8 2.5v4M16 2.5v4" />

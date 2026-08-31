@@ -49,6 +49,7 @@ const PAGES = [
 	{ slug: "fill", title: "Please fill this form", subtitle: "It only takes a minute", icon: "form" },
 	{ slug: "gpa", title: "GPA Calculator", subtitle: "Work out your SGPA & CGPA, semester by semester", icon: "gpa" },
 	{ slug: "attendance-calculator", title: "Attendance Calculator", subtitle: "How far behind you are, and how much you can skip", icon: "attendance" },
+	{ slug: "academic-calendar", title: "Academic Calendar", subtitle: "Holidays, exams & deadlines, all in one place", icon: "calendar" },
 	{ slug: "minors", title: "Minors", subtitle: "Every minor on offer, with courses & credits", icon: "minors" },
 ];
 
