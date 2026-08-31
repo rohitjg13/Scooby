@@ -302,10 +302,16 @@
 		selectedCourseDetails = course;
 	}
 
-	// Saved state is per-semester: bumping this sends everyone back to the
-	// batch screen instead of restoring codes that no longer exist.
+	// Saved picks are per-semester. Bump this only when the sheet changes so
+	// much that saved codes are meaningless (a new semester) — a routine
+	// timetable update is handled by re-resolving picks against the new rows
+	// after the fetch below, so nobody gets sent back to the batch screen.
 	const STORE_VERSION = "monsoon26r21";
 	const key = (name: string) => `scooby_${STORE_VERSION}_${name}`;
+	// Your batch is who you are, not what you picked, so it lives outside the
+	// version and survives every bump.
+	const BATCH_KEY = "scooby_batches_kept";
+	const NOBATCH_KEY = "scooby_nobatch_kept";
 
 	// Past the batch screen, either with a batch or on an empty slate
 	let inApp = $derived($currentBatches.length > 0 || skipBatch);
@@ -316,52 +322,40 @@
 
 		// Restore state from localStorage
 		try {
-			// Last semester's saved batches and courses no longer exist in
-			// this sheet, so drop them rather than restoring a timetable of
-			// codes that are gone.
-			for (const stale of [
-				"scooby_batch",
-				"scooby_batches",
-				"scooby_selected",
-				"scooby_swapped",
-				"scooby_excluded",
-				// monsoon26: the pre-JSON timetable. Rooms, times and
-				// faculty moved, so saved picks are wrong, not just stale.
-				...[
-					"monsoon26",
-					"monsoon26r2",
-					"monsoon26r3",
-					"monsoon26r4",
-					"monsoon26r5",
-					"monsoon26r6",
-					"monsoon26r7",
-					"monsoon26r8",
-					"monsoon26r9",
-					"monsoon26r10",
-					"monsoon26r11",
-					"monsoon26r12",
-					"monsoon26r13",
-					"monsoon26r14",
-					"monsoon26r15",
-					"monsoon26r16",
-					"monsoon26r17",
-					"monsoon26r18",
-					"monsoon26r19",
-					"monsoon26r20",
-				].flatMap((v) =>
-					["batches", "nobatch", "selected", "swapped", "excluded", "colors"].map(
-						(n) => `scooby_${v}_${n}`,
-					),
-				),
-			])
-				localStorage.removeItem(stale);
+			// Batch first: it may still be under an older version's key, so
+			// pick up whatever the last visit wrote before the sweep below
+			// throws that version away.
+			const fromAnyVersion = (suffix: string) => {
+				const k = Object.keys(localStorage).find(
+					(k) =>
+						k.startsWith("scooby_monsoon") &&
+						k.endsWith(`_${suffix}`),
+				);
+				return k ? localStorage.getItem(k) : null;
+			};
+			const savedBatches =
+				localStorage.getItem(BATCH_KEY) ?? fromAnyVersion("batches");
+			const savedNobatch =
+				localStorage.getItem(NOBATCH_KEY) ?? fromAnyVersion("nobatch");
 
-			const savedBatches = localStorage.getItem(key("batches"));
+			// Every other version's picks are last semester's codes, gone from
+			// this sheet, so drop them rather than restoring a timetable of
+			// courses that no longer exist. The batch keys are not versioned
+			// and are left alone.
+			for (const k of Object.keys(localStorage))
+				if (
+					k.startsWith("scooby_") &&
+					k !== BATCH_KEY &&
+					k !== NOBATCH_KEY &&
+					!k.startsWith(`scooby_${STORE_VERSION}_`)
+				)
+					localStorage.removeItem(k);
+
 			if (savedBatches) {
 				currentBatches.set(JSON.parse(savedBatches));
 			}
 
-			skipBatch = localStorage.getItem(key("nobatch")) === "1";
+			skipBatch = savedNobatch === "1";
 			// No batch means nothing is "open to you", so start unfiltered
 			if (skipBatch) showNonUWE = true;
 
@@ -394,10 +388,11 @@
 			const response = await fetch("/api/timetable?v=2");
 			const data = await response.json();
 
-			if (data.error) {
+		if (data.error) {
 				error = data.error;
 			} else {
 				allCourses.set(data.courses);
+				reconcileSaved(data.courses);
 			}
 		} catch (e) {
 			error = "Failed to load timetable data";
@@ -406,14 +401,27 @@
 		}
 	});
 
+	// The sheet moved on since these picks were saved: re-take each saved
+	// course from the fresh rows so its times, rooms and faculty update, and
+	// codes that are gone simply drop out. A swap pointing at a section that
+	// no longer exists would render as nothing, so it falls back to the
+	// original. Batch and everything else is kept.
+	function reconcileSaved(courses: Course[]) {
+		const live = new Set(courses.map((c) => c.courseCode));
+		selectedCourses.update((saved) => {
+			const codes = new Set(saved.map((c) => c.courseCode));
+			return courses.filter((c) => codes.has(c.courseCode));
+		});
+		swappedCourseCodes = new Map(
+			[...swappedCourseCodes].filter(([, to]) => live.has(to)),
+		);
+	}
+
 	// Persist state changes
 	$effect(() => {
 		if (stateLoaded) {
-			localStorage.setItem(
-				key("batches"),
-				JSON.stringify($currentBatches),
-			);
-			localStorage.setItem(key("nobatch"), skipBatch ? "1" : "0");
+			localStorage.setItem(BATCH_KEY, JSON.stringify($currentBatches));
+			localStorage.setItem(NOBATCH_KEY, skipBatch ? "1" : "0");
 		}
 	});
 
@@ -1772,6 +1780,12 @@
 															>
 														{/if}
 													</span>
+													<span class="block-time"
+														>{block.course
+															.startTime}–{block
+															.course
+															.endTime}</span
+													>
 													<span class="block-name"
 														>{block.course
 															.courseName}</span
@@ -3390,6 +3404,7 @@
 	.course-block:hover .block-name,
 	.course-block:hover .block-code,
 	.course-block:hover .block-type,
+	.course-block:hover .block-time,
 	.course-block:hover .block-room {
 		white-space: normal;
 		overflow: visible;
@@ -3411,6 +3426,13 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	.block-time {
+		font-family: "SF Mono", monospace;
+		font-size: 0.6rem;
+		color: #777;
+		white-space: nowrap;
 	}
 
 	.block-name {
