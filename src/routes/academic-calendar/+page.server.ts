@@ -9,6 +9,12 @@ const pdfUrl = Object.entries(
 	import.meta.glob('$lib/data/*calendar*.pdf', { query: '?url', import: 'default', eager: true })
 ).sort(([a], [b]) => b.localeCompare(a))[0]?.[1] as string | undefined;
 
+// The PDF ships with the build, so parse it once at build time: Vercel then
+// serves plain HTML and never has to run pdfjs (or fetch its own assets) in a
+// serverless function. "Today" is worked out in the browser, so the page stays
+// correct however long the deploy has been up.
+export const prerender = true;
+
 // Parsing is pure work over a file that cannot change between requests.
 let cached: Promise<{ calendar: AcademicCalendar }> | null = null;
 

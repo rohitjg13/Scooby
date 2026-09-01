@@ -158,7 +158,7 @@
 
 		<div class="hero-body">
 			{#if todayEntry?.text}
-				<span class="pill {cls(todayEntry)}">{kindOf(todayEntry)}</span>
+				<span class="kind {cls(todayEntry)}">{kindOf(todayEntry)}</span>
 				<p class="hero-text">{todayEntry.text}</p>
 			{:else if todayEntry}
 				<p class="hero-text muted">Nothing on the calendar — a regular day.</p>
@@ -194,7 +194,7 @@
 									{pretty(d.start)}{d.end !== d.start ? ` – ${pretty(d.end)}` : ""}
 								</span>
 								<span class="row-rel">{relative(d.start)}</span>
-								<span class="pill {cls(d)}">{kindOf(d)}</span>
+								<span class="kind {cls(d)}">{kindOf(d)}</span>
 							</div>
 							<p class="row-text">{d.text}</p>
 						</li>
@@ -210,7 +210,7 @@
 		<h2>The whole semester</h2>
 		<div class="legend">
 			{#each cal.legend as l}
-				<span class="pill {cls(l)}">{l.label}</span>
+				<span class="legend-item {cls(l)}"><span class="dot"></span>{l.label}</span>
 			{/each}
 		</div>
 		<div class="months">
@@ -240,15 +240,15 @@
 </main>
 
 <style>
-	/* One hue per legend entry. Everything tinted on the page — pills, rails,
-	   grid cells, the hero — reads the same --cat, so a kind of day looks the
-	   same wherever it turns up. */
-	.exam { --cat: #a78bfa; }
-	.deadline { --cat: #fbbf24; }
-	.holiday { --cat: #fb7185; }
-	.break { --cat: #34d399; }
-	.event { --cat: #38bdf8; }
-	.holiday.restricted { --cat: #f0abfc; }
+	/* One muted hue per legend entry. Every coloured thing on the page — the
+	   timeline dots, the kind labels, the grid cells, the hero's edge — reads
+	   the same --cat, so a kind of day looks the same wherever it turns up. */
+	.exam { --cat: #9c8cd4; }
+	.deadline { --cat: #c9a961; }
+	.holiday { --cat: #cf7f83; }
+	.break { --cat: #7fb59a; }
+	.event { --cat: #8296b5; }
+	.holiday.restricted { --cat: #b98db2; }
 
 	.page {
 		max-width: 1040px;
@@ -282,17 +282,21 @@
 		letter-spacing: -0.01em;
 	}
 
-	/* the coloured chip that names a kind of day */
-	.pill {
+	/* what kind of day it is, in that kind's colour. The colour is the badge —
+	   it does not need a bordered chip drawn around it as well. */
+	.kind {
 		align-self: flex-start;
+		font-family: var(--font-mono);
 		font-size: 0.7rem;
-		letter-spacing: 0.03em;
-		padding: 0.2rem 0.55rem;
-		border-radius: 999px;
+		letter-spacing: 0.04em;
 		white-space: nowrap;
-		color: var(--cat, var(--text-secondary));
-		background: color-mix(in srgb, var(--cat, var(--text-muted)) 14%, transparent);
-		border: 1px solid color-mix(in srgb, var(--cat, var(--text-muted)) 30%, transparent);
+		color: var(--cat, var(--text-muted));
+	}
+	.dot {
+		width: 0.45rem;
+		height: 0.45rem;
+		border-radius: 50%;
+		background: var(--cat, var(--text-muted));
 	}
 
 	/* today ------------------------------------------------------------- */
@@ -302,8 +306,9 @@
 		align-items: stretch;
 		padding: 1.25rem;
 		border-radius: 16px;
-		border: 1px solid color-mix(in srgb, var(--cat, var(--border)) 35%, var(--border));
-		background: color-mix(in srgb, var(--cat, transparent) 8%, var(--bg-card));
+		border: 1px solid var(--border);
+		border-left: 3px solid var(--cat, var(--border-hover));
+		background: var(--bg-card);
 	}
 	.hero-date {
 		display: flex;
@@ -448,7 +453,7 @@
 		font-size: 0.72rem;
 		color: var(--text-muted);
 	}
-	.row-top .pill { margin-left: auto; }
+	.row-top .kind { margin-left: auto; }
 	.row-text {
 		margin-top: 0.15rem;
 		font-size: 0.98rem;
@@ -461,8 +466,15 @@
 	.legend {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.4rem;
+		gap: 0.5rem 1.1rem;
 		margin: 0.75rem 0 1.25rem;
+		font-size: 0.78rem;
+		color: var(--text-secondary);
+	}
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
 	}
 	.months {
 		display: grid;
@@ -511,7 +523,7 @@
 	.cell.deadline,
 	.cell.event {
 		color: var(--cat);
-		background: color-mix(in srgb, var(--cat) 16%, transparent);
+		background: color-mix(in srgb, var(--cat) 13%, transparent);
 	}
 	.cell.blank { visibility: hidden; }
 	.cell.past { opacity: 0.4; }
@@ -545,7 +557,7 @@
 		}
 		.switch { width: 100%; }
 		.switch button { flex: 1; }
-		/* the pill drops under the date rather than squeezing it */
-		.row-top .pill { margin-left: 0; }
+		/* the kind drops under the date rather than squeezing it */
+		.row-top .kind { margin-left: 0; }
 	}
 </style>
