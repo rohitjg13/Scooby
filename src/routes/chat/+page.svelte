@@ -1,36 +1,33 @@
 <script lang="ts">
-  import { Chat } from '@ai-sdk/svelte';
+  import { Chat } from "@ai-sdk/svelte";
 
   const chat = new Chat({});
 
-  let input = $state('');
+  let input = $state("");
 
   const isLoading = $derived(
-    chat.status === 'submitted' || chat.status === 'streaming'
+    chat.status === "submitted" || chat.status === "streaming",
   );
 
   function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
     chat.sendMessage({ text: input });
-    input = '';
+    input = "";
   }
 </script>
 
 <div class="chat-page">
   <header class="chat-header">
-    <h1>ScoobyBot</h1>
+    <h1>Scooby</h1>
   </header>
 
   <main class="message-list">
     {#each chat.messages as message (message.id)}
       <div class="message-row {message.role}">
-        <span class="message-sender">
-          {message.role === 'user' ? 'You' : 'ScoobyBot'}
-        </span>
         <div class="message-bubble {message.role}">
           {#each message.parts as part}
-            {#if part.type === 'text'}
+            {#if part.type === "text"}
               {part.text}
             {/if}
           {/each}
@@ -40,7 +37,6 @@
 
     {#if isLoading}
       <div class="message-row assistant">
-        <span class="message-sender">ScoobyBot</span>
         <div class="message-bubble assistant thinking">
           <span class="dot"></span>
           <span class="dot"></span>
@@ -55,41 +51,63 @@
       <input
         type="text"
         bind:value={input}
-        placeholder="Ask ScoobyBot something..."
+        placeholder="Ask Scooby something..."
         disabled={isLoading}
         autocomplete="off"
       />
-      <button type="submit" disabled={isLoading}>
-        Send
+      <button type="submit" disabled={isLoading} aria-label="Send">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="12" y1="19" x2="12" y2="5" />
+          <polyline points="5 12 12 5 19 12" />
+        </svg>
       </button>
     </form>
   </footer>
 </div>
 
 <style>
+  /* ── Fonts ───────────────────────────────────────────────────── */
+  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
+
   /* ── Page Layout ─────────────────────────────────────────────── */
   .chat-page {
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    max-width: 760px;
-    margin: 0 auto;
-    font-family: system-ui, sans-serif;
-    background: #f9f9fb;
+    width: 100%;
+    font-family:
+      "Inter",
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      sans-serif;
+    background: #0f0f0f;
   }
 
   /* ── Header ──────────────────────────────────────────────────── */
   .chat-header {
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
-    background: #ffffff;
+    border-bottom: 1px solid #2a2a2a;
+    background: #141414;
   }
 
   .chat-header h1 {
     margin: 0;
     font-size: 1.25rem;
     font-weight: 700;
-    color: #111827;
+    color: #ffffff;
   }
 
   /* ── Message List ────────────────────────────────────────────── */
@@ -107,32 +125,21 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    max-width: 75%;
   }
 
   .message-row.user {
     align-self: flex-end;
     align-items: flex-end;
+    max-width: 75%;
   }
 
   .message-row.assistant {
-    align-self: flex-start;
-    align-items: flex-start;
-  }
-
-  .message-sender {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 0 0.25rem;
+    align-self: stretch;
+    align-items: stretch;
   }
 
   /* ── Bubbles ─────────────────────────────────────────────────── */
   .message-bubble {
-    padding: 0.65rem 1rem;
-    border-radius: 1.25rem;
     line-height: 1.5;
     font-size: 0.95rem;
     word-break: break-word;
@@ -140,15 +147,15 @@
   }
 
   .message-bubble.user {
-    background: #2563eb;
-    color: #ffffff;
-    border-bottom-right-radius: 0.25rem;
+    padding: 0.65rem 1rem;
+    border-radius: 1.25rem;
+    background: #ffffff;
+    color: #08080a;
   }
 
   .message-bubble.assistant {
-    background: #e5e7eb;
-    color: #111827;
-    border-bottom-left-radius: 0.25rem;
+    padding: 1rem 1.5rem;
+    color: #e5e5e5;
   }
 
   /* ── Thinking Indicator ──────────────────────────────────────── */
@@ -163,23 +170,33 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #9ca3af;
+    background: #555555;
     animation: bounce 1.2s infinite ease-in-out;
   }
 
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
+  .dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
 
   @keyframes bounce {
-    0%, 80%, 100% { transform: translateY(0); }
-    40%           { transform: translateY(-6px); }
+    0%,
+    80%,
+    100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-6px);
+    }
   }
 
   /* ── Input Area ──────────────────────────────────────────────── */
   .input-area {
     padding: 1rem 1.5rem;
-    border-top: 1px solid #e5e7eb;
-    background: #ffffff;
+    border-top: 1px solid #2a2a2a;
+    background: #141414;
   }
 
   .input-area form {
@@ -190,42 +207,50 @@
   .input-area input {
     flex: 1;
     padding: 0.65rem 1rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid #2a2a2a;
     border-radius: 0.75rem;
     font-size: 0.95rem;
     outline: none;
-    background: #f9f9fb;
+    background: #1c1c1c;
+    color: #ffffff;
     transition: border-color 0.15s;
   }
 
+  .input-area input::placeholder {
+    color: #555555;
+  }
+
   .input-area input:focus {
-    border-color: #2563eb;
-    background: #ffffff;
+    border-color: #ffffff;
+    background: #1c1c1c;
   }
 
   .input-area input:disabled {
-    opacity: 0.6;
+    opacity: 0.4;
     cursor: not-allowed;
   }
 
   .input-area button {
-    padding: 0.65rem 1.25rem;
-    background: #2563eb;
-    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    background: #ffffff;
+    color: #0a0a0a;
     border: none;
     border-radius: 0.75rem;
-    font-size: 0.95rem;
-    font-weight: 600;
     cursor: pointer;
     transition: background 0.15s;
   }
 
   .input-area button:hover:not(:disabled) {
-    background: #1d4ed8;
+    background: #e5e5e5;
   }
 
   .input-area button:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
   }
 </style>
