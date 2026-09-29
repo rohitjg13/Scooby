@@ -4,7 +4,7 @@
 
 <Seo
 	title="Credits"
-	description="Scooby was started by Rohit J G and runs out of the Academic Committee technical team at SNU Chennai."
+	description="Scooby was started by Rohit J G (Secretary of IT) and runs out of the Academic Committee technical team at SNU Chennai."
 />
 
 <main class="credits">
@@ -23,7 +23,7 @@
 	<article class="lead">
 		<p class="tag">Started it</p>
 		<h2>Rohit J G</h2>
-		<p class="role">Project lead</p>
+		<p class="role">Project lead · Secretary of IT</p>
 		<p class="blurb">
 			Built Scooby on his own and ran it for a long time before it came under the
 			Academic Committee. Most of what's on this site he wrote, and he keeps it up

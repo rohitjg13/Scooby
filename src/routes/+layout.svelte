@@ -26,6 +26,7 @@
 				target="_blank"
 				rel="noopener noreferrer">Rohit J G</a
 			>
+			(Secretary of IT)
 			with the Academic Committee · <a href="/credits">Credits</a>
 		</p>
 	</footer>
