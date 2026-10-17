@@ -1,15 +1,18 @@
-// Teaching days left in the semester.
-// The per-weekday totals are the instructional days the academic calendar
-// actually holds (they differ because of holidays), so they're a given, not
-// something we can count off a calendar. What we do count is how many of each
-// weekday have already gone by since the semester started.
-// ponytail: update these two constants each semester — a calendar-file parser
-// would be a lot of code for six numbers and a date.
+// Teaching days left in the semester, counted off the academic calendar PDF
+// (see src/lib/server/academicCalendar.ts), so holidays, exam weeks and
+// no-class days fall exactly where the calendar puts them. Nothing here is
+// specific to one semester: a newer PDF in src/lib/data is the whole update.
 
-export const SEM_START = "2026-08-17"; // Monday
+import type { CalendarDay } from "./server/academicCalendar";
 
-/** keyed by Date#getDay(): 1 = Monday … 6 = Saturday */
-export const TEACHING_DAYS: Record<number, number> = { 1: 13, 2: 13, 3: 14, 4: 14, 5: 13, 6: 12 };
+export type Semester = {
+	/** ISO date classes start */
+	start: string;
+	/** ISO date of the last teaching day */
+	end: string;
+	/** every teaching date, with the weekday (1 = Mon … 6 = Sat) whose timetable runs */
+	days: { date: string; weekday: number }[];
+};
 
 export const DAY_NAMES: Record<number, string> = {
 	1: "Mon",
@@ -22,28 +25,41 @@ export const DAY_NAMES: Record<number, string> = {
 
 export const WEEKDAYS = [1, 2, 3, 4, 5, 6];
 
-const midnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
-function parseDay(iso: string) {
-	const [y, m, d] = iso.split("-").map(Number);
-	return new Date(y, m - 1, d); // local, so "today" means the user's today
-}
+const WEEKDAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
 /**
- * Weekdays still to come, today included (a class today hasn't happened yet).
- * Days that have already passed are subtracted from the semester's totals.
+ * The teaching dates in a parsed calendar. A day is off when the PDF colours
+ * it in — university holidays, no-class days, exams — except restricted
+ * holidays, which still have classes. The colour decides, not the text: an
+ * uncoloured "Buffer day for class" is a teaching day.
  */
-export function remainingDays(today = new Date(), start = SEM_START): Record<number, number> {
-	const cursor = parseDay(start);
-	const end = midnight(today);
-	const out: Record<number, number> = {};
-	for (const d of WEEKDAYS) out[d] = TEACHING_DAYS[d];
+export function semesterFrom(calendar: CalendarDay[]): Semester {
+	const start = calendar.find((d) => /start of classes/i.test(d.text))?.date;
+	if (!start) throw new Error('no "Start of classes" entry in the academic calendar');
+	// the latest one, since the calendar can also carry last summer's
+	const end = calendar.filter((d) => d.date >= start && /last teaching day/i.test(d.text)).at(-1)?.date;
+	if (!end) throw new Error('no "Last Teaching Day" entry after the start of classes');
 
-	while (cursor < end) {
-		const day = cursor.getDay();
-		if (out[day] > 0) out[day] -= 1;
-		cursor.setDate(cursor.getDate() + 1);
+	const days: Semester["days"] = [];
+	for (const d of calendar) {
+		if (d.date < start || d.date > end) continue;
+		if (d.label && !/restricted/i.test(d.label)) continue;
+		// "Last Teaching Day as per Tuesday schedule" runs Tuesday's classes
+		const swap = /as per (\w+day)/i.exec(d.text);
+		const weekday = swap
+			? WEEKDAY_NAMES.indexOf(swap[1].toLowerCase())
+			: new Date(d.date + "T00:00:00Z").getUTCDay();
+		if (WEEKDAYS.includes(weekday)) days.push({ date: d.date, weekday });
 	}
+	return { start, end, days };
+}
+
+/** Teaching days still to come per weekday, today included (a class today hasn't happened yet). */
+export function remainingDays(sem: Semester, today = new Date()): Record<number, number> {
+	const now = today.toLocaleDateString("en-CA"); // local, so "today" means the user's today
+	const out: Record<number, number> = {};
+	for (const d of WEEKDAYS) out[d] = 0;
+	for (const d of sem.days) if (d.date >= now) out[d.weekday] += 1;
 	return out;
 }
 

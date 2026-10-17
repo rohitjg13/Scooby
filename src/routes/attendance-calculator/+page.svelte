@@ -1,13 +1,10 @@
 <script lang="ts">
 	import Seo from "$lib/components/Seo.svelte";
 	import { newCourse, stats, statsFor, courseTotals, type Course } from "$lib/attendance";
-	import {
-		remainingDays,
-		totalDays,
-		WEEKDAYS,
-		DAY_NAMES,
-		SEM_START
-	} from "$lib/semester";
+	import { remainingDays, totalDays, WEEKDAYS, DAY_NAMES } from "$lib/semester";
+	import type { PageData } from "./$types";
+
+	let { data }: { data: PageData } = $props();
 
 	const KEY = "scooby.attendance";
 	const PRESETS = [75, 70, 65, 50];
@@ -41,8 +38,11 @@
 	// counts stay classes until some component says a class is worth more than an hour
 	const unit = (c: Course) => (c.components.every((k) => k.hrs === 1) ? "" : " hrs");
 
-	// teaching days left, and how many of them are yours
-	const left = remainingDays();
+	// teaching days left, and how many of them are yours. The dates come from
+	// the academic calendar at build time; "today" is the browser's.
+	const left = $derived(remainingDays(data.semester));
+	const shortDate = (iso: string) =>
+		new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 	let picked = $state<number[]>([]);
 	const myDays = $derived(picked.reduce((n, d) => n + left[d], 0));
 
@@ -120,7 +120,9 @@
 			<span class="sem-count">{totalDays(left)}</span>
 			<span class="sem-label">
 				teaching days left this semester
-				<span class="sem-sub">since {SEM_START}</span>
+				<span class="sem-sub">
+					{shortDate(data.semester.start)} – {shortDate(data.semester.end)}, per the academic calendar
+				</span>
 			</span>
 		</div>
 
