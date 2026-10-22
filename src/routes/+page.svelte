@@ -87,7 +87,9 @@
 			title: "Attendance Calculator",
 			description:
 				"How far behind you are, and how many classes you can still afford to skip.",
-			href: "/attendance-calculator",
+			// ponytail: /attendance-calculator still exists, just unlinked for now
+			href: "https://attendance.rohitjg.com",
+			external: true,
 			icon: "attendance",
 			tag: "Academics",
 		},
