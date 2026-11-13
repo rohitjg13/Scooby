@@ -180,9 +180,9 @@
             placeholder="Course name (e.g. CSD101)"
             bind:value={course.name}
         />
-        <button class="delete-btn" on:click={() => onRemove(course.id)}>
+        <button class="delete-btn" aria-label="Delete course" on:click={() => onRemove(course.id)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" /></svg>
-            Delete course
+            <span class="delete-text">Delete course</span>
         </button>
     </div>
 
@@ -336,11 +336,12 @@
 									? markError(it.classAvgObtained, it.classAvgTotal, 'Class average', false)
 									: null}
 							<div class="marks-row">
-								<span class="marks-label">
+								<span class="marks-label" class:solo={comp.iterations.length <= 1}>
 									{comp.iterations.length > 1 ? attemptLabel(componentName(comp), i + 1) : ''}
 								</span>
 
 								<div class="marks-input">
+									<span class="cell-label">Your marks</span>
 									<input
 										type="number"
 										min="0"
@@ -361,6 +362,7 @@
 
 								{#if course.mode === 'relative'}
 									<div class="marks-input">
+										<span class="cell-label">Class average</span>
 										<input
 											type="number"
 											min="0"
@@ -380,16 +382,19 @@
 									</div>
 								{/if}
 
-								<select
-									class="select order-select"
-									aria-label="Sequence"
-									value={it.order}
-									on:change={(e) => onIterationOrderChange(it.id, Number(e.currentTarget.value))}
-								>
-									{#each orderOptions as n}
-										<option value={n}>{n}</option>
-									{/each}
-								</select>
+								<div class="seq-cell">
+									<span class="cell-label">Sequence</span>
+									<select
+										class="select order-select"
+										aria-label="Sequence"
+										value={it.order}
+										on:change={(e) => onIterationOrderChange(it.id, Number(e.currentTarget.value))}
+									>
+										{#each orderOptions as n}
+											<option value={n}>{n}</option>
+										{/each}
+									</select>
+								</div>
 							</div>
 							{#if studentErr}<p class="field-error marks-error">{studentErr.msg}</p>{/if}
 							{#if avgErr}<p class="field-error marks-error">{avgErr.msg}</p>{/if}
@@ -447,10 +452,8 @@
 </div>
 
 <style>
+	/* No background/border: the expanded tile around it already draws the box. */
 	.course-card {
-		background: linear-gradient(180deg, var(--bg-card, #0d0d0d), rgba(10, 10, 10, 0.4));
-		border: 1px solid var(--border, #262626);
-		border-radius: 14px;
 		padding: 1.5rem;
 		color: var(--text, #e5e7eb);
 	}
@@ -748,6 +751,15 @@
 		align-items: center;
 		gap: 0.3rem;
 	}
+	/* Per-cell labels replace the column header on phones only. */
+	.cell-label {
+		display: none;
+	}
+	.seq-cell {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
 	.slash {
 		color: var(--text-muted, #6b7280);
 	}
@@ -845,70 +857,129 @@
 
 	@media (max-width: 640px) {
 		.course-card {
-			padding: 1.1rem;
+			padding: 1rem 0.9rem;
 		}
 		.course-name-input {
 			flex: 1 1 0;
 		}
+		.delete-text {
+			display: none;
+		}
+		.course-header .delete-btn {
+			width: 38px;
+			padding: 0;
+		}
 		.mode-toggle {
 			flex-wrap: wrap;
+			row-gap: 0.6rem;
+			margin-bottom: 1.1rem;
 		}
+		.target-field {
+			margin-left: 0;
+		}
+		.component-block {
+			padding: 0.9rem;
+		}
+
+		/* type + delete / custom name / weightage + future */
 		.comp-top {
-			flex-direction: column;
-			align-items: stretch;
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			grid-template-areas:
+				'type del'
+				'name name'
+				'weight future';
 			gap: 0.75rem;
+			align-items: end;
 		}
-		.comp-top-left,
-		.weightage-field,
+		.comp-top-left {
+			grid-area: type;
+		}
 		.name-field {
+			grid-area: name;
+		}
+		.weightage-field {
+			grid-area: weight;
+		}
+		.future-checkbox {
+			grid-area: future;
+			margin-left: 0;
+			padding-bottom: 0.55rem;
+		}
+		.comp-top > .delete-btn {
+			grid-area: del;
+			justify-self: end;
+			height: 40px;
+			width: 40px;
+		}
+		.select {
+			min-width: 0;
 			width: 100%;
 		}
 		.name-input {
 			width: 100%;
 			box-sizing: border-box;
 		}
-		.select {
-			min-width: 0;
-			width: 100%;
+
+		/* Marks: each cell carries its own label instead of a header row. */
+		.marks-header {
+			display: none;
 		}
-		.order-select {
-			width: 100%;
-		}
-		.future-checkbox {
-			margin-left: 0;
-		}
-		.best-of-row {
-			flex-wrap: wrap;
-			row-gap: 0.5rem;
-		}
-		.marks-header,
 		.marks-row,
-		.marks-table.with-avg .marks-header,
 		.marks-table.with-avg .marks-row {
-			grid-template-columns: 1fr;
-			gap: 0.4rem;
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+			gap: 0.6rem 0.75rem;
+			padding-top: 0.5rem;
+		}
+		.marks-label {
+			grid-column: 1 / -1;
+			font-weight: 600;
+		}
+		.marks-label.solo {
+			display: none;
+		}
+		.cell-label {
+			display: block;
+			width: 100%;
+			font-family: var(--font-mono, monospace);
+			font-size: 0.68rem;
+			color: var(--text-muted, #9ca3af);
 		}
 		.marks-input {
 			flex-wrap: wrap;
 		}
-		.mini-input {
-			width: 100%;
+		.marks-input .mini-input {
+			flex: 1 1 0;
+			width: auto;
 			min-width: 0;
-			max-width: 90px;
 		}
-		.totals {
-			flex-direction: column;
+		.seq-cell {
+			grid-column: 1 / -1;
 		}
-		.total-box {
-			min-width: 0;
-			width: 100%;
-			box-sizing: border-box;
-		}
-		.target-field{
-			margin-left: 0;
+		.seq-cell .cell-label {
+			width: auto;
 		}
 		.marks-error {
 			padding-left: 0;
+		}
+
+		.totals {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+			gap: 0.6rem;
+		}
+		.total-box {
+			min-width: 0;
+			padding: 0.7rem 0.8rem;
+		}
+		.total-value {
+			font-size: 1.2rem;
+		}
+		.target-hint {
+			max-width: none;
+		}
+		.progress-section {
+			padding: 1rem 0 0;
 		}
 	}
 </style>

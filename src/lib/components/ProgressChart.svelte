@@ -6,7 +6,10 @@
 	/** Estimated class average % for each component, or null when not tracked (absolute mode). */
 	export let classAvgValues: number[] | null = null;
 
-	const width = 640;
+	// Draw at the real on-screen width so 9px labels stay 9px on phones
+	// instead of shrinking with a fixed 640-wide viewBox.
+	let wrapWidth = 0;
+	$: width = wrapWidth ? Math.max(280, Math.min(wrapWidth, 900)) : 640;
 	const height = 260;
 	const padding = { top: 20, right: 20, bottom: 44, left: 42 };
 
@@ -17,9 +20,8 @@
 	// Each point gets an equal-width slot and sits at its center, so edge
 	// labels never spill past the plot and neighbours don't collide.
 	$: slotW = innerWidth / Math.max(n, 1);
-	function xFor(i: number): number {
-		return padding.left + slotW * (i + 0.5);
-	}
+	// Reactive (not a plain function) so points re-place when the width changes.
+	$: xFor = (i: number): number => padding.left + slotW * (i + 0.5);
 
 	// ponytail: ~5.5px per char at 9px mono; good enough without measuring text.
 	function wrapLabel(label: string, slot: number): string[] {
@@ -56,7 +58,7 @@
 {#if n === 0}
 	<p class="chart-empty">Add marks to your graded components to see a progress chart.</p>
 {:else}
-	<div class="chart-wrap">
+	<div class="chart-wrap" bind:clientWidth={wrapWidth}>
 		<svg viewBox="0 0 {width} {height}" preserveAspectRatio="xMidYMid meet" class="chart-svg">
 			{#each gridLines as g}
 				<line
@@ -142,6 +144,7 @@
 	}
 	.chart-legend {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 1.25rem;
 		justify-content: center;
 		margin-top: 0.75rem;
@@ -150,6 +153,7 @@
 		color: var(--text-secondary, #9ca3af);
 	}
 	.legend-item {
+		white-space: nowrap;
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
