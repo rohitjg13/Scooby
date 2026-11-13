@@ -139,27 +139,19 @@
     }
 
     $: weightSum = totalWeightage(course.components);
-    $: studentTotal = studentTotalPct(course.components);
-    $: classAvgTotal = course.mode === 'relative' ? classAvgTotalPct(course.components) : null;
+    // Future components have no marks yet, so they never count toward totals.
+    $: gradedComponents = course.components.filter((c) => !c.isFuture);
+    $: futureComponents = course.components.filter((c) => c.isFuture);
+    $: studentTotal = studentTotalPct(gradedComponents);
+    $: classAvgTotal = course.mode === 'relative' ? classAvgTotalPct(gradedComponents) : null;
 
-	// How much weightage is still "open" (not yet graded) — this is the pool
-    // the student still has a chance to earn marks on.
-    $: gradedWeight = totalWeightage(course.components.filter((c) => !c.isFuture));
-    $: remainingWeight = Math.max(0, 100 - gradedWeight);
-
-    // Average % the student needs across that remaining weightage to land on
-    // their target total: (target - current total) / remaining weight * 100.
-    $: targetValue = course.targetPct || 0;
-	$: remainingAimValue =
-		targetValue > 0 && remainingWeight > 0
-			? Math.max(0, ((targetValue - studentTotal) / remainingWeight) * 100)
-			: null;
-	$: remainingAimDisplay =
-		remainingAimValue === null
-			? '—'
-			: remainingAimValue === 0
-				? 'Reached'
-				: `${remainingAimValue.toFixed(2)}%`;
+    // Target gap: points still needed, and the average % that means across
+    // the components marked Future (the only marks still up for grabs).
+    $: target = Math.min(100, course.targetPct || 0);
+    $: futureWeight = totalWeightage(futureComponents);
+    $: pointsNeeded = target - studentTotal;
+    $: avgNeeded = futureWeight > 0 ? (pointsNeeded / futureWeight) * 100 : null;
+    $: futureNames = futureComponents.map(componentName).join(', ');
         // Every individual mark from non-future components, in the student-chosen order.
     $: orderedMarks = course.components
         .filter((c) => !c.isFuture)
@@ -418,28 +410,22 @@
         <div class="total-box">
             <span class="total-label">Total</span>
             <span class="total-value student">{studentTotal.toFixed(2)}%</span>
-        </div>
-            <div class="total-box target-box">
-            <span class="total-label">Target</span>
-            <span
-                class="remaining-aim"
-                title="Average % needed on your remaining {remainingWeight.toFixed(0)}% weightage to hit your target"
-            >
-                {remainingAimDisplay}
-            </span>
-            <div class="total-aim-row">
-                <span class="total-aim-label">Total aim: {course.targetPct || 0}%</span>
-                <div class="target-input-wrap">
-                    <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        class="target-input"
-                        bind:value={course.targetPct}
-                    />
-                    <span class="target-suffix">%</span>
-                </div>
-            </div>
+            {#if target > 0}
+                <p class="target-hint">
+                    {#if pointsNeeded <= 0}
+                        ✓ {target}% target reached
+                    {:else if avgNeeded === null}
+                        {pointsNeeded.toFixed(1)} points short of {target}% · mark upcoming components as
+                        <em>Future</em> to see what you need
+                    {:else if avgNeeded > 100}
+                        {target}% is out of reach — max possible is {(studentTotal + futureWeight).toFixed(1)}%
+                    {:else}
+                        <strong>Need {pointsNeeded.toFixed(1)} more points</strong> to reach {target}%<br />
+                        ≈ {avgNeeded.toFixed(0)}% {futureComponents.length === 1 ? 'in' : 'average across'}
+                        {futureNames} ({futureWeight}% of grade)
+                    {/if}
+                </p>
+            {/if}
         </div>
         {#if course.mode === 'relative' && classAvgTotal !== null}
             <div class="total-box">
@@ -804,50 +790,18 @@
 	.total-value.class-avg {
 		color: #f5f5f5;
 	}
-	.target-box {
-	border-color: #f5f5f5;
-	}
-	.remaining-aim {
-		font-size: 1.4rem;
-		font-weight: 700;
-		color: #f5f5f5;
-	}
-	/* .total-aim-row {
-		display: flex;
-		align-items: baseline;
-		gap: 0.35rem;
-		margin-top: 0.15rem;
-	} */
-	.total-aim-label {
+	.target-hint {
+		margin: 0.35rem 0 0;
+		max-width: 26ch;
 		font-family: var(--font-mono, monospace);
-		font-size: 0.68rem;
-		color: #f5f5f5;
+		font-size: 0.7rem;
+		line-height: 1.45;
+		color: var(--text-muted, #9ca3af);
 	}
-	/* .target-input-wrap {
-		display: flex;
-		align-items: baseline;
-		gap: 0.2rem;
-	} */
-	/* .target-input {
-		background: transparent;
-		border: none;
-		border-bottom: 1px dashed var(--border, #2e2e2e);
-		color: var(--text-secondary, #d1d5db);
-		font-size: 0.85rem;
+	.target-hint strong {
+		color: var(--text, #f5f5f5);
 		font-weight: 600;
-		width: 3ch;
-		padding: 0;
-		font-family: inherit;
 	}
-	.target-input:focus {
-		outline: none;
-		border-bottom-color: var(--border-hover, #525252);
-	} */
-	/* .target-suffix {
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: var(--text-secondary, #d1d5db);
-	} */
 	.target-field {
 		display: flex;
 		align-items: center;

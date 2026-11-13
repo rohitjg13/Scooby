@@ -94,7 +94,7 @@
 						<h2 class="tile-name">{course.name || 'Untitled course'}</h2>
 						<div class="tile-mode">{course.mode === 'relative' ? 'Relative grading' : 'Absolute grading'}</div>
 						{#if course.components.length > 0}
-							<span class="tile-total">{studentTotalPct(course.components).toFixed(1)}%</span>
+							<span class="tile-total">{studentTotalPct(course.components.filter((c) => !c.isFuture)).toFixed(1)}%</span>
 						{:else}
 							<span class="tile-total-placeholder">No components yet</span>
 						{/if}
