@@ -14,9 +14,30 @@
 	$: innerHeight = height - padding.top - padding.bottom;
 	$: n = labels.length;
 
+	// Each point gets an equal-width slot and sits at its center, so edge
+	// labels never spill past the plot and neighbours don't collide.
+	$: slotW = innerWidth / Math.max(n, 1);
 	function xFor(i: number): number {
-		if (n <= 1) return padding.left + innerWidth / 2;
-		return padding.left + (innerWidth * i) / (n - 1);
+		return padding.left + slotW * (i + 0.5);
+	}
+
+	// ponytail: ~5.5px per char at 9px mono; good enough without measuring text.
+	function wrapLabel(label: string, slot: number): string[] {
+		const max = Math.max(4, Math.floor(slot / 5.5));
+		const lines: string[] = [];
+		let line = '';
+		for (const word of label.split(/\s+/)) {
+			const next = line ? `${line} ${word}` : word;
+			if (next.length <= max || !line) line = next;
+			else {
+				lines.push(line);
+				line = word;
+			}
+		}
+		if (line) lines.push(line);
+		const out = lines.slice(0, 2).map((l) => (l.length > max ? l.slice(0, max - 1) + '…' : l));
+		if (lines.length > 2) out[1] = out[1].slice(0, max - 1) + '…';
+		return out;
 	}
 
 	function yFor(value: number): number {
@@ -49,8 +70,11 @@
 			{/each}
 
 			{#each labels as label, i}
-				<text x={xFor(i)} y={height - padding.bottom + 20} class="axis-label" text-anchor="middle">
-					{label}
+				<text x={xFor(i)} y={height - padding.bottom + 18} class="axis-label" text-anchor="middle">
+					<title>{label}</title>
+					{#each wrapLabel(label, slotW) as line, li}
+						<tspan x={xFor(i)} dy={li === 0 ? 0 : 11}>{line}</tspan>
+					{/each}
 				</text>
 			{/each}
 

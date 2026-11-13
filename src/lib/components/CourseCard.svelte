@@ -4,6 +4,7 @@
         COMPONENT_TYPES,
         needsBestOf,
         attemptLabel,
+        componentName,
         createEmptyComponent,
         syncComponentIterations,
         resetToSingleIteration,
@@ -50,6 +51,19 @@
 
     function onBestOfChange(comp: GradedComponent) {
         replaceComponent(syncComponentIterations(comp, () => generateId(`${comp.id}-iter`)));
+    }
+
+    // "best" follows "out of" (n of n) unless the user already picked a smaller
+    // number; iterations.length is still the previous total at this point.
+    function onBestOfTotalChange(comp: GradedComponent) {
+        const prevTotal = comp.iterations.length;
+        const total = comp.bestOfTotal;
+        if (total != null && Number.isInteger(total) && total >= 1 && total <= 20) {
+            if (comp.bestOfCount == null || comp.bestOfCount >= prevTotal || comp.bestOfCount > total) {
+                comp.bestOfCount = total;
+            }
+        }
+        onBestOfChange(comp);
     }
 
     function onTypeChange(comp: GradedComponent) {
@@ -145,7 +159,7 @@
         .flatMap((c) =>
             c.iterations.map((it, i) => ({
                 order: it.order ?? Number.MAX_SAFE_INTEGER,
-                label: c.iterations.length > 1 ? attemptLabel(c.type, i + 1) : c.type,
+                label: c.iterations.length > 1 ? attemptLabel(componentName(c), i + 1) : componentName(c),
                 student: pct(it.studentObtained, it.studentTotal),
                 classAvg: pct(it.classAvgObtained, it.classAvgTotal)
             }))
@@ -206,7 +220,6 @@
 	{#if course.targetPct > 100}
 		<p class="field-error target-error">Target cannot be more than 100%</p>
 	{/if}
-</div>
 
     {#each course.components as comp (comp.id)}
         {@const weightErr = weightageError(comp.weightage)}
@@ -220,6 +233,19 @@
                         {/each}
                     </select>
                 </div>
+
+                {#if comp.type === 'Other'}
+                    <label class="name-field">
+                        <span class="field-label">Component name</span>
+                        <input
+                            type="text"
+                            class="name-input"
+                            placeholder="e.g. Viva"
+                            maxlength="40"
+                            bind:value={comp.customName}
+                        />
+                    </label>
+                {/if}
 
                 <div class="weightage-field">
                     <span class="field-label">Weightage %</span>
@@ -270,8 +296,11 @@
 						<span class="field-label">best</span>
 						<input
 							type="number"
-							min="0"
+							min="1"
+							max={comp.bestOfTotal ?? 1}
 							class="mini-input"
+							title={(comp.bestOfTotal ?? 1) > 1 ? '' : 'Raise the second number to add attempts first'}
+							disabled={(comp.bestOfTotal ?? 1) <= 1}
 							class:invalid={bestErr?.field === 'count'}
 							bind:value={comp.bestOfCount}
 							on:input={() => onBestOfChange(comp)}
@@ -280,10 +309,11 @@
 						<input
 							type="number"
 							min="1"
+							max="20"
 							class="mini-input"
 							class:invalid={bestErr?.field === 'total'}
 							bind:value={comp.bestOfTotal}
-							on:input={() => onBestOfChange(comp)}
+							on:input={() => onBestOfTotalChange(comp)}
 						/>
 					</div>
 					{#if bestErr}<p class="field-error best-error">{bestErr.msg}</p>{/if}
@@ -307,7 +337,7 @@
 									: null}
 							<div class="marks-row">
 								<span class="marks-label">
-									{comp.iterations.length > 1 ? attemptLabel(comp.type, i + 1) : ''}
+									{comp.iterations.length > 1 ? attemptLabel(componentName(comp), i + 1) : ''}
 								</span>
 
 								<div class="marks-input">
@@ -417,6 +447,7 @@
         <h3 class="progress-title">Progress chart</h3>
         <ProgressChart labels={chartLabels} studentValues={chartStudent} classAvgValues={chartClassAvg} />
     </div>
+</div>
 
 <style>
 	.course-card {
@@ -537,6 +568,30 @@
 		min-width: 64px;
 		width: 64px;
 		padding: 0.55rem 0.5rem;
+	}
+
+	.name-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+	.name-input {
+		background: var(--bg-hover, #171717);
+		border: 1px solid var(--border, #2e2e2e);
+		border-radius: 10px;
+		padding: 0.55rem 0.7rem;
+		color: var(--text, #f5f5f5);
+		font-size: 0.9rem;
+		width: 160px;
+		font-family: inherit;
+	}
+	.name-input:focus {
+		outline: none;
+		border-color: var(--border-hover, #525252);
+	}
+	.best-of-row .mini-input:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.field-label {
@@ -826,8 +881,13 @@
 			gap: 0.75rem;
 		}
 		.comp-top-left,
-		.weightage-field {
+		.weightage-field,
+		.name-field {
 			width: 100%;
+		}
+		.name-input {
+			width: 100%;
+			box-sizing: border-box;
 		}
 		.select {
 			min-width: 0;

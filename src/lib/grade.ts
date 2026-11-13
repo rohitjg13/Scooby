@@ -58,6 +58,8 @@ export interface GradedComponent {
 	isFuture: boolean;
 	/** 1-based chronological position of this component, set by the student via the order dropdown. */
 	order: number;
+	/** User-given name, only used when type is 'Other'. */
+	customName?: string;
 }
 
 export interface Course {
@@ -84,19 +86,24 @@ export function createEmptyComponent(id: string): GradedComponent {
 		id,
 		type: 'Midsem',
 		weightage: 0,
-		bestOfCount: null,
-		bestOfTotal: null,
+		bestOfCount: 1,
+		bestOfTotal: 1,
 		iterations: [createEmptyIteration(`${id}-iter-1`)],
 		isFuture: false,
 		order: 1
 	};
 }
 
-const SINGULAR_OVERRIDES: Partial<Record<ComponentType, string>> = {
+/** Display name: the custom name for 'Other' components, else the type. */
+export function componentName(comp: Pick<GradedComponent, 'type' | 'customName'>): string {
+	return (comp.type === 'Other' && comp.customName?.trim()) || comp.type;
+}
+
+const SINGULAR_OVERRIDES: Record<string, string> = {
 	'Lab Assignments': 'Lab Assignment'
 };
 
-export function attemptLabel(type: ComponentType, index: number): string {
+export function attemptLabel(type: string, index: number): string {
 	const base = SINGULAR_OVERRIDES[type] ?? type;
 	return `${base.toLowerCase()} ${index}`;
 }
