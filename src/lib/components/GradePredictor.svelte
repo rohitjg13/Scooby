@@ -83,30 +83,33 @@
 						</button>
 					</div>
 				{:else}
-					<div class="tile-collapsed-content">
-						<div class="tile-top">
-							<span class="tile-tag">Course</span>
+					<button
+						class="tile-button"
+						aria-expanded="false"
+						on:click={() => toggleExpand(course.id)}
+					>
+						<span class="tile-top">
+							<span class="tile-tag">{course.mode === 'relative' ? 'Relative' : 'Absolute'}</span>
 							<span class="tile-count">
 								{course.components.length}
 								{course.components.length === 1 ? 'component' : 'components'}
 							</span>
-						</div>
-						<h2 class="tile-name">{course.name || 'Untitled course'}</h2>
-						<div class="tile-mode">{course.mode === 'relative' ? 'Relative grading' : 'Absolute grading'}</div>
-						{#if course.components.length > 0}
-							<span class="tile-total">{studentTotalPct(course.components.filter((c) => !c.isFuture)).toFixed(1)}%</span>
-						{:else}
-							<span class="tile-total-placeholder">No components yet</span>
-						{/if}
-					</div>
-					<div class="expand-toggle-row">
-						<button class="expand-toggle" on:click={() => toggleExpand(course.id)}>
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-								<path d="M6 9l6 6 6-6" />
-							</svg>
-							Expand
-						</button>
-					</div>
+						</span>
+						<span class="tile-name">{course.name || 'Untitled course'}</span>
+						<span class="tile-bottom">
+							{#if course.components.length > 0}
+								<span class="tile-total">{studentTotalPct(course.components.filter((c) => !c.isFuture)).toFixed(1)}%</span>
+							{:else}
+								<span class="tile-total-placeholder">No components yet</span>
+							{/if}
+							<span class="tile-open">
+								Open
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M9 6l6 6-6 6" />
+								</svg>
+							</span>
+						</span>
+					</button>
 				{/if}
 			</div>
 		{/each}
@@ -184,28 +187,36 @@
 		grid-column: 1 / -1;
 	}
 
-	/* -- Collapsed tile: fixed size, content top, toggle pinned to bottom center -- */
-	.tile-collapsed-content {
+	/* -- Collapsed tile: the whole card is one button -- */
+	.tile-button {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
-		padding: 2.5rem 2.25rem 0.75rem;
-	}
-
-	.course-tile:not(.expanded) {
-		min-height: 380px;
+		gap: 0.6rem;
+		width: 100%;
+		min-height: 190px;
+		padding: 1.5rem 1.6rem;
+		box-sizing: border-box;
+		text-align: left;
+		font-family: inherit;
+		color: inherit;
+		cursor: pointer;
+		border-radius: 16px;
 		background: linear-gradient(180deg, var(--bg-card, #0d0d0d), rgba(10, 10, 10, 0.4));
 		border: 1px solid var(--border, #262626);
-		justify-content: space-between;
 		transition:
 			border-color 0.2s ease,
 			transform 0.2s ease,
 			box-shadow 0.2s ease;
 	}
-	.course-tile:not(.expanded):hover {
+	.tile-button:hover,
+	.tile-button:focus-visible {
 		border-color: var(--border-hover, #525252);
-		transform: translateY(-3px);
+		transform: translateY(-2px);
 		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+		outline: none;
+	}
+	.tile-button:focus-visible {
+		border-color: var(--text, #f5f5f5);
 	}
 
 	.tile-top {
@@ -216,7 +227,7 @@
 
 	.tile-tag {
 		font-family: var(--font-mono, monospace);
-		font-size: 0.7rem;
+		font-size: 0.68rem;
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
 		color: var(--text-muted, #6b7280);
@@ -224,34 +235,55 @@
 
 	.tile-count {
 		font-family: var(--font-mono, monospace);
-		font-size: 0.75rem;
+		font-size: 0.72rem;
 		color: var(--text-muted, #6b7280);
 	}
 
 	.tile-name {
-		font-size: 1.7rem;
+		font-size: 1.4rem;
 		font-weight: 600;
 		letter-spacing: -0.015em;
 		color: var(--text, #f5f5f5);
+		overflow-wrap: anywhere;
 	}
 
-	.tile-mode {
-		font-family: var(--font-mono, monospace);
-		font-size: 0.85rem;
-		color: var(--text-secondary, #9ca3af);
+	.tile-bottom {
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-top: auto;
 	}
 
 	.tile-total {
-		font-size: 2.75rem;
+		font-size: 2.1rem;
 		font-weight: 700;
+		line-height: 1;
 		color: #60a5fa;
-		margin-top: 0.5rem;
 	}
 	.tile-total-placeholder {
 		font-size: 0.85rem;
 		color: var(--text-muted, #6b7280);
 		font-style: italic;
-		margin-top: 0.25rem;
+	}
+
+	.tile-open {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2rem;
+		font-family: var(--font-mono, monospace);
+		font-size: 0.75rem;
+		color: var(--text-secondary, #9ca3af);
+		transition: color 0.2s ease, transform 0.2s ease;
+	}
+	.tile-open svg {
+		width: 14px;
+		height: 14px;
+	}
+	.tile-button:hover .tile-open,
+	.tile-button:focus-visible .tile-open {
+		color: var(--text, #f5f5f5);
+		transform: translateX(2px);
 	}
 
 	/* -- Expand / collapse control, centered at the bottom of every tile -- */
@@ -309,7 +341,8 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.6rem;
-		min-height: 380px;
+		min-height: 190px;
+		border-radius: 16px;
 		background: transparent;
 		border: 1px dashed var(--border, #3f3f3f);
 		color: var(--text-secondary, #d1d5db);
@@ -351,25 +384,18 @@
 		.course-tile.expanded {
 			max-width: 100%;
 		}
-		.tile-collapsed-content,
-		.add-tile {
+		.tile-button {
 			min-height: 0;
-		}
-		.tile-collapsed-content {
-			padding: 1.5rem 1.5rem 0.5rem;
-			gap: 0.6rem;
-		}
-		.course-tile:not(.expanded) {
-			min-height: 0;
+			padding: 1.25rem;
 		}
 		.tile-name {
-			font-size: 1.3rem;
+			font-size: 1.2rem;
 		}
 		.tile-total {
-			font-size: 2rem;
+			font-size: 1.8rem;
 		}
 		.add-tile {
-			min-height: 140px;
+			min-height: 110px;
 		}
 	}
 </style>

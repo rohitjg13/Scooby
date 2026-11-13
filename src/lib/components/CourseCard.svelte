@@ -180,8 +180,9 @@
             placeholder="Course name (e.g. CSD101)"
             bind:value={course.name}
         />
-        <button class="icon-btn" on:click={() => onRemove(course.id)} aria-label="Remove course">
-            &times;
+        <button class="delete-btn" on:click={() => onRemove(course.id)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" /></svg>
+            Delete course
         </button>
     </div>
 
@@ -278,11 +279,12 @@
                 -->
 
                 <button
-                    class="icon-btn small"
+                    class="delete-btn icon-only"
                     on:click={() => removeComponent(comp.id)}
                     aria-label="Remove component"
+                    title="Remove component"
                 >
-                    &times;
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" /></svg>
                 </button>
             </div>
 
@@ -324,7 +326,7 @@
                             {#if course.mode === 'relative'}
                                 <span>Estimated class average</span>
                             {/if}
-                            <span>Order</span>
+                            <span title="When this was graded, relative to your other marks. Sets the order on the progress chart.">Sequence</span>
                         </div>
 
                         {#each comp.iterations as it, i (it.id)}
@@ -380,6 +382,7 @@
 
 								<select
 									class="select order-select"
+									aria-label="Sequence"
 									value={it.order}
 									on:change={(e) => onIterationOrderChange(it.id, Number(e.currentTarget.value))}
 								>
@@ -460,13 +463,16 @@
 	}
 
 	.course-name-input {
-		flex: 1;
+		flex: 0 1 260px;
+		min-width: 0;
+		margin-right: auto;
 		background: var(--bg-input, #171717);
 		border: 1px solid var(--border, #2e2e2e);
-		border-radius: 10px;
-		padding: 0.6rem 0.9rem;
+		border-radius: 8px;
+		padding: 0.45rem 0.7rem;
 		color: var(--text, #f5f5f5);
-		font-size: 1rem;
+		font-size: 0.95rem;
+		font-weight: 600;
 		font-family: inherit;
 	}
 
@@ -475,25 +481,39 @@
 		border-color: var(--border-hover, #525252);
 	}
 
-	.icon-btn {
-		background: var(--bg-input, #171717);
-		border: 1px solid var(--border, #2e2e2e);
-		border-radius: 10px;
-		color: var(--text-muted, #a3a3a3);
-		width: 38px;
+	.delete-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
 		height: 38px;
-		font-size: 1.1rem;
+		padding: 0 0.85rem;
+		background: rgba(248, 113, 113, 0.08);
+		border: 1px solid rgba(248, 113, 113, 0.45);
+		border-radius: 10px;
+		color: #f87171;
+		font-family: inherit;
+		font-size: 0.82rem;
+		font-weight: 600;
 		cursor: pointer;
 		flex-shrink: 0;
+		transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 	}
-	.icon-btn:hover {
-		color: var(--text, #f5f5f5);
-		border-color: var(--border-hover, #525252);
+	.delete-btn svg {
+		width: 16px;
+		height: 16px;
 	}
-	.icon-btn.small {
-		width: 30px;
-		height: 30px;
-		font-size: 0.95rem;
+	.delete-btn:hover,
+	.delete-btn:focus-visible {
+		background: rgba(248, 113, 113, 0.18);
+		border-color: #f87171;
+		color: #fca5a5;
+		outline: none;
+	}
+	.delete-btn.icon-only {
+		width: 36px;
+		height: 36px;
+		padding: 0;
 	}
 
 	.mode-toggle {
@@ -827,12 +847,8 @@
 		.course-card {
 			padding: 1.1rem;
 		}
-		.course-header {
-			flex-wrap: wrap;
-		}
 		.course-name-input {
-			min-width: 0;
-			width: 100%;
+			flex: 1 1 0;
 		}
 		.mode-toggle {
 			flex-wrap: wrap;

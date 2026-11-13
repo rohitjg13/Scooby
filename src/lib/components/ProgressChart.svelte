@@ -54,7 +54,7 @@
 </script>
 
 {#if n === 0}
-	<p class="chart-empty">Set an order on your graded components to see a progress chart.</p>
+	<p class="chart-empty">Add marks to your graded components to see a progress chart.</p>
 {:else}
 	<div class="chart-wrap">
 		<svg viewBox="0 0 {width} {height}" preserveAspectRatio="xMidYMid meet" class="chart-svg">
