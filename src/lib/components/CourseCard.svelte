@@ -415,14 +415,16 @@
                     {#if pointsNeeded <= 0}
                         ✓ {target}% target reached
                     {:else if avgNeeded === null}
-                        {pointsNeeded.toFixed(1)} points short of {target}% · mark upcoming components as
-                        <em>Future</em> to see what you need
+                        Below your {target}% target. Mark upcoming components as <em>Future</em> to
+                        see what you need in them.
                     {:else if avgNeeded > 100}
-                        {target}% is out of reach — max possible is {(studentTotal + futureWeight).toFixed(1)}%
+                        {target}% isn't reachable. Even 100% in {futureNames} gets you
+                        {(studentTotal + futureWeight).toFixed(1)}%.
                     {:else}
-                        <strong>Need {pointsNeeded.toFixed(1)} more points</strong> to reach {target}%<br />
-                        ≈ {avgNeeded.toFixed(0)}% {futureComponents.length === 1 ? 'in' : 'average across'}
-                        {futureNames} ({futureWeight}% of grade)
+                        To reach {target}%, score
+                        {futureComponents.length === 1 ? 'at least' : 'an average of'}
+                        <strong>{Math.ceil(avgNeeded)}%</strong>
+                        {futureComponents.length === 1 ? 'in' : 'across'} {futureNames}.
                     {/if}
                 </p>
             {/if}
