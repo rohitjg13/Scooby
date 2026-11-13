@@ -88,7 +88,6 @@
 			return checkTotal ? { field: 'total', msg: 'Total must be greater than 0' } : null;
 		}
 		if (obtained == null) return null;
-		if (obtained < 0) return { field: 'obtained', msg: `${who} cannot be negative` };
 		if (obtained > total) return { field: 'obtained', msg: `${who} cannot be more than the total` };
 		return null;
 	}
@@ -114,17 +113,25 @@
 
 	function weightageError(w: number | null): string | null {
 		if (w == null) return null;
-		if (w < 0) return 'Weightage cannot be negative';
 		if (w > 100) return 'Weightage cannot be more than 100%';
 		return null;
 	}
 
-	function onTargetInput() {
-		if (course.targetPct !== null && course.targetPct < 0) course.targetPct = 0;
-	}
+	// Attached to the whole card: every number field here is a mark,
+	// weightage or count, so none of them can be negative.
+	const isNumberInput = (t: EventTarget | null): t is HTMLInputElement =>
+		t instanceof HTMLInputElement && t.type === 'number';
 
 	function blockMinus(e: KeyboardEvent) {
-		if (e.key === '-') e.preventDefault();
+		if (isNumberInput(e.target) && ['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
+	}
+
+	// Catches what keydown can't: pasting or dropping "-5".
+	function stripMinus(e: Event) {
+		const el = e.target;
+		if (!isNumberInput(el) || !el.value.startsWith('-')) return;
+		el.value = el.value.slice(1);
+		el.dispatchEvent(new Event('input', { bubbles: true }));
 	}
 
     function onIterationOrderChange(iterationId: string, newOrder: number) {
@@ -172,7 +179,8 @@
     $: chartClassAvg = course.mode === 'relative' ? orderedMarks.map((m) => m.classAvg) : null;
 </script>
 
-<div class="course-card">
+<!-- svelte-ignore a11y_no_static_element_interactions (only filters keys/input bubbling up from the number fields inside) -->
+<div class="course-card" on:keydown={blockMinus} on:input={stripMinus}>
     <div class="course-header">
         <input
             class="course-name-input"
@@ -211,8 +219,6 @@
                 class="mini-input"
 				class:invalid={course.targetPct > 100}
                 bind:value={course.targetPct}
-                on:input={onTargetInput}
-                on:keydown={blockMinus}
             />
             <span class="slash">%</span>
         </div>
