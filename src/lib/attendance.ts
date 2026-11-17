@@ -72,16 +72,17 @@ export function statsFor(
 	const total = counted + remaining;
 	const p = target / 100;
 
-	// smallest x with (attended + x) / total >= p
-	const raw = Math.ceil(p * total - attended - 1e-9);
+	// exact x with (attended + x) / total = p — unrounded, since hours can be fractional
+	const need = Math.max(0, p * total - attended);
+	const mustAttend = Math.min(need, remaining);
 
 	return {
 		current: counted > 0 ? pct(attended, counted) : null,
 		best: total > 0 ? pct(attended + remaining, total) : 0,
 		worst: total > 0 ? pct(attended, total) : 0,
-		mustAttend: Math.min(Math.max(0, raw), remaining),
-		canSkip: Math.max(0, remaining - Math.max(0, raw)),
-		impossible: raw > remaining
+		mustAttend,
+		canSkip: remaining - mustAttend,
+		impossible: need > remaining + 1e-9
 	};
 }
 
