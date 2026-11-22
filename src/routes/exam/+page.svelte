@@ -3,7 +3,7 @@
 	import Seo from "$lib/components/Seo.svelte";
 
 	// Flip to true when a mid-sem / end-sem exam schedule is live.
-	const examActive = true;
+	const examActive = false;
 </script>
 
 <Seo
@@ -36,7 +36,7 @@
 			</span>
 			<h1>Exam Timetable</h1>
 			<p class="empty-msg">
-				There is no Mid/End Sem exam currently going on.
+				The exam timetable is being updated. Please check back shortly!
 			</p>
 			<a href="/" class="btn secondary">← Home</a>
 		</div>
