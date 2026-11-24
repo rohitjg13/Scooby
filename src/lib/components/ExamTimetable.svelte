@@ -131,26 +131,26 @@
 
 	function removeExam(exam: Exam) {
 		selectedExams = selectedExams.filter(
-			(e) => !(e.courseCode === exam.courseCode && e.day === exam.day && e.time === exam.time)
+			(e) => !(e.courseCode === exam.courseCode && e.date === exam.date && e.time === exam.time)
 		);
 		askIfEmpty();
 	}
 
 	function isSelected(exam: Exam): boolean {
 		return selectedExams.some(
-			(e) => e.courseCode === exam.courseCode && e.day === exam.day && e.time === exam.time
+			(e) => e.courseCode === exam.courseCode && e.date === exam.date && e.time === exam.time
 		);
 	}
 
 	function hasConflict(exam: Exam): boolean {
 		return selectedExams.some(
-			(e) => e.day === exam.day && e.slot === exam.slot && e.courseCode !== exam.courseCode
+			(e) => e.date === exam.date && e.slot === exam.slot && e.courseCode !== exam.courseCode
 		);
 	}
 
 	function getConflicts(exam: Exam): Exam[] {
 		return selectedExams.filter(
-			(e) => e.day === exam.day && e.slot === exam.slot && e.courseCode !== exam.courseCode
+			(e) => e.date === exam.date && e.slot === exam.slot && e.courseCode !== exam.courseCode
 		);
 	}
 
@@ -379,7 +379,7 @@
 								<div class="item-row">
 									<span class="mono">{courseCode}</span>
 									<span class="muted small">
-										{firstExam.day} • {firstExam.time}
+										{firstExam.date} ({firstExam.day}) • {firstExam.time}
 									</span>
 								</div>
 								{#if hasConflictFlag}
